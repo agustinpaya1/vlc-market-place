@@ -1,23 +1,39 @@
-import { AuthService } from '../services/auth.service';
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { AlertController } from '@ionic/angular';
+import { CommonModule } from '@angular/common';
 import { ToastController } from '@ionic/angular';
 import { 
   IonContent, 
   IonButton, 
-  IonIcon, 
-  IonItem, 
-  IonInput, 
-  IonLabel,
-  IonButtons,
-  IonImg 
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardSubtitle,
+  IonCardContent,
+  IonImg
 } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-main-page',
   templateUrl: './main-page.component.html',
-  styleUrls: ['./main-page.component.scss']
+  styleUrls: ['./main-page.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    IonContent,
+    IonButton,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardSubtitle,
+    IonCardContent,
+    IonImg
+  ]
 })
 export class MainPageComponent {
   products = [
@@ -41,17 +57,14 @@ export class MainPageComponent {
       description: 'Description of Product 3',
       price: 1000,
       imageUrl: 'assets/images/product3.jpg'
-    },
-    // Add more products as needed
+    }
   ];
 
-  constructor(private toastController: ToastController) {} // Inyectar ToastController
+  constructor(private toastController: ToastController) {}
 
-  // Añadir el producto al carrito
   async addToCart(product: any): Promise<void> {
     console.log('Product added to cart:', product);
 
-    // Mostrar un mensaje de confirmación usando un Toast
     const toast = await this.toastController.create({
       message: `${product.name} has been added to your cart.`,
       duration: 2000,
