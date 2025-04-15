@@ -1,20 +1,18 @@
-import { AuthService } from '../services/auth.service';
 import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
-import { 
-  IonContent, 
-  IonButton, 
-  IonIcon, 
-  IonItem, 
-  IonInput, 
-  IonLabel,
-  IonBackButton,
-  IonButtons
+import {
+    IonButton,
+    IonContent,
+    IonIcon,
+    IonInput,
+    IonItem,
+    IonLabel
 } from '@ionic/angular/standalone';
-import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
-import { eyeOutline, eyeOffOutline, arrowBackOutline } from 'ionicons/icons';
+import { arrowBackOutline, eyeOffOutline, eyeOutline } from 'ionicons/icons';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-tab2',
@@ -27,8 +25,6 @@ import { eyeOutline, eyeOffOutline, arrowBackOutline } from 'ionicons/icons';
     IonItem,
     IonInput,
     IonLabel,
-    IonBackButton,
-    IonButtons,
     FormsModule
   ],
   standalone: true

@@ -1,0 +1,112 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleTheme()">
+        <ion-icon [name]="isDarkTheme ? 'sunny-outline' : 'moon-outline'"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-no-padding">
+  <div class="main-container">
+  
+    <!-- Panel lateral -->
+    <div class="side-panel">
+      <div class="search-section">
+        <h1>Mapa de Tiendas</h1>
+        <ion-searchbar placeholder="Buscar mercados..." mode="ios"></ion-searchbar>
+      </div>
+      <div class="stores-list">
+        <ion-list>
+          <ion-item class="store-item" *ngFor="let store of stores">
+            <ion-label>
+              <h2>{{store.name}}</h2>
+              <p class="distance">
+                <ion-icon name="location-outline"></ion-icon>
+                {{store.distance}} km
+              </p>
+              <p>
+                <ion-icon name="time-outline"></ion-icon>
+                {{store.schedule}}
+              </p>
+              <p>
+                <ion-icon name="call-outline"></ion-icon>
+                {{store.phone}}
+              </p>
+              <ion-chip [color]="store.isOpen ? 'success' : 'medium'">
+                <ion-icon [name]="store.isOpen ? 'checkmark-circle' : 'close-circle'"></ion-icon>
+                <ion-label>{{store.isOpen ? 'Abierto' : 'Cerrado'}}</ion-label>
+              </ion-chip>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </div>
+    </div>
+
+    <!-- Contenedor del mapa -->
+    <div class="map-wrapper">
+      <div id="mapbox-map"></div>
+      <!-- Leyenda del mapa -->
+      <div class="map-legend">
+        <div class="legend-item">
+          <div class="marker-dot open"></div>
+          <span>Mercado abierto</span>
+        </div>
+        <div class="legend-item">
+          <div class="marker-dot closed"></div>
+          <span>Mercado cerrado</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de filtros -->
+  <ion-modal [isOpen]="showFilters" [breakpoints]="[0, 0.5, 0.8]" [initialBreakpoint]="0.5" (didDismiss)="toggleFilters()">
+    <ng-template>
+      <ion-header class="ion-no-border">
+        <ion-toolbar>
+          <ion-title>Filtros</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="toggleFilters()">
+              <ion-icon name="close-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content>
+        <ion-list>
+          <ion-item>
+            <ion-label>Mostrar solo abiertos</ion-label>
+            <ion-toggle [(ngModel)]="showOnlyOpen"></ion-toggle>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Distancia máxima: {{maxDistance}}km</ion-label>
+            <ion-range min="1" max="20" step="1" [(ngModel)]="maxDistance">
+              <ion-label slot="start">1km</ion-label>
+              <ion-label slot="end">20km</ion-label>
+            </ion-range>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Categorías</ion-label>
+            <ion-select multiple="true" [(ngModel)]="selectedCategories">
+              <ion-select-option value="food">Alimentación</ion-select-option>
+              <ion-select-option value="clothing">Ropa</ion-select-option>
+              <ion-select-option value="electronics">Electrónica</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-list>
+
+        <div class="ion-padding">
+          <ion-button expand="block" (click)="applyFilters()">
+            Aplicar Filtros
+          </ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content> 
