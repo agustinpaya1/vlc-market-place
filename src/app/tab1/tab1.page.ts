@@ -11,7 +11,7 @@ import {
     IonLabel
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { arrowBackOutline, eyeOffOutline, eyeOutline, logoApple, logoFacebook, logoGoogle, logoTwitter } from 'ionicons/icons';
+import { arrowBackOutline, eyeOffOutline, eyeOutline, logoApple, logoGoogle} from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
 
@@ -43,9 +43,7 @@ export class Tab1Page {
   ) {
     addIcons({
       'logo-google': logoGoogle,
-      'logo-facebook': logoFacebook,
       'logo-apple': logoApple,
-      'logo-twitter': logoTwitter,
       'eye-outline': eyeOutline,
       'eye-off-outline': eyeOffOutline,
       'arrow-back-outline': arrowBackOutline
@@ -97,18 +95,6 @@ export class Tab1Page {
     }
   }
 
-  async loginWithFacebook() {
-    console.log('Facebook login clicked');
-    // Implementar autenticación con Facebook
-    try{
-      const success = await this.authService.login('facebook@example.com', 'facebook-token');
-      if (success) {
-        this.router.navigate(['/home']);
-      }
-    } catch (error) {
-      this.showAlert('Error', 'Facebook login failed. Please try again.');
-    }
-  }
 
   async loginWithApple() {
     console.log('Apple login clicked');
@@ -123,18 +109,6 @@ export class Tab1Page {
     }
   }
 
-  async loginWithTwitter() {
-    console.log('Twitter login clicked');
-    // Implementar autenticación con Twitter
-    try{
-      const success = await this.authService.login('twitter@example.com', 'twitter-token');
-      if (success) {
-        this.router.navigate(['/home']);
-      }
-    } catch (error) {
-      this.showAlert('Error', 'Twitter login failed. Please try again.');
-    }
-  }
 
   async forgotPassword() {
     const alert = await this.alertController.create({
@@ -153,16 +127,37 @@ export class Tab1Page {
         },
         {
           text: 'Send Reset Link',
-          handler: (data) => {
+          handler: async (data) => {
             if (data.email) {
-              console.log('Reset password for:', data.email);
-              // Implementar lógica de recuperación de contraseña
+              try {
+                // Llamar al método de recuperación de contraseña de Supabase
+                const { error } = await this.supabaseService.getClient().auth.resetPasswordForEmail(
+                  data.email,
+                  {
+                    redirectTo: 'http://localhost:8100/reset-password'
+                  }
+                );
+  
+                if (error) {
+                  this.showAlert('Error', 'Failed to send reset link. Please try again.');
+                } else {
+                  this.showAlert(
+                    'Success', 
+                    'Password reset link has been sent to your email. Please check your inbox.'
+                  );
+                }
+              } catch (error) {
+                console.error('Password reset error:', error);
+                this.showAlert('Error', 'An unexpected error occurred. Please try again.');
+              }
+            } else {
+              this.showAlert('Error', 'Please enter a valid email address');
             }
           }
         }
       ]
     });
-
+  
     await alert.present();
   }
 
