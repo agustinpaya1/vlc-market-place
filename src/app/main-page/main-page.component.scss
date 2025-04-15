@@ -1,0 +1,30 @@
+/* filepath: c:\agustinpaya1\vlc-market-place\vlc-market-place\src\app\main-page\main-page.component.scss */
+.main-page {
+  text-align: center;
+}
+
+.product-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.products {
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 5px;
+  width: 200px;
+  text-align: center;
+}
+
+.products img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+.price {
+  font-weight: bold;
+  color: #333;
+}
