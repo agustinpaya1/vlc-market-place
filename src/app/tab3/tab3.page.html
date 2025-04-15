@@ -1,5 +1,11 @@
 <ion-header [translucent]="true">
-  
+  <ion-toolbar>
+    <ion-buttons slot="end">
+      <ion-button (click)="isMenuOpen = true">
+        <ion-icon name="ellipsis-vertical"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
@@ -9,7 +15,18 @@
     </ion-toolbar>
   </ion-header>
 
-  
+  <ion-popover [isOpen]="isMenuOpen" (didDismiss)="isMenuOpen = false">
+    <ng-template>
+      <ion-list>
+        <ion-item button (click)="onLogin()">
+          <ion-label>Login</ion-label>
+        </ion-item>
+        <ion-item button (click)="onLogout()">
+          <ion-label>Logout</ion-label>
+        </ion-item>
+      </ion-list>
+    </ng-template>
+  </ion-popover>
 
   <app-explore-container name="Tab 3 page"></app-explore-container>
 </ion-content>

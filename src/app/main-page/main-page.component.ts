@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ToastController } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { ellipsisVertical } from 'ionicons/icons';
 import { 
   IonContent, 
   IonButton, 
@@ -12,8 +14,19 @@ import {
   IonCardTitle,
   IonCardSubtitle,
   IonCardContent,
-  IonImg
+  IonImg,
+  IonHeader,
+  IonToolbar,
+  IonButtons,
+  IonIcon,
+  IonPopover,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonTitle
 } from '@ionic/angular/standalone';
+import { AuthService } from '../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-main-page',
@@ -32,10 +45,22 @@ import {
     IonCardTitle,
     IonCardSubtitle,
     IonCardContent,
-    IonImg
+    IonImg,
+    IonHeader,
+    IonToolbar,
+    IonButtons,
+    IonIcon,
+    IonPopover,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonTitle
   ]
 })
 export class MainPageComponent {
+  isMenuOpen = false;
+  isAuthenticated = false;
+  currentUser: any = null;
   products = [
     {
       id: 1,
@@ -60,7 +85,18 @@ export class MainPageComponent {
     }
   ];
 
-  constructor(private toastController: ToastController) {}
+  constructor(
+    private toastController: ToastController,
+    private authService: AuthService,
+    private router: Router
+  ) {
+    addIcons({ ellipsisVertical });
+    // Suscribirse al estado de autenticación
+    this.authService.user$.subscribe(user => {
+      this.isAuthenticated = !!user;
+      this.currentUser = user;
+    });
+  }
 
   async addToCart(product: any): Promise<void> {
     console.log('Product added to cart:', product);
@@ -71,5 +107,39 @@ export class MainPageComponent {
       position: 'bottom'
     });
     await toast.present();
+  }
+
+  onLogin() {
+    this.isMenuOpen = false;
+    setTimeout(() => {
+      this.router.navigate(['/login']);
+    }, 100);
+  }
+
+  onRegister() {
+    this.isMenuOpen = false;
+    setTimeout(() => {
+      this.router.navigate(['/register']);
+    }, 100);
+  }
+
+  async onLogout() {
+    this.isMenuOpen = false;
+    try {
+      await this.authService.logout();
+      const toast = await this.toastController.create({
+        message: 'Sesión cerrada correctamente',
+        duration: 2000,
+        position: 'bottom'
+      });
+      await toast.present();
+    } catch (error) {
+      const toast = await this.toastController.create({
+        message: 'Error al cerrar sesión',
+        duration: 2000,
+        position: 'bottom'
+      });
+      await toast.present();
+    }
   }
 }

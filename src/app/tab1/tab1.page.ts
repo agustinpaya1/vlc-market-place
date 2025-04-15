@@ -64,7 +64,7 @@ export class Tab1Page {
         const success = await this.authService.login(this.email, this.password);
         if (success) {
           //Redirigir al usuario a la página principal
-          this.router.navigate(['/home']);
+          this.router.navigate(['/tabs/tab3']);
         } else {
           this.showAlert('Error', 'Invalid email or password');
         }
@@ -83,32 +83,30 @@ export class Tab1Page {
   }
 
   async loginWithGoogle() {
-    //console.log('Google login clicked');
-    // Implementar autenticación con Google
-    try{
-      const success = await this.authService.login('google@example.com', 'google-token');
+    try {
+      const success = await this.authService.loginWithGoogle();
       if (success) {
-        this.router.navigate(['/home']);
+        this.router.navigate(['/tabs/tab3']);
+      } else {
+        this.showAlert('Error', 'Google login failed');
       }
     } catch (error) {
       this.showAlert('Error', 'Google login failed. Please try again.');
     }
   }
 
-
   async loginWithApple() {
-    console.log('Apple login clicked');
-    // Implementar autenticación con Apple
-    try{
-      const success = await this.authService.login('apple@example.com', 'apple-token');
+    try {
+      const success = await this.authService.loginWithApple();
       if (success) {
-        this.router.navigate(['/home']);
+        this.router.navigate(['/tabs/tab3']);
+      } else {
+        this.showAlert('Error', 'Apple login failed');
       }
     } catch (error) {
       this.showAlert('Error', 'Apple login failed. Please try again.');
     }
   }
-
 
   async forgotPassword() {
     const alert = await this.alertController.create({
@@ -162,7 +160,7 @@ export class Tab1Page {
   }
 
   goToRegister() {
-    this.router.navigate(['/tabs/tab2']);
+    this.router.navigate(['/register']);
   }
 
   private async showAlert(header: string, message: string) {

@@ -69,6 +69,40 @@ export class AuthService {
     this.user.next(null);
   }
 
+  async loginWithGoogle(): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabaseService.getClient().auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Google login error:', error);
+      return false;
+    }
+  }
+
+  async loginWithApple(): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabaseService.getClient().auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Apple login error:', error);
+      return false;
+    }
+  }
+
   isAuthenticated(): boolean {
     return this.user.value !== null;
   }
