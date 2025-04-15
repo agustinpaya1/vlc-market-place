@@ -13,6 +13,7 @@ import {
 import { addIcons } from 'ionicons';
 import { arrowBackOutline, eyeOffOutline, eyeOutline, logoApple, logoFacebook, logoGoogle, logoTwitter } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
+import { SupabaseService } from '../services/supabase.service';
 
 @Component({
   selector: 'app-tab1',
@@ -37,7 +38,8 @@ export class Tab1Page {
   constructor(
     private router: Router,
     private alertController: AlertController,
-    private authService: AuthService
+    private authService: AuthService,
+    private supabaseService: SupabaseService
   ) {
     addIcons({
       'logo-google': logoGoogle,
@@ -176,5 +178,14 @@ export class Tab1Page {
     });
 
     await alert.present();
+  }
+
+  async getData() {
+    try {
+      const data = await this.supabaseService.getData('your_table_name');
+      console.log('Data:', data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
   }
 }

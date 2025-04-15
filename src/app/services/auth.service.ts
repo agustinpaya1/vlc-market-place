@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { SupabaseService } from './supabase.service';
 
 export interface User {
   id: string;
@@ -14,29 +15,30 @@ export class AuthService {
   private user = new BehaviorSubject<User | null>(null);
   public user$ = this.user.asObservable();
 
-  constructor() {
-    //Verificar si hay un usuario almacenado en el localStorage
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      this.user.next(JSON.parse(savedUser));
+  constructor(private supabaseService: SupabaseService) {
+    this.initializeUser();
+  }
+
+  private async initializeUser() {
+    const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
+    if (session) {
+      this.user.next(session.user as unknown as User);
     }
+
+    this.supabaseService.getClient().auth.onAuthStateChange((_event, session) => {
+      this.user.next(session?.user as unknown as User || null);
+    });
   }
 
   async login(email: string, password: string): Promise<boolean> {
     try {
-      //Aquí normalmente harías una llamada a tu API para autenticar al usuario
-      //por ahora, simularemos una autenticación exitosa
-      if (email && password) {
-        const user: User = {
-          id: '1',
-          email: email,
-          fullName: 'Usuario de Prueba'
-        };
-        localStorage.setItem('user', JSON.stringify(user));
-        this.user.next(user);
-        return true;
-      }
-      return false;
+      const { data, error } = await this.supabaseService.getClient().auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+      return !!data.user;
     } catch (error) {
       console.error('Login error:', error);
       return false;
@@ -44,27 +46,26 @@ export class AuthService {
   }
   async register(fullName: string, email: string, password: string): Promise<boolean> {
     try {
-      // Aquí normalmente harías una llamada a tu API
-      // Por ahora simularemos una respuesta exitosa
-      if (fullName && email && password) {
-        const user: User = {
-          id: '1',
-          email: email,
-          fullName: fullName
-        };
+      const { data, error } = await this.supabaseService.getClient().auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName
+          }
+        }
+      });
 
-        localStorage.setItem('user', JSON.stringify(user));
-        this.user.next(user);
-        return true;
-      }
-      return false;
+      if (error) throw error;
+      return !!data.user;
     } catch (error) {
       console.error('Register error:', error);
       return false;
     }
   }
+
   async logout(): Promise<void> {
-    localStorage.removeItem('user');
+    await this.supabaseService.getClient().auth.signOut();
     this.user.next(null);
   }
 
