@@ -24,12 +24,15 @@ import {
   IonText
 } from '@ionic/angular/standalone';
 import { CartService } from '../services/cart.service';
+import { ProductService } from '../services/product.service';
+import type { Product } from '../services/product.service';
 import { addIcons } from 'ionicons';
 import { trash, arrowBack, add, remove } from 'ionicons/icons';
 
 interface CartItem {
   productId: number;
   quantity: number;
+  product: Product;
 }
 
 @Component({
@@ -63,32 +66,10 @@ interface CartItem {
 })
 export class CarritoComponent implements OnInit {
   cartItems: CartItem[] = [];
-  products = [
-    {
-      id: 1,
-      name: 'Product 1',
-      description: 'Description of Product 1',
-      price: 100,
-      imageUrl: 'assets/images/product1.jpg'
-    },
-    {
-      id: 2,
-      name: 'Product 2',
-      description: 'Description of Product 2',
-      price: 0,
-      imageUrl: 'assets/images/product2.jpg'
-    },
-    {
-      id: 3,
-      name: 'Product 3',
-      description: 'Description of Product 3',
-      price: 1000,
-      imageUrl: 'assets/images/product3.jpg'
-    }
-  ];
 
   constructor(
     private cartService: CartService,
+    private productService: ProductService,
     private router: Router
   ) {
     addIcons({ trash, arrowBack, add, remove });
@@ -96,21 +77,25 @@ export class CarritoComponent implements OnInit {
 
   ngOnInit() {
     this.cartService.cartItems$.subscribe(items => {
-      this.cartItems = Array.from(items.entries()).map(([productId, quantity]) => ({
-        productId,
-        quantity
-      }));
+      this.cartItems = Array.from(items.entries())
+        .map(([productId, quantity]) => {
+          const product = this.productService.getProductById(productId);
+          if (product && quantity > 0) {
+            return {
+              productId,
+              quantity,
+              product
+            };
+          }
+          return null;
+        })
+        .filter((item): item is CartItem => item !== null);
     });
-  }
-
-  getProductById(id: number) {
-    return this.products.find(product => product.id === id);
   }
 
   getTotalPrice(): number {
     return this.cartItems.reduce((total, item) => {
-      const product = this.getProductById(item.productId);
-      return total + (product?.price || 0) * item.quantity;
+      return total + item.product.price * item.quantity;
     }, 0);
   }
 
@@ -122,11 +107,21 @@ export class CarritoComponent implements OnInit {
     this.cartService.removeFromCart(productId);
   }
 
-  getQuantity(productId: number): number {
-    return this.cartService.getQuantity(productId);
+  removeAllFromCart(productId: number): void {
+    const item = this.cartItems.find(item => item.productId === productId);
+    if (item) {
+      for (let i = 0; i < item.quantity; i++) {
+        this.cartService.removeFromCart(productId);
+      }
+    }
   }
 
   goBack(): void {
     this.router.navigate(['/']);
+  }
+
+  proceedToCheckout(): void {
+    // Aquí implementaremos la lógica de pago más adelante
+    console.log('Proceeding to checkout with items:', this.cartItems);
   }
 } 
