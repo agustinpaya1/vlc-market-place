@@ -2,7 +2,14 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ToastController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { ellipsisVertical } from 'ionicons/icons';
+import { 
+  ellipsisVertical,
+  personCircle,
+  logIn,
+  personAdd,
+  logOut,
+  cart
+} from 'ionicons/icons';
 import { 
   IonContent, 
   IonButton, 
@@ -23,7 +30,8 @@ import {
   IonList,
   IonItem,
   IonLabel,
-  IonTitle
+  IonTitle,
+  IonAvatar
 } from '@ionic/angular/standalone';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
@@ -54,7 +62,8 @@ import { Router } from '@angular/router';
     IonList,
     IonItem,
     IonLabel,
-    IonTitle
+    IonTitle,
+    IonAvatar
   ]
 })
 export class MainPageComponent {
@@ -90,7 +99,14 @@ export class MainPageComponent {
     private authService: AuthService,
     private router: Router
   ) {
-    addIcons({ ellipsisVertical });
+    addIcons({ 
+      ellipsisVertical,
+      personCircle,
+      logIn,
+      personAdd,
+      logOut,
+      cart
+    });
     // Suscribirse al estado de autenticación
     this.authService.user$.subscribe(user => {
       this.isAuthenticated = !!user;
