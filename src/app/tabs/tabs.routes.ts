@@ -22,6 +22,11 @@ export const routes: Routes = [
           import('../tab5/tab5.page').then((m) => m.Tab5Page),
       },
       {
+        path: 'cart',
+        loadComponent: () =>
+          import('../carrito/carrito.component').then((m) => m.CarritoComponent),
+      },
+      {
         path: '',
         redirectTo: '/tabs/tab3',
         pathMatch: 'full',

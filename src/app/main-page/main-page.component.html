@@ -30,10 +30,15 @@
             <ion-card-content>
               <p>{{ product.description }}</p>
             </ion-card-content>
-            <ion-button expand="block" (click)="addToCart(product)">
-              <ion-icon name="cart" slot="start"></ion-icon>
-              Add to Cart
-            </ion-button>
+            <div class="cart-button-container">
+              <ion-button expand="block" (click)="addToCart(product)">
+                <ion-icon name="cart" slot="start"></ion-icon>
+                Add to Cart
+              </ion-button>
+              <ion-badge *ngIf="getProductQuantity(product.id) > 0" color="primary" class="cart-badge">
+                {{ getProductQuantity(product.id) }}
+              </ion-badge>
+            </div>
           </ion-card>
         </ion-col>
       </ion-row>

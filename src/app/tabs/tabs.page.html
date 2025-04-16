@@ -14,5 +14,13 @@
       <ion-icon aria-hidden="true" name="map"></ion-icon>
       <ion-label>Mapa</ion-label>
     </ion-tab-button>
+
+    <ion-tab-button tab="cart" href="/tabs/cart">
+      <ion-icon aria-hidden="true" name="cart"></ion-icon>
+      <ion-label>Carrito</ion-label>
+      <ion-badge *ngIf="cartService.getTotalItems() > 0" color="danger" class="cart-badge">
+        {{ cartService.getTotalItems() }}
+      </ion-badge>
+    </ion-tab-button>
   </ion-tab-bar>
 </ion-tabs>

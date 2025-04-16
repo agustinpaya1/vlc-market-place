@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ToastController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
@@ -31,9 +31,11 @@ import {
   IonItem,
   IonLabel,
   IonTitle,
-  IonAvatar
+  IonAvatar,
+  IonBadge
 } from '@ionic/angular/standalone';
 import { AuthService } from '../services/auth.service';
+import { CartService } from '../services/cart.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -63,10 +65,12 @@ import { Router } from '@angular/router';
     IonItem,
     IonLabel,
     IonTitle,
-    IonAvatar
-  ]
+    IonAvatar,
+    IonBadge
+  ],
+  providers: [CartService]
 })
-export class MainPageComponent {
+export class MainPageComponent implements OnInit {
   isMenuOpen = false;
   isAuthenticated = false;
   currentUser: any = null;
@@ -97,6 +101,7 @@ export class MainPageComponent {
   constructor(
     private toastController: ToastController,
     private authService: AuthService,
+    private cartService: CartService,
     private router: Router
   ) {
     addIcons({ 
@@ -107,16 +112,21 @@ export class MainPageComponent {
       logOut,
       cart
     });
-    // Suscribirse al estado de autenticación
+  }
+
+  ngOnInit() {
     this.authService.user$.subscribe(user => {
       this.isAuthenticated = !!user;
       this.currentUser = user;
     });
   }
 
-  async addToCart(product: any): Promise<void> {
-    console.log('Product added to cart:', product);
+  getProductQuantity(productId: number): number {
+    return this.cartService.getQuantity(productId);
+  }
 
+  async addToCart(product: any): Promise<void> {
+    this.cartService.addToCart(product.id);
     const toast = await this.toastController.create({
       message: `${product.name} has been added to your cart.`,
       duration: 2000,
