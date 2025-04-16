@@ -20,11 +20,12 @@ import {
   IonCol,
   IonImg,
   IonBadge,
-  IonButtons
+  IonButtons,
+  IonText
 } from '@ionic/angular/standalone';
 import { CartService } from '../services/cart.service';
 import { addIcons } from 'ionicons';
-import { trash, arrowBack } from 'ionicons/icons';
+import { trash, arrowBack, add, remove } from 'ionicons/icons';
 
 interface CartItem {
   productId: number;
@@ -56,7 +57,8 @@ interface CartItem {
     IonCol,
     IonImg,
     IonBadge,
-    IonButtons
+    IonButtons,
+    IonText
   ]
 })
 export class CarritoComponent implements OnInit {
@@ -89,7 +91,7 @@ export class CarritoComponent implements OnInit {
     private cartService: CartService,
     private router: Router
   ) {
-    addIcons({ trash, arrowBack });
+    addIcons({ trash, arrowBack, add, remove });
   }
 
   ngOnInit() {
@@ -112,8 +114,16 @@ export class CarritoComponent implements OnInit {
     }, 0);
   }
 
+  addToCart(productId: number): void {
+    this.cartService.addToCart(productId);
+  }
+
   removeFromCart(productId: number): void {
     this.cartService.removeFromCart(productId);
+  }
+
+  getQuantity(productId: number): number {
+    return this.cartService.getQuantity(productId);
   }
 
   goBack(): void {

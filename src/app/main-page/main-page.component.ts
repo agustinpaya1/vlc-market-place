@@ -74,6 +74,7 @@ export class MainPageComponent implements OnInit {
   isMenuOpen = false;
   isAuthenticated = false;
   currentUser: any = null;
+  totalItems = 0;
   products = [
     {
       id: 1,
@@ -119,20 +120,32 @@ export class MainPageComponent implements OnInit {
       this.isAuthenticated = !!user;
       this.currentUser = user;
     });
+
+    this.cartService.cartItems$.subscribe(items => {
+      this.totalItems = this.cartService.getTotalItems();
+    });
   }
 
   getProductQuantity(productId: number): number {
     return this.cartService.getQuantity(productId);
   }
 
+  getTotalItems(): number {
+    return this.totalItems;
+  }
+
   async addToCart(product: any): Promise<void> {
     this.cartService.addToCart(product.id);
     const toast = await this.toastController.create({
-      message: `${product.name} has been added to your cart.`,
+      message: `${product.name} ha sido añadido al carrito.`,
       duration: 2000,
       position: 'bottom'
     });
     await toast.present();
+  }
+
+  goToCart(): void {
+    this.router.navigate(['/carrito']);
   }
 
   onLogin() {
