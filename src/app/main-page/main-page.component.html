@@ -1,81 +1,95 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>Marketplace</ion-title>
+    <ion-title>VLC Market Place</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="goToCart()">
-        <ion-icon name="cart" slot="icon-only"></ion-icon>
-        <ion-badge *ngIf="getTotalItems() > 0" color="primary">
-          {{ getTotalItems() }}
-        </ion-badge>
+      <ion-button (click)="toggleCart()">
+        <ion-icon name="cart"></ion-icon>
+        <ion-badge *ngIf="totalItems > 0">{{totalItems}}</ion-badge>
       </ion-button>
-      <ion-button (click)="isMenuOpen = true">
-        <ion-icon name="ellipsis-vertical" size="large"></ion-icon>
+      <ion-button (click)="isMenuOpen = !isMenuOpen">
+        <ion-icon name="ellipsis-vertical"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-  <div class="main-page-container">
-    <div class="header-section">
-      <h1 class="title">Welcome to Our Store</h1>
-      <p class="subtitle">Explore our exclusive range of products</p>
-    </div>
-
-    <ion-grid>
-      <ion-row>
-        <ion-col size="12" size-md="6" size-lg="4" *ngFor="let product of products">
-          <ion-card>
-            <div class="image-container">
-              <ion-img [src]="product.imageUrl" alt="{{ product.name }}"></ion-img>
-            </div>
+<ion-content>
+  <ion-grid>
+    <ion-row>
+      <ion-col size="12" size-md="8">
+        <div class="products-grid">
+          <ion-card *ngFor="let product of products">
+            <img [src]="product.imageUrl" [alt]="product.name">
             <ion-card-header>
-              <ion-card-title>{{ product.name }}</ion-card-title>
-              <ion-card-subtitle>${{ product.price }}</ion-card-subtitle>
+              <ion-card-title>{{product.name}}</ion-card-title>
+              <ion-card-subtitle>${{product.price}}</ion-card-subtitle>
             </ion-card-header>
             <ion-card-content>
-              <p>{{ product.description }}</p>
-            </ion-card-content>
-            <div class="cart-button-container">
-              <ion-button expand="block" (click)="addToCart(product)">
-                <ion-icon name="cart" slot="start"></ion-icon>
+              <p>{{product.description}}</p>
+              <div class="quantity-controls" *ngIf="getProductQuantity(product.id) > 0">
+                <ion-button fill="clear" (click)="updateProductQuantity(product, -1)">
+                  <ion-icon name="remove"></ion-icon>
+                </ion-button>
+                <ion-label>{{getProductQuantity(product.id)}}</ion-label>
+                <ion-button fill="clear" (click)="updateProductQuantity(product, 1)">
+                  <ion-icon name="add"></ion-icon>
+                </ion-button>
+              </div>
+              <ion-button expand="block" (click)="addToCart(product)" *ngIf="getProductQuantity(product.id) === 0">
                 Add to Cart
               </ion-button>
-              <ion-badge *ngIf="getProductQuantity(product.id) > 0" color="primary" class="cart-badge">
-                {{ getProductQuantity(product.id) }}
-              </ion-badge>
-            </div>
+            </ion-card-content>
           </ion-card>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-  </div>
-
-  <ion-popover [isOpen]="isMenuOpen" (didDismiss)="isMenuOpen = false">
-    <ng-template>
-      <ion-list>
-        <ion-item *ngIf="isAuthenticated && currentUser" lines="none">
-          <ion-avatar slot="start">
-            <ion-icon name="person-circle" size="large"></ion-icon>
-          </ion-avatar>
-          <ion-label>
-            <h2>Bienvenido</h2>
-            <p>{{ currentUser.email }}</p>
-          </ion-label>
-        </ion-item>
-        <ion-item button (click)="onLogin()" *ngIf="!isAuthenticated">
-          <ion-icon name="log-in" slot="start"></ion-icon>
-          <ion-label>Login</ion-label>
-        </ion-item>
-        <ion-item button (click)="onRegister()" *ngIf="!isAuthenticated">
-          <ion-icon name="person-add" slot="start"></ion-icon>
-          <ion-label>Registro</ion-label>
-        </ion-item>
-        <ion-item button (click)="onLogout()" *ngIf="isAuthenticated">
-          <ion-icon name="log-out" slot="start"></ion-icon>
-          <ion-label>Logout</ion-label>
-        </ion-item>
-      </ion-list>
-    </ng-template>
-  </ion-popover>
+        </div>
+      </ion-col>
+      <ion-col size="12" size-md="4">
+        <div class="cart-sidebar" [class.open]="isCartOpen">
+          <h2>Shopping Cart</h2>
+          <ion-list>
+            <ion-item *ngFor="let item of cartItems">
+              <ion-label>
+                <h3>{{item.name}}</h3>
+                <p>${{item.price}} x {{item.quantity}}</p>
+              </ion-label>
+              <ion-button fill="clear" (click)="updateQuantity(item, -1)" *ngIf="item.quantity > 1">
+                <ion-icon name="remove"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" color="danger" (click)="updateQuantity(item, -1)" *ngIf="item.quantity === 1">
+                <ion-icon name="trash"></ion-icon>
+              </ion-button>
+              <ion-label>{{item.quantity}}</ion-label>
+              <ion-button fill="clear" (click)="updateQuantity(item, 1)">
+                <ion-icon name="add"></ion-icon>
+              </ion-button>
+            </ion-item>
+          </ion-list>
+          <div class="cart-totals">
+            <h3>Total: ${{totalPrice | number:'1.2-2'}}</h3>
+            <ion-button expand="block" (click)="goToCart()" *ngIf="totalItems > 0">
+              Checkout
+            </ion-button>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>
+
+<ion-popover [isOpen]="isMenuOpen" (didDismiss)="isMenuOpen = false">
+  <ng-template>
+    <ion-list>
+      <ion-item button (click)="onLogin()" *ngIf="!isAuthenticated">
+        <ion-icon name="log-in" slot="start"></ion-icon>
+        <ion-label>Login</ion-label>
+      </ion-item>
+      <ion-item button (click)="onRegister()" *ngIf="!isAuthenticated">
+        <ion-icon name="person-add" slot="start"></ion-icon>
+        <ion-label>Register</ion-label>
+      </ion-item>
+      <ion-item button (click)="onLogout()" *ngIf="isAuthenticated">
+        <ion-icon name="log-out" slot="start"></ion-icon>
+        <ion-label>Logout</ion-label>
+      </ion-item>
+    </ion-list>
+  </ng-template>
+</ion-popover>

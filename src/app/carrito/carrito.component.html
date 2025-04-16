@@ -11,56 +11,46 @@
 
 <ion-content [fullscreen]="true" class="ion-padding">
   <div class="cart-container">
-    <ion-list *ngIf="cartItems.length > 0">
-      <ion-item *ngFor="let item of cartItems" class="cart-item">
-        <ion-grid>
-          <ion-row class="ion-align-items-center">
-            <ion-col size="3">
-              <ion-img [src]="item.product.imageUrl" 
-                      [alt]="item.product.name"
-                      class="product-image">
-              </ion-img>
-            </ion-col>
-            <ion-col size="6">
-              <ion-label>
-                <h2>{{ item.product.name }}</h2>
-                <p>{{ item.product.description }}</p>
-                <p class="price">${{ item.product.price }}</p>
-                <div class="quantity-controls">
-                  <ion-button fill="clear" size="small" (click)="removeFromCart(item.productId)">
-                    <ion-icon name="remove" slot="icon-only"></ion-icon>
-                  </ion-button>
-                  <ion-text>{{ item.quantity }}</ion-text>
-                  <ion-button fill="clear" size="small" (click)="addToCart(item.productId)">
-                    <ion-icon name="add" slot="icon-only"></ion-icon>
-                  </ion-button>
-                </div>
-                <p class="subtotal">Subtotal: ${{ item.product.price * item.quantity }}</p>
-              </ion-label>
-            </ion-col>
-            <ion-col size="3" class="ion-text-center">
-              <ion-button fill="clear" color="danger" (click)="removeAllFromCart(item.productId)">
-                <ion-icon name="trash" slot="icon-only"></ion-icon>
-              </ion-button>
-            </ion-col>
-          </ion-row>
-        </ion-grid>
-      </ion-item>
-    </ion-list>
-
     <div *ngIf="cartItems.length === 0" class="empty-cart">
       <ion-card>
         <ion-card-header>
-          <ion-card-title>Carrito Vacío</ion-card-title>
+          <ion-card-title>Tu carrito está vacío</ion-card-title>
+          <ion-card-subtitle>Agrega productos para comenzar a comprar</ion-card-subtitle>
         </ion-card-header>
-        <ion-card-content>
-          <p>No hay productos en tu carrito.</p>
-          <ion-button expand="block" (click)="goBack()">
-            Volver a la tienda
-          </ion-button>
-        </ion-card-content>
       </ion-card>
     </div>
+
+    <ion-list *ngIf="cartItems.length > 0">
+      <ion-item *ngFor="let item of cartItems">
+        <ion-grid>
+          <ion-row class="ion-align-items-center">
+            <ion-col size="3">
+              <ion-img [src]="item.imageUrl" [alt]="item.name"></ion-img>
+            </ion-col>
+            <ion-col size="6">
+              <ion-label>
+                <h2>{{ item.name }}</h2>
+                <p>${{ item.price }}</p>
+              </ion-label>
+            </ion-col>
+            <ion-col size="3">
+              <div class="quantity-controls">
+                <ion-button fill="clear" (click)="updateQuantity(item, -1)">
+                  <ion-icon name="remove"></ion-icon>
+                </ion-button>
+                <ion-label>{{ item.quantity }}</ion-label>
+                <ion-button fill="clear" (click)="updateQuantity(item, 1)">
+                  <ion-icon name="add"></ion-icon>
+                </ion-button>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+        <ion-button fill="clear" slot="end" (click)="removeItem(item.id)">
+          <ion-icon name="trash" color="danger"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </ion-list>
 
     <div *ngIf="cartItems.length > 0" class="cart-total">
       <ion-card>
@@ -68,7 +58,7 @@
           <ion-card-title>Resumen del Pedido</ion-card-title>
         </ion-card-header>
         <ion-card-content>
-          <p class="total">Total: ${{ getTotalPrice() }}</p>
+          <p class="total">Total: ${{ totalPrice }}</p>
           <ion-button expand="block" color="primary" (click)="proceedToCheckout()">
             Proceder al Pago
           </ion-button>

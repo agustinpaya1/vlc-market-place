@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { 
   IonContent,
@@ -21,19 +22,15 @@ import {
   IonImg,
   IonBadge,
   IonButtons,
-  IonText
+  IonText,
+  IonCardSubtitle,
+  IonInput
 } from '@ionic/angular/standalone';
-import { CartService } from '../services/cart.service';
+import { CartService, CartItem } from '../services/cart.service';
 import { ProductService } from '../services/product.service';
 import type { Product } from '../services/product.service';
 import { addIcons } from 'ionicons';
 import { trash, arrowBack, add, remove } from 'ionicons/icons';
-
-interface CartItem {
-  productId: number;
-  quantity: number;
-  product: Product;
-}
 
 @Component({
   selector: 'app-carrito',
@@ -42,6 +39,7 @@ interface CartItem {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     IonContent,
     IonHeader,
     IonTitle,
@@ -61,11 +59,15 @@ interface CartItem {
     IonImg,
     IonBadge,
     IonButtons,
-    IonText
+    IonText,
+    IonCardSubtitle,
+    IonInput
   ]
 })
 export class CarritoComponent implements OnInit {
   cartItems: CartItem[] = [];
+  totalItems = 0;
+  totalPrice = 0;
 
   constructor(
     private cartService: CartService,
@@ -77,43 +79,25 @@ export class CarritoComponent implements OnInit {
 
   ngOnInit() {
     this.cartService.cartItems$.subscribe(items => {
-      this.cartItems = Array.from(items.entries())
-        .map(([productId, quantity]) => {
-          const product = this.productService.getProductById(productId);
-          if (product && quantity > 0) {
-            return {
-              productId,
-              quantity,
-              product
-            };
-          }
-          return null;
-        })
-        .filter((item): item is CartItem => item !== null);
+      this.cartItems = items;
+      this.totalItems = this.cartService.getTotalItems();
+      this.totalPrice = this.cartService.getTotalPrice();
     });
   }
 
-  getTotalPrice(): number {
-    return this.cartItems.reduce((total, item) => {
-      return total + item.product.price * item.quantity;
-    }, 0);
+  updateQuantity(item: CartItem, change: number) {
+    const newQuantity = item.quantity + change;
+    if (newQuantity > 0) {
+      this.cartService.updateQuantity(item.id, newQuantity);
+    }
   }
 
-  addToCart(productId: number): void {
-    this.cartService.addToCart(productId);
-  }
-
-  removeFromCart(productId: number): void {
+  removeItem(productId: number) {
     this.cartService.removeFromCart(productId);
   }
 
-  removeAllFromCart(productId: number): void {
-    const item = this.cartItems.find(item => item.productId === productId);
-    if (item) {
-      for (let i = 0; i < item.quantity; i++) {
-        this.cartService.removeFromCart(productId);
-      }
-    }
+  clearCart() {
+    this.cartService.clearCart();
   }
 
   goBack(): void {

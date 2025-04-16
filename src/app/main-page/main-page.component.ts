@@ -3,12 +3,14 @@ import { CommonModule } from '@angular/common';
 import { ToastController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { 
-  ellipsisVertical,
-  personCircle,
-  logIn,
-  personAdd,
-  logOut,
-  cart
+  cartOutline,
+  ellipsisVerticalOutline,
+  removeOutline,
+  addOutline,
+  trashOutline,
+  logInOutline,
+  personAddOutline,
+  logOutOutline
 } from 'ionicons/icons';
 import { 
   IonContent, 
@@ -31,12 +33,19 @@ import {
   IonItem,
   IonLabel,
   IonTitle,
-  IonAvatar,
   IonBadge
 } from '@ionic/angular/standalone';
 import { AuthService } from '../services/auth.service';
-import { CartService } from '../services/cart.service';
+import { CartService, CartItem } from '../services/cart.service';
 import { Router } from '@angular/router';
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  description: string;
+  imageUrl: string;
+}
 
 @Component({
   selector: 'app-main-page',
@@ -65,36 +74,37 @@ import { Router } from '@angular/router';
     IonItem,
     IonLabel,
     IonTitle,
-    IonAvatar,
     IonBadge
-  ],
-  providers: [CartService]
+  ]
 })
 export class MainPageComponent implements OnInit {
   isMenuOpen = false;
+  isCartOpen = false;
   isAuthenticated = false;
   currentUser: any = null;
   totalItems = 0;
-  products = [
+  cartItems: CartItem[] = [];
+  totalPrice = 0;
+  products: Product[] = [
     {
       id: 1,
       name: 'Product 1',
-      description: 'Description of Product 1',
-      price: 100,
+      price: 99.99,
+      description: 'Description for product 1',
       imageUrl: 'assets/images/product1.jpg'
     },
     {
       id: 2,
       name: 'Product 2',
-      description: 'Description of Product 2',
-      price: 0,
+      price: 149.99,
+      description: 'Description for product 2',
       imageUrl: 'assets/images/product2.jpg'
     },
     {
       id: 3,
       name: 'Product 3',
-      description: 'Description of Product 3',
-      price: 1000,
+      price: 199.99,
+      description: 'Description for product 3',
       imageUrl: 'assets/images/product3.jpg'
     }
   ];
@@ -105,13 +115,15 @@ export class MainPageComponent implements OnInit {
     private cartService: CartService,
     private router: Router
   ) {
-    addIcons({ 
-      ellipsisVertical,
-      personCircle,
-      logIn,
-      personAdd,
-      logOut,
-      cart
+    addIcons({
+      cart: cartOutline,
+      'ellipsis-vertical': ellipsisVerticalOutline,
+      remove: removeOutline,
+      add: addOutline,
+      trash: trashOutline,
+      'log-in': logInOutline,
+      'person-add': personAddOutline,
+      'log-out': logOutOutline
     });
   }
 
@@ -121,21 +133,36 @@ export class MainPageComponent implements OnInit {
       this.currentUser = user;
     });
 
-    this.cartService.cartItems$.subscribe(items => {
-      this.totalItems = this.cartService.getTotalItems();
+    this.cartService.getCartItems().subscribe(items => {
+      this.cartItems = items;
+      this.updateCartTotals();
     });
   }
 
   getProductQuantity(productId: number): number {
-    return this.cartService.getQuantity(productId);
+    const item = this.cartItems.find(item => item.id === productId);
+    return item ? item.quantity : 0;
   }
 
-  getTotalItems(): number {
-    return this.totalItems;
+  updateProductQuantity(product: Product, change: number): void {
+    const currentQuantity = this.getProductQuantity(product.id);
+    const newQuantity = currentQuantity + change;
+    
+    if (newQuantity <= 0) {
+      this.cartService.removeFromCart(product.id);
+    } else {
+      this.cartService.updateQuantity(product.id, newQuantity);
+    }
   }
 
-  async addToCart(product: any): Promise<void> {
-    this.cartService.addToCart(product.id);
+  async addToCart(product: Product): Promise<void> {
+    this.cartService.addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      imageUrl: product.imageUrl
+    });
     const toast = await this.toastController.create({
       message: `${product.name} ha sido añadido al carrito.`,
       duration: 2000,
@@ -144,41 +171,46 @@ export class MainPageComponent implements OnInit {
     await toast.present();
   }
 
-  goToCart(): void {
-    this.router.navigate(['/carrito']);
+  toggleCart() {
+    this.isCartOpen = !this.isCartOpen;
+  }
+
+  goToCart() {
+    this.isCartOpen = false;
+    this.router.navigate(['/cart']);
+  }
+
+  async logout() {
+    await this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   onLogin() {
     this.isMenuOpen = false;
-    setTimeout(() => {
-      this.router.navigate(['/login']);
-    }, 100);
+    this.router.navigate(['/login']);
   }
 
   onRegister() {
     this.isMenuOpen = false;
-    setTimeout(() => {
-      this.router.navigate(['/register']);
-    }, 100);
+    this.router.navigate(['/register']);
   }
 
-  async onLogout() {
+  onLogout() {
     this.isMenuOpen = false;
-    try {
-      await this.authService.logout();
-      const toast = await this.toastController.create({
-        message: 'Sesión cerrada correctamente',
-        duration: 2000,
-        position: 'bottom'
-      });
-      await toast.present();
-    } catch (error) {
-      const toast = await this.toastController.create({
-        message: 'Error al cerrar sesión',
-        duration: 2000,
-        position: 'bottom'
-      });
-      await toast.present();
+    this.logout();
+  }
+
+  updateCartTotals() {
+    this.totalItems = this.cartItems.reduce((sum, item) => sum + item.quantity, 0);
+    this.totalPrice = this.cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  }
+
+  updateQuantity(item: CartItem, change: number) {
+    const newQuantity = item.quantity + change;
+    if (newQuantity > 0) {
+      this.cartService.updateQuantity(item.id, newQuantity);
+    } else {
+      this.cartService.removeFromCart(item.id);
     }
   }
 }
