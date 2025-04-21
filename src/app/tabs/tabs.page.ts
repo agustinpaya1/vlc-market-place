@@ -5,11 +5,14 @@ import {
   IonTabButton,
   IonIcon,
   IonLabel,
-  IonBadge
+  IonBadge,
+  IonContent
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { storefront, business, map, cart } from 'ionicons/icons';
+import { storefront, business, map, cart, settings } from 'ionicons/icons';
 import { CartService } from '../services/cart.service';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-tabs',
@@ -17,16 +20,19 @@ import { CartService } from '../services/cart.service';
   styleUrls: ['tabs.page.scss'],
   standalone: true,
   imports: [
+    CommonModule,
+    RouterModule,
     IonTabs,
     IonTabBar,
     IonTabButton,
     IonIcon,
     IonLabel,
-    IonBadge
+    IonBadge,
+    IonContent
   ]
 })
 export class TabsPage {
   constructor(public cartService: CartService) {
-    addIcons({ storefront, business, map, cart });
+    addIcons({ storefront, business, map, cart, settings });
   }
 }

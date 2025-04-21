@@ -22,13 +22,18 @@ export const routes: Routes = [
           import('../tab5/tab5.page').then((m) => m.Tab5Page),
       },
       {
+        path: 'tab6',
+        loadComponent: () =>
+          import('../tab6/tab6.page').then((m) => m.Tab6Page),
+      },
+      {
         path: 'cart',
         loadComponent: () =>
           import('../carrito/carrito.component').then((m) => m.CarritoComponent),
       },
       {
         path: '',
-        redirectTo: '/tabs/tab3',
+        redirectTo: '/tabs/tab6',
         pathMatch: 'full',
       },
     ],
@@ -45,7 +50,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: '/tabs/tab3',
+    redirectTo: '/tabs/tab6',
     pathMatch: 'full',
   },
 ];
