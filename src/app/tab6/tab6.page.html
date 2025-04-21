@@ -1,12 +1,19 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>Tiendas</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleDarkMode()" class="theme-toggle">
+        <ion-icon [name]="isDarkMode ? 'sunny' : 'moon'"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
-  <h1 class="page-title">Explora Nuestras Tiendas</h1>
-  <p class="page-subtitle">Descubre los mejores comercios locales de Valencia</p>
+<ion-content [class.dark-theme]="isDarkMode">
+  <div class="page-header">
+    <h1 class="page-title">Explora Nuestras Tiendas</h1>
+    <p class="page-subtitle">Descubre los mejores comercios locales de Valencia</p>
+  </div>
 
   <div class="filters-container">
     <div class="categories-container">
@@ -78,4 +85,11 @@
       </ion-col>
     </ion-row>
   </ion-grid>
+
+  <!-- Empty state -->
+  <div class="empty-state" *ngIf="filteredStores.length === 0">
+    <ion-icon name="search-outline"></ion-icon>
+    <h3>No se encontraron tiendas</h3>
+    <p>Intenta con otra categoría o criterio de búsqueda</p>
+  </div>
 </ion-content> 

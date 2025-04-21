@@ -17,13 +17,24 @@ import {
   IonCol,
   IonChip,
   IonSelect,
-  IonSelectOption
+  IonSelectOption,
+  IonButtons
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { storefront, location, time, arrowForward, star, trendingUp, map, starHalf } from 'ionicons/icons';
+import { 
+  storefront, 
+  location, 
+  time, 
+  arrowForward, 
+  star, 
+  trendingUp, 
+  map, 
+  starHalf,
+  sunny,
+  moon, searchOutline } from 'ionicons/icons';
 
 interface Store {
   id: number;
@@ -63,10 +74,12 @@ interface Store {
     IonCol,
     IonChip,
     IonSelect,
-    IonSelectOption
+    IonSelectOption,
+    IonButtons
   ]
 })
 export class Tab6Page {
+  isDarkMode = false;
   selectedCategory: string = 'Todos';
   selectedSort: string = 'default';
   categories: string[] = [
@@ -201,7 +214,24 @@ export class Tab6Page {
   ];
 
   constructor(private router: Router) {
-    addIcons({location,time,storefront,star,arrowForward,trendingUp,map,starHalf});
+    addIcons({trendingUp,location,time,storefront,star,arrowForward,searchOutline,map,starHalf,sunny,moon});
+
+    // Check if dark mode was previously selected
+    const savedDarkMode = localStorage.getItem('darkMode');
+    if (savedDarkMode) {
+      this.isDarkMode = JSON.parse(savedDarkMode);
+      this.applyTheme();
+    }
+  }
+
+  toggleDarkMode() {
+    this.isDarkMode = !this.isDarkMode;
+    localStorage.setItem('darkMode', JSON.stringify(this.isDarkMode));
+    this.applyTheme();
+  }
+
+  private applyTheme() {
+    document.body.classList.toggle('dark-theme', this.isDarkMode);
   }
 
   get filteredStores(): Store[] {

@@ -1,0 +1,15 @@
+    <div class="sort-container">
+      <ion-select 
+        [(ngModel)]="selectedSort" 
+        (ionChange)="selectSort($event.detail.value)"
+        interface="popover"
+        class="sort-select"
+      >
+        <ion-select-option *ngFor="let option of sortOptions" [value]="option.value" class="select-option">
+          <div class="option-content">
+            <ion-icon [name]="option.icon" class="option-icon"></ion-icon>
+            <span class="option-text">{{ option.label }}</span>
+          </div>
+        </ion-select-option>
+      </ion-select>
+    </div> 
