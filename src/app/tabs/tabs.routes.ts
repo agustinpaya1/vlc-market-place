@@ -27,6 +27,11 @@ export const routes: Routes = [
           import('../tab6/tab6.page').then((m) => m.Tab6Page),
       },
       {
+        path: 'store/:id',
+        loadComponent: () =>
+          import('../store/store.page').then((m) => m.StorePage),
+      },
+      {
         path: 'cart',
         loadComponent: () =>
           import('../carrito/carrito.component').then((m) => m.CarritoComponent),

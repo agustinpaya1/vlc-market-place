@@ -36,6 +36,19 @@ import {
   sunny,
   moon, searchOutline } from 'ionicons/icons';
 
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+  category: string;
+  isOffer?: boolean;
+  offerPrice?: number;
+  stock: number;
+  unit: string; // kg, unidad, etc.
+}
+
 interface Store {
   id: number;
   name: string;
@@ -47,6 +60,7 @@ interface Store {
   categories: string[];
   hasOffers: boolean;
   distance: number;
+  products: Product[];
 }
 
 @Component({
@@ -113,7 +127,31 @@ export class Tab6Page {
       rating: 4.8,
       categories: ['Mercado', 'Frutas y Verduras', 'Carnicería', 'Pescadería'],
       hasOffers: true,
-      distance: 0.5
+      distance: 0.5,
+      products: [
+        {
+          id: 1,
+          name: 'Naranjas Valencianas',
+          description: 'Naranjas dulces de temporada',
+          price: 2.50,
+          imageUrl: 'assets/products/naranjas.jpg',
+          category: 'Frutas y Verduras',
+          isOffer: true,
+          offerPrice: 1.99,
+          stock: 100,
+          unit: 'kg'
+        },
+        {
+          id: 2,
+          name: 'Tomates Raf',
+          description: 'Tomates premium para ensalada',
+          price: 3.95,
+          imageUrl: 'assets/products/tomates.jpg',
+          category: 'Frutas y Verduras',
+          stock: 50,
+          unit: 'kg'
+        }
+      ]
     },
     {
       id: 2,
@@ -125,7 +163,31 @@ export class Tab6Page {
       rating: 4.5,
       categories: ['Panadería', 'Dulcería'],
       hasOffers: false,
-      distance: 1.2
+      distance: 1.2,
+      products: [
+        {
+          id: 1,
+          name: 'Pan de Pueblo',
+          description: 'Pan artesanal de masa madre',
+          price: 2.80,
+          imageUrl: 'assets/products/pan.jpg',
+          category: 'Panadería',
+          stock: 30,
+          unit: 'unidad'
+        },
+        {
+          id: 2,
+          name: 'Fartons',
+          description: 'Perfectos para mojar en horchata',
+          price: 4.50,
+          imageUrl: 'assets/products/fartons.jpg',
+          category: 'Dulcería',
+          isOffer: true,
+          offerPrice: 3.50,
+          stock: 40,
+          unit: 'pack'
+        }
+      ]
     },
     {
       id: 3,
@@ -137,7 +199,31 @@ export class Tab6Page {
       rating: 4.6,
       categories: ['Frutas y Verduras'],
       hasOffers: true,
-      distance: 0.8
+      distance: 0.8,
+      products: [
+        {
+          id: 1,
+          name: 'Alcachofas',
+          description: 'Alcachofas frescas de temporada',
+          price: 3.20,
+          imageUrl: 'assets/products/alcachofas.jpg',
+          category: 'Verduras',
+          isOffer: true,
+          offerPrice: 2.50,
+          stock: 45,
+          unit: 'kg'
+        },
+        {
+          id: 2,
+          name: 'Fresas',
+          description: 'Fresas dulces de Sagunto',
+          price: 4.80,
+          imageUrl: 'assets/products/fresas.jpg',
+          category: 'Frutas',
+          stock: 25,
+          unit: 'kg'
+        }
+      ]
     },
     {
       id: 4,
@@ -149,7 +235,8 @@ export class Tab6Page {
       rating: 4.4,
       categories: ['Carnicería'],
       hasOffers: false,
-      distance: 1.5
+      distance: 1.5,
+      products: []
     },
     {
       id: 5,
@@ -161,7 +248,8 @@ export class Tab6Page {
       rating: 4.7,
       categories: ['Pescadería'],
       hasOffers: true,
-      distance: 3.2
+      distance: 3.2,
+      products: []
     },
     {
       id: 6,
@@ -173,7 +261,8 @@ export class Tab6Page {
       rating: 4.3,
       categories: ['Supermercado'],
       hasOffers: true,
-      distance: 2.8
+      distance: 2.8,
+      products: []
     },
     {
       id: 7,
@@ -185,7 +274,8 @@ export class Tab6Page {
       rating: 4.9,
       categories: ['Bodega', 'Especialidad'],
       hasOffers: false,
-      distance: 1.8
+      distance: 1.8,
+      products: []
     },
     {
       id: 8,
@@ -197,7 +287,8 @@ export class Tab6Page {
       rating: 4.8,
       categories: ['Dulcería'],
       hasOffers: true,
-      distance: 0.3
+      distance: 0.3,
+      products: []
     },
     {
       id: 9,
@@ -209,7 +300,8 @@ export class Tab6Page {
       rating: 4.7,
       categories: ['Especialidad', 'Supermercado'],
       hasOffers: false,
-      distance: 2.5
+      distance: 2.5,
+      products: []
     }
   ];
 
@@ -284,6 +376,7 @@ export class Tab6Page {
   }
 
   viewStore(storeId: number) {
-    this.router.navigate(['/tabs/tab3']);
+    console.log('Navigating to store:', storeId);
+    this.router.navigate(['/tabs/store', storeId]);
   }
 } 
