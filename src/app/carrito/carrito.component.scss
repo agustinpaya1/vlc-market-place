@@ -1,0 +1,172 @@
+.cart-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.cart-item {
+  --background: transparent;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  background: var(--ion-color-light);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  ion-grid {
+    width: 100%;
+    padding: 0.5rem;
+  }
+}
+
+.product-image {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+ion-label {
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--ion-color-dark);
+  }
+
+  p {
+    margin: 0.25rem 0;
+    color: var(--ion-color-medium);
+  }
+}
+
+.price {
+  color: var(--ion-color-primary);
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin: 0.5rem 0;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  ion-label {
+    min-width: 24px;
+    text-align: center;
+  }
+}
+
+.subtotal {
+  color: var(--ion-color-dark);
+  font-weight: 500;
+  margin: 0.5rem 0;
+}
+
+.empty-cart {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  
+  ion-card {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+  }
+}
+
+.cart-total {
+  margin-top: 2rem;
+  
+  ion-card {
+    background: var(--ion-color-light);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .total {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ion-color-primary);
+    text-align: center;
+    margin: 1rem 0;
+  }
+
+  ion-button {
+    margin-top: 1rem;
+  }
+}
+
+.cart-summary {
+  margin-top: 20px;
+  background: var(--ion-color-light);
+  
+  ion-card-content {
+    padding: 16px;
+  }
+
+  h2 {
+    margin: 8px 0;
+    font-weight: 500;
+  }
+}
+
+ion-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  --border-radius: 8px;
+}
+
+ion-img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+ion-button[fill="clear"] {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  margin: 0;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .cart-container {
+    padding: 0.5rem;
+  }
+
+  .product-image {
+    height: 80px;
+  }
+
+  ion-label h2 {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .product-image {
+    height: 60px;
+  }
+
+  .quantity-controls {
+    ion-button {
+      height: 24px;
+      width: 24px;
+    }
+
+    ion-text {
+      min-width: 24px;
+    }
+  }
+
+  .price, .subtotal {
+    font-size: 0.9rem;
+  }
+} 

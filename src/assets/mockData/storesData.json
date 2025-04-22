@@ -1,0 +1,74 @@
+[
+  {
+    "name": "Frutas Manolo",
+    "description": "Las mejores frutas y verduras de temporada directas del agricultor",
+    "image_url": "https://www.jorgegalindo.com/wp-content/uploads/2019/03/fruteria-1.jpg",
+    "location": "Calle de la Fruta, 23, Valencia",
+    "open_time": "8:00 - 14:00, 17:00 - 20:00",
+    "category": "Frutas y Verduras",
+    "has_offers": true
+  },
+  {
+    "name": "Panadería El Horno",
+    "description": "Pan artesanal y repostería tradicional valenciana horneada cada día",
+    "image_url": "https://www.laespanolaaceites.com/wp-content/uploads/2019/06/panaderia-1080x675.jpg",
+    "location": "Avenida del Pan, 15, Valencia",
+    "open_time": "7:00 - 21:00",
+    "category": "Panadería",
+    "has_offers": true
+  },
+  {
+    "name": "Pescadería Mediterráneo",
+    "description": "Pescado fresco del Mediterráneo, traído directamente de la Lonja de Valencia",
+    "image_url": "https://valenciasecreta.com/wp-content/uploads/2019/03/mercado-central-pescaderia.jpg",
+    "location": "Plaza del Mercado Central, 8, Valencia",
+    "open_time": "7:00 - 14:00",
+    "category": "Pescadería",
+    "has_offers": false
+  },
+  {
+    "name": "Carnicería Torres",
+    "description": "Carnes de primera calidad, embutidos tradicionales y productos selectos",
+    "image_url": "https://valenciaplaza.com/public/Image/2020/7/IMG_2558_NoticiaAmpliada.jpg",
+    "location": "Calle Carnicería, 7, Valencia",
+    "open_time": "8:00 - 14:00, 17:00 - 20:30",
+    "category": "Carnicería",
+    "has_offers": true
+  },
+  {
+    "name": "La Alacena Valenciana",
+    "description": "Productos gourmet y especialidades valencianas de primera calidad",
+    "image_url": "https://media-cdn.tripadvisor.com/media/photo-s/16/c5/78/a5/nuestra-tienda.jpg",
+    "location": "Calle Colón, 45, Valencia",
+    "open_time": "10:00 - 21:00",
+    "category": "Especialidad",
+    "has_offers": false
+  },
+  {
+    "name": "Mercado de Ruzafa",
+    "description": "El mercado más vibrante de Valencia, con los mejores productos locales",
+    "image_url": "https://valenciasecreta.com/wp-content/uploads/2020/12/mercado-de-ruzafa.jpg",
+    "location": "Plaza de Ruzafa, Valencia",
+    "open_time": "7:00 - 15:00",
+    "category": "Mercado",
+    "has_offers": true
+  },
+  {
+    "name": "Bodega Vicente",
+    "description": "Vinos valencianos y nacionales con la mejor relación calidad-precio",
+    "image_url": "https://www.valenciabonita.es/wp-content/uploads/2018/03/Bodega-La-Aldeana-Valencia.jpg",
+    "location": "Calle del Vino, 12, Valencia",
+    "open_time": "10:00 - 14:00, 17:00 - 21:00",
+    "category": "Bodega",
+    "has_offers": true
+  },
+  {
+    "name": "Quesería La Mancha en Valencia",
+    "description": "Los mejores quesos artesanales españoles e internacionales",
+    "image_url": "https://media-cdn.tripadvisor.com/media/photo-s/13/57/99/59/la-tienda-desde-fuera.jpg",
+    "location": "Calle del Queso, 3, Valencia",
+    "open_time": "9:00 - 14:00, 17:00 - 20:00",
+    "category": "Especialidad",
+    "has_offers": false
+  }
+] 

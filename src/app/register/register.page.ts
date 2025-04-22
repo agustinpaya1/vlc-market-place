@@ -15,9 +15,9 @@ import { arrowBackOutline, eyeOffOutline, eyeOutline } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
 
 @Component({
-  selector: 'app-tab2',
-  templateUrl: './tab2.page.html',
-  styleUrls: ['./tab2.page.scss'],
+  selector: 'app-register',
+  templateUrl: './register.page.html',
+  styleUrls: ['./register.page.scss'],
   imports: [
     IonContent,
     IonButton,
@@ -29,7 +29,7 @@ import { AuthService } from '../services/auth.service';
   ],
   standalone: true
 })
-export class Tab2Page {
+export class RegisterPage {
   fullName: string = '';
   email: string = '';
   password: string = '';
@@ -96,7 +96,7 @@ export class Tab2Page {
   }
 
   goToLogin() {
-    this.router.navigate(['/tabs/tab1']);
+    this.router.navigate(['/login']);
   }
 
   private async showAlert(header: string, message: string) {

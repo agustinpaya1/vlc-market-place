@@ -10,13 +10,13 @@ interface Store {
 }
 
 @Component({
-  selector: 'app-tab4',
-  templateUrl: './tab4.page.html',
-  styleUrls: ['./tab4.page.scss'],
+  selector: 'app-locations',
+  templateUrl: './locations.page.html',
+  styleUrls: ['./locations.page.scss'],
   standalone: true,
   imports: [IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
 })
-export class Tab4Page implements OnInit, AfterViewInit {
+export class LocationsPage implements OnInit, AfterViewInit {
   constructor(private mapService: MapService) {}
 
   ngOnInit() {}

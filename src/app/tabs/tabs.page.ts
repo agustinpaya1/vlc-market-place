@@ -1,19 +1,49 @@
-import { Component, EnvironmentInjector, inject } from '@angular/core';
-import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel } from '@ionic/angular/standalone';
+import { Component } from '@angular/core';
+import { 
+  IonTabs,
+  IonTabBar,
+  IonTabButton,
+  IonIcon,
+  IonLabel,
+  IonBadge,
+  IonContent
+} from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { storefront, business, map } from 'ionicons/icons';
+import { storefront, map, cart, person } from 'ionicons/icons';
+import { CartService } from '../services/cart.service';
+import { CommonModule } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
 
 @Component({
   selector: 'app-tabs',
   templateUrl: 'tabs.page.html',
   styleUrls: ['tabs.page.scss'],
   standalone: true,
-  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
+  imports: [
+    CommonModule,
+    RouterModule,
+    IonTabs,
+    IonTabBar,
+    IonTabButton,
+    IonIcon,
+    IonLabel,
+    IonBadge,
+    IonContent
+  ]
 })
 export class TabsPage {
-  public environmentInjector = inject(EnvironmentInjector);
+  constructor(
+    public cartService: CartService,
+    private router: Router
+  ) {
+    addIcons({ storefront, map, cart, person });
+  }
 
-  constructor() {
-    addIcons({ storefront, business, map });
+  navigateToProfile() {
+    console.log('Intentando navegar a la página de perfil');
+    this.router.navigate(['/tabs/profile']).then(
+      success => console.log('Navegación exitosa:', success),
+      error => console.error('Error en navegación:', error)
+    );
   }
 }

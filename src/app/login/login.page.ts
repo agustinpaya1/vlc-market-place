@@ -16,9 +16,9 @@ import { AuthService } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
 
 @Component({
-  selector: 'app-tab1',
-  templateUrl: './tab1.page.html',
-  styleUrls: ['./tab1.page.scss'],
+  selector: 'app-login',
+  templateUrl: './login.page.html',
+  styleUrls: ['./login.page.scss'],
   imports: [
     IonContent, 
     IonButton, 
@@ -30,7 +30,7 @@ import { SupabaseService } from '../services/supabase.service';
   ],
   standalone: true
 })
-export class Tab1Page {
+export class LoginPage {
   email: string = '';
   password: string = '';
   showPassword: boolean = false;
@@ -64,7 +64,7 @@ export class Tab1Page {
         const success = await this.authService.login(this.email, this.password);
         if (success) {
           //Redirigir al usuario a la página principal
-          this.router.navigate(['/tabs/tab3']);
+          this.router.navigate(['/tabs/stores']);
         } else {
           this.showAlert('Error', 'Invalid email or password');
         }
@@ -86,7 +86,7 @@ export class Tab1Page {
     try {
       const success = await this.authService.loginWithGoogle();
       if (success) {
-        this.router.navigate(['/tabs/tab3']);
+        this.router.navigate(['/tabs/stores']);
       } else {
         this.showAlert('Error', 'Google login failed');
       }
@@ -99,7 +99,7 @@ export class Tab1Page {
     try {
       const success = await this.authService.loginWithApple();
       if (success) {
-        this.router.navigate(['/tabs/tab3']);
+        this.router.navigate(['/tabs/stores']);
       } else {
         this.showAlert('Error', 'Apple login failed');
       }
