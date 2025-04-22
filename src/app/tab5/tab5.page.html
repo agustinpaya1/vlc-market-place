@@ -1,6 +1,6 @@
-<ion-header class="ion-no-border">
+<ion-header [translucent]="true">
   <ion-toolbar>
-    
+    <ion-title>Mapa de Tiendas</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="toggleTheme()">
         <ion-icon [name]="isDarkTheme ? 'sunny-outline' : 'moon-outline'"></ion-icon>
@@ -10,57 +10,50 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-no-padding">
-  <div class="main-container">
-  
-    <!-- Panel lateral -->
-    <div class="side-panel">
-      <div class="search-section">
-        <h1>Mapa de Tiendas</h1>
-        <ion-searchbar placeholder="Buscar mercados..." mode="ios"></ion-searchbar>
-      </div>
-      <div class="stores-list">
-        <ion-list>
-          <ion-item class="store-item" *ngFor="let store of stores">
-            <ion-label>
-              <h2>{{store.name}}</h2>
-              <p class="distance">
-                <ion-icon name="location-outline"></ion-icon>
-                {{store.distance}} km
-              </p>
-              <p>
-                <ion-icon name="time-outline"></ion-icon>
-                {{store.schedule}}
-              </p>
-              <p>
-                <ion-icon name="call-outline"></ion-icon>
-                {{store.phone}}
-              </p>
-              <ion-chip [color]="store.isOpen ? 'success' : 'medium'">
-                <ion-icon [name]="store.isOpen ? 'checkmark-circle' : 'close-circle'"></ion-icon>
-                <ion-label>{{store.isOpen ? 'Abierto' : 'Cerrado'}}</ion-label>
-              </ion-chip>
-            </ion-label>
-          </ion-item>
-        </ion-list>
-      </div>
+  <!-- Mapa a pantalla completa -->
+  <div id="mapbox-map" class="fullscreen-map"></div>
+
+  <!-- Bottom Sheet deslizable -->
+  <div class="bottom-sheet" [class.active]="isBottomSheetActive">
+    <div class="bottom-sheet-handle" (click)="toggleBottomSheet()">
+      <div class="handle-bar"></div>
+    </div>
+    
+    <!-- Barra de búsqueda -->
+    <div class="search-section">
+      <ion-searchbar placeholder="Buscar mercados..." mode="ios"></ion-searchbar>
     </div>
 
-    <!-- Contenedor del mapa -->
-    <div class="map-wrapper">
-      <div id="mapbox-map"></div>
-      <!-- Leyenda del mapa -->
-      <div class="map-legend">
-        <div class="legend-item">
-          <div class="marker-dot open"></div>
-          <span>Mercado abierto</span>
-        </div>
-        <div class="legend-item">
-          <div class="marker-dot closed"></div>
-          <span>Mercado cerrado</span>
+    <!-- Lista de tiendas -->
+    <div class="stores-list">
+      <div class="store-item" *ngFor="let store of stores" (click)="focusOnStore(store)">
+        <h2>{{store.name}}</h2>
+        <p class="distance">
+          <ion-icon name="location-outline"></ion-icon>
+          {{store.distance}} km
+        </p>
+        <p>
+          <ion-icon name="time-outline"></ion-icon>
+          {{store.schedule}}
+        </p>
+        <p>
+          <ion-icon name="call-outline"></ion-icon>
+          {{store.phone}}
+        </p>
+        <div class="status-chip" [class.open]="store.isOpen">
+          <ion-icon [name]="store.isOpen ? 'checkmark-circle' : 'close-circle'"></ion-icon>
+          <span>{{store.isOpen ? 'Abierto' : 'Cerrado'}}</span>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Botón de filtros flotante -->
+  <ion-fab vertical="top" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="toggleFilters()">
+      <ion-icon name="options-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 
   <!-- Modal de filtros -->
   <ion-modal [isOpen]="showFilters" [breakpoints]="[0, 0.5, 0.8]" [initialBreakpoint]="0.5" (didDismiss)="toggleFilters()">
