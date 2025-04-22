@@ -1,0 +1,110 @@
+// Variables
+$primary-color: var(--ion-color-primary);
+$border-radius-small: 8px;
+$border-radius-medium: 12px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 30px;
+
+// User profile section
+.user-profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-lg 0;
+  margin-bottom: $spacing-lg;
+  text-align: center;
+}
+
+.user-avatar-container {
+  position: relative;
+  margin-bottom: $spacing-md;
+}
+
+.user-avatar-icon {
+  font-size: 80px;
+  color: $primary-color;
+}
+
+.user-edit-button {
+  position: absolute;
+  bottom: 0;
+  right: -10px;
+  --padding-start: 5px;
+  --padding-end: 5px;
+  --padding-top: 5px;
+  --padding-bottom: 5px;
+  --border-radius: 50%;
+  --background: var(--ion-color-light);
+  --color: $primary-color;
+}
+
+.user-fullname {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+.user-email-text {
+  margin: 5px 0 0;
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+}
+
+// User info lists
+.user-info-list {
+  margin-bottom: $spacing-lg;
+  border-radius: $border-radius-small;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.user-menu-list {
+  margin-bottom: $spacing-xl;
+  border-radius: $border-radius-small;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+// Footer actions
+.user-actions-container {
+  padding: 0 $spacing-md;
+  margin-top: $spacing-xl;
+}
+
+// Dark mode adjustments
+:host-context(.dark) {
+  .user-fullname {
+    color: var(--ion-color-light);
+  }
+  
+  .user-email-text {
+    color: var(--ion-color-medium-shade);
+  }
+  
+  .user-info-list,
+  .user-menu-list {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+}
+
+// Responsive adjustments
+@media (min-width: 768px) {
+  .user-profile-header {
+    padding: $spacing-xl 0;
+  }
+  
+  .user-avatar-icon {
+    font-size: 100px;
+  }
+  
+  .user-info-list, 
+  .user-menu-list,
+  .user-actions-container {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+} 

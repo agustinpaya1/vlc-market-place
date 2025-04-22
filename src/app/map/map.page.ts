@@ -57,9 +57,9 @@ interface Store {
 }
 
 @Component({
-  selector: 'app-tab5',
-  templateUrl: './tab5.page.html',
-  styleUrls: ['./tab5.page.scss'],
+  selector: 'app-map',
+  templateUrl: './map.page.html',
+  styleUrls: ['./map.page.scss'],
   standalone: true,
   imports: [
     CommonModule,
@@ -92,7 +92,7 @@ interface Store {
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class Tab5Page implements OnInit, OnDestroy, AfterViewInit {
+export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   private map!: mapboxgl.Map;
   private readonly mapboxToken = 'pk.eyJ1IjoianVhbmpvc2VydWl6IiwiYSI6ImNtOWlkdmdjYTAxNWIyanF3Mmg4NmJjeDkifQ.i1uWtbQazE35o9Vtyv_oBA';
   private markers: mapboxgl.Marker[] = [];

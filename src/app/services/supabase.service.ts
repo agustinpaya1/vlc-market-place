@@ -41,5 +41,60 @@ export class SupabaseService {
     return result;
   }
 
+  // Método específico para obtener tiendas
+  async getStores() {
+    const { data, error } = await this.supabase
+      .from('stores')
+      .select('*');
+    
+    if (error) throw error;
+    console.log('Datos de tiendas recibidos de Supabase:', data);
+    // Mapear location_text a location para compatibilidad con la aplicación
+    return data.map(store => ({
+      ...store,
+      location: store.location_text || 'Valencia'
+    }));
+  }
 
+  // Método para obtener productos de una tienda específica
+  async getStoreProducts(storeId: string) {
+    console.log('Buscando productos para la tienda ID:', storeId);
+    const { data, error } = await this.supabase
+      .from('products')
+      .select('*')
+      .eq('store_id', storeId);
+    
+    if (error) {
+      console.error('Error al obtener productos:', error);
+      throw error;
+    }
+    console.log('Productos encontrados:', data);
+    return data;
+  }
+
+  // Método para obtener detalles de una tienda específica
+  async getStoreById(storeId: string) {
+    console.log('Buscando tienda con ID:', storeId);
+    const { data, error } = await this.supabase
+      .from('stores')
+      .select('*')
+      .eq('id', storeId)
+      .single();
+    
+    if (error) {
+      console.error('Error al obtener tienda:', error);
+      throw error;
+    }
+    console.log('Tienda encontrada:', data);
+    
+    // Mapear location_text a location para compatibilidad con la aplicación
+    if (data) {
+      return {
+        ...data,
+        location: data.location_text || 'Valencia'
+      };
+    }
+    
+    return data;
+  }
 }

@@ -1,5 +1,5 @@
 export interface Store {
-  id: number;
+  id: string;
   name: string;
   description: string;
   imageUrl: string;
@@ -8,5 +8,5 @@ export interface Store {
   rating: number;
   categories: string[];
   hasOffers: boolean;
-  distance: string;
+  distance: string | number;
 } 

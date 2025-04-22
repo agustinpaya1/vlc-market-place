@@ -18,7 +18,8 @@ import {
   moon
 } from 'ionicons/icons';
 import { CartService } from '../services/cart.service';
-import { ToastController } from '@ionic/angular';
+import { ToastController, LoadingController } from '@ionic/angular';
+import { SupabaseService } from '../services/supabase.service';
 
 @Component({
   selector: 'app-store',
@@ -34,11 +35,12 @@ export class StorePage implements OnInit {
   searchTerm: string = '';
   isDarkTheme: boolean = false;
   cartItemsCount = 0;
+  isLoading = true;
 
-  // Mock data for stores
-  private stores = [
+  // Tiendas de respaldo en caso de error
+  private fallbackStores = [
     {
-      id: 1,
+      id: '1',
       name: 'Mercado Central',
       description: 'El mercado más emblemático de Valencia',
       imageUrl: '/assets/stores/mercado-central.jpg',
@@ -71,7 +73,7 @@ export class StorePage implements OnInit {
       ]
     },
     {
-      id: 3,
+      id: '3',
       name: 'Frutas y Verduras El Huerto',
       description: 'Los mejores productos de la huerta valenciana',
       imageUrl: '/assets/stores/fruteria.jpg',
@@ -104,7 +106,7 @@ export class StorePage implements OnInit {
       ]
     },
     {
-      id: 2,
+      id: '2',
       name: 'Panadería La Valenciana',
       description: 'Pan artesanal y pasteles tradicionales',
       imageUrl: '/assets/stores/panaderia.jpg',
@@ -142,7 +144,9 @@ export class StorePage implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private cartService: CartService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private loadingController: LoadingController,
+    private supabaseService: SupabaseService
   ) {
     addIcons({ star, location, time, pricetag, cart, arrowBack, searchOutline, sunny, moon });
     
@@ -159,26 +163,126 @@ export class StorePage implements OnInit {
     });
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.loadStoreData(Number(id));
+      await this.loadStoreData(id);
     }
   }
 
-  private loadStoreData(storeId: number) {
-    const store = this.stores.find(s => s.id === storeId);
-    if (store) {
-      if (store.products && store.products.length > 0) {
-        this.store = store;
-        this.products = store.products;
+  private async loadStoreData(storeId: string) {
+    const loading = await this.loadingController.create({
+      message: 'Cargando tienda...',
+      spinner: 'circles'
+    });
+    await loading.present();
+
+    try {
+      // Obtener datos de la tienda de Supabase
+      const storeData = await this.supabaseService.getStoreById(storeId);
+      
+      if (storeData) {
+        // Adaptar el formato de los datos
+        this.store = {
+          id: storeData.id,
+          name: storeData.name,
+          description: storeData.description || 'Tienda local con productos de calidad',
+          imageUrl: storeData.image_url || '/assets/stores/default-store.jpg',
+          location: storeData.location || 'Valencia',
+          openTime: storeData.open_time || '9:00 - 20:00',
+          rating: storeData.rating || 4.5,
+          categories: storeData.category ? [storeData.category] : ['Especialidad'],
+          hasOffers: storeData.has_offers || false,
+          distance: '1.2 km'
+        };
+
+        // Obtener productos de la tienda
+        const productsData = await this.supabaseService.getStoreProducts(storeId);
+        
+        if (productsData && productsData.length > 0) {
+          console.log('Productos obtenidos de Supabase:', productsData);
+          this.products = productsData.map(product => ({
+            id: product.id,
+            name: product.name,
+            description: product.description || 'Producto de calidad local',
+            price: product.price,
+            offerPrice: product.price * 0.9, // Precio de oferta simulado
+            imageUrl: product.image_url || '/assets/products/default-product.jpg',
+            category: product.category || 'General',
+            inStock: product.stock > 0
+          }));
+          this.filteredProducts = [...this.products];
+        } else {
+          // Si no hay productos en Supabase, intentar obtenerlos del localStorage
+          const fallbackProductsJSON = localStorage.getItem('fallbackStoreProducts');
+          if (fallbackProductsJSON) {
+            const fallbackProducts = JSON.parse(fallbackProductsJSON);
+            console.log('Productos obtenidos del localStorage:', fallbackProducts);
+            
+            if (fallbackProducts && fallbackProducts.length > 0) {
+              this.products = fallbackProducts.map((product: any) => ({
+                id: product.id,
+                name: product.name,
+                description: product.description || 'Producto de calidad local',
+                price: product.price,
+                offerPrice: product.price * 0.9, // Precio de oferta simulado
+                imageUrl: product.image_url || '/assets/products/default-product.jpg',
+                category: product.category || 'General',
+                inStock: product.stock > 0
+              }));
+              this.filteredProducts = [...this.products];
+            } else {
+              // Si no hay productos en localStorage, usar los de respaldo
+              const fallbackStore = this.fallbackStores.find(s => s.id === storeId);
+              if (fallbackStore && fallbackStore.products) {
+                console.log('Productos obtenidos del fallbackStore:', fallbackStore.products);
+                this.products = fallbackStore.products;
+                this.filteredProducts = [...this.products];
+              } else {
+                this.showNoProductsMessage();
+              }
+            }
+          } else {
+            // Si no hay productos en localStorage, usar los de respaldo
+            const fallbackStore = this.fallbackStores.find(s => s.id === storeId);
+            if (fallbackStore && fallbackStore.products) {
+              console.log('Productos obtenidos del fallbackStore:', fallbackStore.products);
+              this.products = fallbackStore.products;
+              this.filteredProducts = [...this.products];
+            } else {
+              this.showNoProductsMessage();
+            }
+          }
+        }
+      } else {
+        // Si no se encuentra la tienda, buscar en las de respaldo
+        const fallbackStore = this.fallbackStores.find(s => s.id === storeId);
+        if (fallbackStore) {
+          this.store = fallbackStore;
+          this.products = fallbackStore.products || [];
+          this.filteredProducts = [...this.products];
+        } else {
+          this.showStoreNotFoundMessage();
+          this.router.navigate(['/tabs/stores']);
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar la tienda:', error);
+      // En caso de error, intentar cargar desde el respaldo
+      const fallbackStore = this.fallbackStores.find(s => s.id === storeId);
+      if (fallbackStore) {
+        this.store = fallbackStore;
+        this.products = fallbackStore.products || [];
         this.filteredProducts = [...this.products];
       } else {
-        this.showNoProductsMessage();
-        this.router.navigate(['/tabs/tab6']);
+        this.showErrorMessage();
+        this.router.navigate(['/tabs/stores']);
       }
-    } else {
-      this.router.navigate(['/tabs/tab6']);
+    } finally {
+      this.isLoading = false;
+      loading.dismiss();
+      // Limpiar localStorage después de cargar
+      localStorage.removeItem('fallbackStoreProducts');
     }
   }
 
@@ -192,24 +296,44 @@ export class StorePage implements OnInit {
     await toast.present();
   }
 
+  private async showStoreNotFoundMessage() {
+    const toast = await this.toastController.create({
+      message: 'Tienda no encontrada',
+      duration: 3000,
+      position: 'bottom',
+      color: 'danger'
+    });
+    await toast.present();
+  }
+
+  private async showErrorMessage() {
+    const toast = await this.toastController.create({
+      message: 'Error al cargar la tienda. Inténtalo de nuevo más tarde.',
+      duration: 3000,
+      position: 'bottom',
+      color: 'danger'
+    });
+    await toast.present();
+  }
+
   filterProducts() {
     if (!this.searchTerm.trim()) {
       this.filteredProducts = [...this.products];
       return;
     }
 
-    const searchTermLower = this.searchTerm.toLowerCase();
+    const searchTerm = this.searchTerm.toLowerCase();
     this.filteredProducts = this.products.filter(product => 
-      product.name.toLowerCase().includes(searchTermLower) ||
-      product.category.toLowerCase().includes(searchTermLower) ||
-      product.description.toLowerCase().includes(searchTermLower)
+      product.name.toLowerCase().includes(searchTerm) || 
+      product.category.toLowerCase().includes(searchTerm) ||
+      product.description.toLowerCase().includes(searchTerm)
     );
   }
 
   handleImageError(event: Event) {
     const img = event.target as HTMLImageElement;
     if (img) {
-      img.src = '/assets/stores/default-store.jpg';
+      img.src = '/assets/products/default-product.jpg';
     }
   }
 
@@ -233,9 +357,10 @@ export class StorePage implements OnInit {
     });
 
     const toast = await this.toastController.create({
-      message: `${product.name} ha sido añadido al carrito`,
+      message: `${product.name} añadido al carrito`,
       duration: 2000,
-      position: 'bottom'
+      position: 'bottom',
+      color: 'success'
     });
     await toast.present();
   }
@@ -245,6 +370,6 @@ export class StorePage implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/tabs/tab6']);
+    this.router.navigate(['/tabs/stores']);
   }
 } 

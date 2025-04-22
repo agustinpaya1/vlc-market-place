@@ -7,24 +7,14 @@ export const routes: Routes = [
     component: TabsPage,
     children: [
       {
-        path: 'tab3',
+        path: 'map',
         loadComponent: () =>
-          import('../main-page/main-page.component').then((m) => m.MainPageComponent),
+          import('../map/map.page').then((m) => m.MapPage),
       },
       {
-        path: 'tab4',
+        path: 'stores',
         loadComponent: () =>
-          import('../tab4/tab4.page').then((m) => m.Tab4Page),
-      },
-      {
-        path: 'tab5',
-        loadComponent: () =>
-          import('../tab5/tab5.page').then((m) => m.Tab5Page),
-      },
-      {
-        path: 'tab6',
-        loadComponent: () =>
-          import('../tab6/tab6.page').then((m) => m.Tab6Page),
+          import('../stores/stores.page').then((m) => m.StoresPage),
       },
       {
         path: 'store/:id',
@@ -37,8 +27,23 @@ export const routes: Routes = [
           import('../carrito/carrito.component').then((m) => m.CarritoComponent),
       },
       {
+        path: 'profile',
+        loadComponent: () =>
+          import('../profile/profile.page').then((m) => m.ProfilePage),
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('../settings/settings.page').then((m) => m.SettingsPage),
+      },
+      {
+        path: 'locations',
+        loadComponent: () =>
+          import('../locations/locations.page').then((m) => m.LocationsPage),
+      },
+      {
         path: '',
-        redirectTo: '/tabs/tab3',
+        redirectTo: '/tabs/stores',
         pathMatch: 'full',
       },
     ],
@@ -46,16 +51,16 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('../tab1/tab1.page').then((m) => m.Tab1Page),
+      import('../login/login.page').then((m) => m.LoginPage),
   },
   {
     path: 'register',
     loadComponent: () =>
-      import('../tab2/tab2.page').then((m) => m.Tab2Page),
+      import('../register/register.page').then((m) => m.RegisterPage),
   },
   {
     path: '',
-    redirectTo: '/tabs/tab3',
+    redirectTo: '/tabs/stores',
     pathMatch: 'full',
   },
 ];

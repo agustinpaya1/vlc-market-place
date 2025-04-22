@@ -9,10 +9,10 @@ import {
   IonContent
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { storefront, business, map, cart, settings } from 'ionicons/icons';
+import { storefront, map, cart, person } from 'ionicons/icons';
 import { CartService } from '../services/cart.service';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 @Component({
   selector: 'app-tabs',
@@ -32,7 +32,18 @@ import { RouterModule } from '@angular/router';
   ]
 })
 export class TabsPage {
-  constructor(public cartService: CartService) {
-    addIcons({ storefront, business, map, cart, settings });
+  constructor(
+    public cartService: CartService,
+    private router: Router
+  ) {
+    addIcons({ storefront, map, cart, person });
+  }
+
+  navigateToProfile() {
+    console.log('Intentando navegar a la página de perfil');
+    this.router.navigate(['/tabs/profile']).then(
+      success => console.log('Navegación exitosa:', success),
+      error => console.error('Error en navegación:', error)
+    );
   }
 }

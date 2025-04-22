@@ -1,0 +1,54 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Mi Perfil</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="debug-info" style="background-color: #f8f8f8; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+    <p>Página de perfil cargada correctamente</p>
+  </div>
+  
+  <div class="user-profile-header">
+    <div class="user-avatar-container">
+      <ion-icon name="personCircle" class="user-avatar-icon"></ion-icon>
+      <ion-button fill="clear" class="user-edit-button" (click)="editProfile()">
+        <ion-icon name="pencil" slot="icon-only"></ion-icon>
+      </ion-button>
+    </div>
+    <h2 class="user-fullname">{{ user.name }}</h2>
+    <p class="user-email-text">{{ user.email }}</p>
+  </div>
+
+  <ion-list lines="full" class="user-info-list">
+    <ion-item>
+      <ion-icon name="call-outline" slot="start"></ion-icon>
+      <ion-label>
+        <p>Teléfono</p>
+        <h3>{{ user.phone }}</h3>
+      </ion-label>
+    </ion-item>
+
+    <ion-item>
+      <ion-icon name="location-outline" slot="start"></ion-icon>
+      <ion-label>
+        <p>Dirección</p>
+        <h3>{{ user.address }}</h3>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-list lines="full" class="user-menu-list">
+    <ion-item *ngFor="let item of menuItems" (click)="navigate(item.route)" detail>
+      <ion-icon [name]="item.icon" slot="start"></ion-icon>
+      <ion-label>{{ item.label }}</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <div class="user-actions-container">
+    <ion-button expand="block" fill="outline" color="danger" (click)="logout()">
+      <ion-icon name="logOut" slot="start"></ion-icon>
+      Cerrar Sesión
+    </ion-button>
+  </div>
+</ion-content> 
