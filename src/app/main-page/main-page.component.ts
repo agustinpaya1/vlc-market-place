@@ -40,7 +40,7 @@ import { CartService, CartItem } from '../services/cart.service';
 import { Router } from '@angular/router';
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   price: number;
   description: string;
@@ -87,21 +87,21 @@ export class MainPageComponent implements OnInit {
   totalPrice = 0;
   products: Product[] = [
     {
-      id: 1,
+      id: '1',
       name: 'Product 1',
       price: 99.99,
       description: 'Description for product 1',
       imageUrl: 'assets/images/product1.jpg'
     },
     {
-      id: 2,
+      id: '2',
       name: 'Product 2',
       price: 149.99,
       description: 'Description for product 2',
       imageUrl: 'assets/images/product2.jpg'
     },
     {
-      id: 3,
+      id: '3',
       name: 'Product 3',
       price: 199.99,
       description: 'Description for product 3',
@@ -139,7 +139,7 @@ export class MainPageComponent implements OnInit {
     });
   }
 
-  getProductQuantity(productId: number): number {
+  getProductQuantity(productId: string): number {
     const item = this.cartItems.find(item => item.id === productId);
     return item ? item.quantity : 0;
   }

@@ -17,6 +17,8 @@ import {
   sunny,
   moon
 } from 'ionicons/icons';
+import { CartService } from '../services/cart.service';
+import { ToastController } from '@ionic/angular';
 
 @Component({
   selector: 'app-store',
@@ -31,7 +33,7 @@ export class StorePage implements OnInit {
   filteredProducts: Product[] = [];
   searchTerm: string = '';
   isDarkTheme: boolean = false;
-  cartItems: { product: Product; quantity: number }[] = [];
+  cartItemsCount = 0;
 
   // Mock data for stores
   private stores = [
@@ -39,7 +41,7 @@ export class StorePage implements OnInit {
       id: 1,
       name: 'Mercado Central',
       description: 'El mercado más emblemático de Valencia',
-      imageUrl: 'assets/stores/mercado-central.jpg',
+      imageUrl: '/assets/stores/mercado-central.jpg',
       location: 'Plaza del Mercado, Valencia',
       openTime: 'Lun-Sab: 7:00-15:00',
       rating: 4.8,
@@ -48,31 +50,31 @@ export class StorePage implements OnInit {
       distance: '0.5 km',
       products: [
         {
-          id: '1',
+          id: 'mercado-1',
           name: 'Jamón Ibérico',
           category: 'Embutidos',
           description: 'Jamón ibérico de bellota de primera calidad',
           price: 89.99,
           offerPrice: 79.99,
-          imageUrl: 'assets/products/jamon.jpg',
+          imageUrl: '/assets/products/jamon.jpg',
           inStock: true
         },
         {
-          id: '2',
+          id: 'mercado-2',
           name: 'Queso Manchego',
           category: 'Lácteos',
           description: 'Queso manchego curado D.O.',
           price: 24.99,
-          imageUrl: 'assets/products/queso.jpg',
+          imageUrl: '/assets/products/queso.jpg',
           inStock: true
         }
       ]
     },
     {
-      id: 2,
+      id: 3,
       name: 'Frutas y Verduras El Huerto',
       description: 'Los mejores productos de la huerta valenciana',
-      imageUrl: 'assets/stores/fruteria.jpg',
+      imageUrl: '/assets/stores/fruteria.jpg',
       location: 'Calle de Ruzafa, 15',
       openTime: 'Lun-Sab: 8:00-20:00',
       rating: 4.6,
@@ -81,22 +83,55 @@ export class StorePage implements OnInit {
       distance: '0.8 km',
       products: [
         {
-          id: '1',
+          id: 'fruteria-1',
           name: 'Naranjas Valencianas',
           category: 'Frutas',
           description: 'Naranjas dulces de temporada',
           price: 2.99,
           offerPrice: 2.49,
-          imageUrl: 'assets/products/naranjas.jpg',
+          imageUrl: '/assets/products/naranjas.jpg',
           inStock: true
         },
         {
-          id: '2',
+          id: 'fruteria-2',
           name: 'Tomates Raf',
           category: 'Verduras',
           description: 'Tomates premium para ensalada',
           price: 4.99,
-          imageUrl: 'assets/products/tomates.jpg',
+          imageUrl: '/assets/products/tomates.jpg',
+          inStock: true
+        }
+      ]
+    },
+    {
+      id: 2,
+      name: 'Panadería La Valenciana',
+      description: 'Pan artesanal y pasteles tradicionales',
+      imageUrl: '/assets/stores/panaderia.jpg',
+      location: 'Calle Colón, Valencia',
+      openTime: 'Lun-Sab: 6:00-21:00',
+      rating: 4.5,
+      categories: ['Panadería', 'Dulcería'],
+      hasOffers: true,
+      distance: '1.2 km',
+      products: [
+        {
+          id: 'panaderia-1',
+          name: 'Pan de Pueblo',
+          category: 'Panadería',
+          description: 'Pan artesanal de masa madre',
+          price: 2.80,
+          imageUrl: '/assets/products/pan.jpg',
+          inStock: true
+        },
+        {
+          id: 'panaderia-2',
+          name: 'Fartons',
+          category: 'Dulcería',
+          description: 'Perfectos para mojar en horchata',
+          price: 4.50,
+          offerPrice: 3.50,
+          imageUrl: '/assets/products/fartons.jpg',
           inStock: true
         }
       ]
@@ -105,7 +140,9 @@ export class StorePage implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private cartService: CartService,
+    private toastController: ToastController
   ) {
     addIcons({ star, location, time, pricetag, cart, arrowBack, searchOutline, sunny, moon });
     
@@ -116,11 +153,10 @@ export class StorePage implements OnInit {
       this.applyTheme();
     }
 
-    // Load cart from localStorage
-    const savedCart = localStorage.getItem('cartItems');
-    if (savedCart) {
-      this.cartItems = JSON.parse(savedCart);
-    }
+    // Subscribe to cart changes
+    this.cartService.cartItems$.subscribe(items => {
+      this.cartItemsCount = this.cartService.getTotalItems();
+    });
   }
 
   ngOnInit() {
@@ -133,12 +169,27 @@ export class StorePage implements OnInit {
   private loadStoreData(storeId: number) {
     const store = this.stores.find(s => s.id === storeId);
     if (store) {
-      this.store = store;
-      this.products = store.products;
-      this.filteredProducts = [...this.products];
+      if (store.products && store.products.length > 0) {
+        this.store = store;
+        this.products = store.products;
+        this.filteredProducts = [...this.products];
+      } else {
+        this.showNoProductsMessage();
+        this.router.navigate(['/tabs/tab6']);
+      }
     } else {
       this.router.navigate(['/tabs/tab6']);
     }
+  }
+
+  private async showNoProductsMessage() {
+    const toast = await this.toastController.create({
+      message: 'Esta tienda no tiene productos disponibles en este momento',
+      duration: 3000,
+      position: 'bottom',
+      color: 'warning'
+    });
+    await toast.present();
   }
 
   filterProducts() {
@@ -158,7 +209,7 @@ export class StorePage implements OnInit {
   handleImageError(event: Event) {
     const img = event.target as HTMLImageElement;
     if (img) {
-      img.src = 'assets/stores/default-store.jpg';
+      img.src = '/assets/stores/default-store.jpg';
     }
   }
 
@@ -172,30 +223,20 @@ export class StorePage implements OnInit {
     document.body.classList.toggle('dark', this.isDarkTheme);
   }
 
-  addToCart(product: Product) {
-    const existingItem = this.cartItems.find(item => item.product.id === product.id);
-    
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      this.cartItems.push({ product, quantity: 1 });
-    }
+  async addToCart(product: Product) {
+    this.cartService.addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.offerPrice || product.price,
+      quantity: 1,
+      imageUrl: product.imageUrl
+    });
 
-    // Save to localStorage
-    localStorage.setItem('cartItems', JSON.stringify(this.cartItems));
-    
-    // Show success message
-    this.showAddToCartSuccess();
-  }
-
-  private async showAddToCartSuccess() {
-    const toast = document.createElement('ion-toast');
-    toast.message = 'Producto añadido al carrito';
-    toast.duration = 2000;
-    toast.position = 'bottom';
-    toast.color = 'success';
-
-    document.body.appendChild(toast);
+    const toast = await this.toastController.create({
+      message: `${product.name} ha sido añadido al carrito`,
+      duration: 2000,
+      position: 'bottom'
+    });
     await toast.present();
   }
 

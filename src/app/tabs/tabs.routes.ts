@@ -38,7 +38,7 @@ export const routes: Routes = [
       },
       {
         path: '',
-        redirectTo: '/tabs/tab6',
+        redirectTo: '/tabs/tab3',
         pathMatch: 'full',
       },
     ],
@@ -55,7 +55,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: '/tabs/tab6',
+    redirectTo: '/tabs/tab3',
     pathMatch: 'full',
   },
 ];

@@ -9,8 +9,8 @@
     <ion-buttons slot="end">
       <ion-button (click)="goToCart()">
         <ion-icon slot="icon-only" name="cart"></ion-icon>
-        @if (cartItems.length > 0) {
-          <ion-badge color="danger">{{ cartItems.length }}</ion-badge>
+        @if (cartItemsCount > 0) {
+          <ion-badge color="danger">{{ cartItemsCount }}</ion-badge>
         }
       </ion-button>
       <ion-button (click)="toggleTheme()">

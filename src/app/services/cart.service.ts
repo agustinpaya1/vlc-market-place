@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface CartItem {
-  id: number;
+  id: string;
   name: string;
   price: number;
   quantity: number;
@@ -27,7 +27,7 @@ export class CartService {
   addToCart(product: any): void {
     const currentItems = this.cartItems.value;
     const existingItem = currentItems.find(item => item.id === product.id);
-
+    
     if (existingItem) {
       existingItem.quantity += 1;
       this.updateCart([...currentItems]);
@@ -35,7 +35,7 @@ export class CartService {
       const newItem: CartItem = {
         id: product.id,
         name: product.name,
-        price: product.price,
+        price: this.roundToTwoDecimals(product.price),
         quantity: 1,
         imageUrl: product.imageUrl
       };
@@ -43,13 +43,13 @@ export class CartService {
     }
   }
 
-  removeFromCart(productId: number): void {
+  removeFromCart(productId: string): void {
     const currentItems = this.cartItems.value;
     const updatedItems = currentItems.filter(item => item.id !== productId);
     this.updateCart(updatedItems);
   }
 
-  updateQuantity(productId: number, quantity: number): void {
+  updateQuantity(productId: string, quantity: number): void {
     const currentItems = this.cartItems.value;
     const item = currentItems.find(item => item.id === productId);
     
@@ -76,7 +76,11 @@ export class CartService {
   }
 
   getTotalPrice(): number {
-    return this.cartItems.value.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const total = this.cartItems.value.reduce((total, item) => {
+      const itemTotal = item.price * item.quantity;
+      return total + itemTotal;
+    }, 0);
+    return this.roundToTwoDecimals(total);
   }
 
   clearCart(): void {
@@ -86,5 +90,9 @@ export class CartService {
   private updateCart(items: CartItem[]): void {
     this.cartItems.next(items);
     localStorage.setItem('cart', JSON.stringify(items));
+  }
+
+  private roundToTwoDecimals(num: number): number {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
   }
 } 

@@ -28,7 +28,6 @@ import {
 } from '@ionic/angular/standalone';
 import { CartService, CartItem } from '../services/cart.service';
 import { ProductService } from '../services/product.service';
-import type { Product } from '../services/product.service';
 import { addIcons } from 'ionicons';
 import { trash, arrowBack, add, remove } from 'ionicons/icons';
 
@@ -92,7 +91,7 @@ export class CarritoComponent implements OnInit {
     }
   }
 
-  removeItem(productId: number) {
+  removeItem(productId: string) {
     this.cartService.removeFromCart(productId);
   }
 
