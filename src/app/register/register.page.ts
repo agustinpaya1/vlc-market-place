@@ -16,9 +16,9 @@ import { AuthService } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
 
 @Component({
-  selector: 'app-tab2',
-  templateUrl: './tab2.page.html',
-  styleUrls: ['./tab2.page.scss'],
+  selector: 'app-register',
+  templateUrl: './register.page.html',
+  styleUrls: ['./register.page.scss'],
   imports: [
     IonContent,
     IonButton,
@@ -30,7 +30,7 @@ import { SupabaseService } from '../services/supabase.service';
   ],
   standalone: true
 })
-export class Tab2Page {
+export class RegisterPage {
   fullName: string = '';
   email: string = '';
   password: string = '';

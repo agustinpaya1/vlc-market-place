@@ -1,40 +1,50 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, CUSTOM_ELEMENTS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Platform } from '@ionic/angular';
 import {
-    IonButton,
-    IonButtons,
-    IonChip,
-    IonContent,
-    IonHeader,
-    IonIcon,
-    IonItem,
-    IonLabel,
-    IonList,
-    IonModal,
-    IonRange,
-    IonSearchbar,
-    IonSelect,
-    IonSelectOption,
-    IonTitle,
-    IonToggle,
-    IonToolbar
+  IonButton,
+  IonButtons,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonChip,
+  IonContent,
+  IonFab,
+  IonFabButton,
+  IonHeader,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonModal,
+  IonPopover,
+  IonRange,
+  IonSearchbar,
+  IonSelect,
+  IonSelectOption,
+  IonTitle,
+  IonToggle,
+  IonToolbar
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
-    callOutline,
-    checkmarkCircle,
-    closeCircle,
-    closeOutline,
-    filterOutline,
-    locationOutline,
-    moonOutline,
-    optionsOutline,
-    sunnyOutline,
-    timeOutline
+  callOutline,
+  checkmarkCircle,
+  closeCircle,
+  closeOutline,
+  ellipsisVertical,
+  locationOutline,
+  moonOutline,
+  optionsOutline,
+  sunnyOutline,
+  timeOutline
 } from 'ionicons/icons';
 import mapboxgl from 'mapbox-gl';
+import { AuthService } from '../services/auth.service';
 
 interface Store {
   id: string;
@@ -44,13 +54,13 @@ interface Store {
   phone: string;
   isOpen: boolean;
   coordinates: [number, number];
-  description?: string;
 }
 
 @Component({
-  selector: 'app-tab5',
-  templateUrl: 'tab5.page.html',
-  styleUrls: ['tab5.page.scss'],
+  selector: 'app-map',
+  templateUrl: './map.page.html',
+  styleUrls: ['./map.page.scss'],
+  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -58,34 +68,40 @@ interface Store {
     IonToolbar,
     IonTitle,
     IonContent,
-    IonSearchbar,
-    IonList,
-    IonItem,
-    IonLabel,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardSubtitle,
+    IonCardContent,
     IonButton,
     IonIcon,
     IonButtons,
+    IonPopover,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonChip,
+    IonSearchbar,
+    IonModal,
     IonToggle,
     IonRange,
     IonSelect,
     IonSelectOption,
-    IonModal,
-    IonChip
+    IonFab,
+    IonFabButton
   ],
-  standalone: true
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class Tab5Page implements OnInit, OnDestroy {
+export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   private map!: mapboxgl.Map;
   private readonly mapboxToken = 'pk.eyJ1IjoianVhbmpvc2VydWl6IiwiYSI6ImNtOWlkdmdjYTAxNWIyanF3Mmg4NmJjeDkifQ.i1uWtbQazE35o9Vtyv_oBA';
   private markers: mapboxgl.Marker[] = [];
+  private originalStores: Store[] = [];
   
-  // Estado de la UI
-  showStores = false;
-  showFilters = false;
-  showOnlyOpen = false;
-  maxDistance = 5;
-  selectedCategories: string[] = [];
   isDarkTheme = true;
+  isBottomSheetActive = false;
+  isAuthenticated = false;
+  currentUser: any = null;
   
   stores: Store[] = [
     {
@@ -95,8 +111,7 @@ export class Tab5Page implements OnInit, OnDestroy {
       schedule: '7:00 AM - 3:00 PM',
       phone: '+34 963 82 91 00',
       isOpen: true,
-      coordinates: [-0.37739, 39.47391],
-      description: 'Mercado histórico con arquitectura modernista, fundado en 1928.'
+      coordinates: [-0.37739, 39.47391]
     },
     {
       id: '2',
@@ -105,8 +120,7 @@ export class Tab5Page implements OnInit, OnDestroy {
       schedule: '8:00 AM - 10:00 PM',
       phone: '+34 963 37 42 00',
       isOpen: true,
-      coordinates: [-0.36539, 39.46991],
-      description: 'Edificio modernista restaurado con cafeterías y tiendas gourmet.'
+      coordinates: [-0.36539, 39.46991]
     },
     {
       id: '3',
@@ -115,27 +129,49 @@ export class Tab5Page implements OnInit, OnDestroy {
       schedule: '7:00 AM - 3:00 PM',
       phone: '+34 963 74 12 00',
       isOpen: false,
-      coordinates: [-0.37039, 39.46191],
-      description: 'Mercado tradicional en el barrio bohemio de Ruzafa.'
+      coordinates: [-0.37039, 39.46191]
     }
   ];
 
-  constructor(private platform: Platform) {
+  showFilters = false;
+  showOnlyOpen = false;
+  maxDistance = 5;
+  selectedCategories: string[] = [];
+
+  constructor(
+    private platform: Platform,
+    private authService: AuthService,
+    private router: Router
+  ) {
     addIcons({
+      ellipsisVertical,
       locationOutline,
       timeOutline,
       callOutline,
       closeOutline,
-      optionsOutline,
-      filterOutline,
       checkmarkCircle,
       closeCircle,
       sunnyOutline,
-      moonOutline
+      moonOutline,
+      optionsOutline
     });
+    
+    // Set Mapbox access token
+    (mapboxgl as any).accessToken = this.mapboxToken;
+    
+    // Subscribe to authentication state
+    this.authService.user$.subscribe(user => {
+      this.isAuthenticated = !!user;
+      this.currentUser = user;
+    });
+    
+    // Guardar copia de las tiendas originales
+    this.originalStores = [...this.stores];
   }
 
-  ngOnInit() {
+  ngOnInit() {}
+
+  ngAfterViewInit() {
     this.platform.ready().then(() => {
       this.initializeMap();
     });
@@ -148,8 +184,6 @@ export class Tab5Page implements OnInit, OnDestroy {
   }
 
   private initializeMap() {
-    mapboxgl.accessToken = this.mapboxToken;
-    
     this.map = new mapboxgl.Map({
       container: 'mapbox-map',
       style: this.isDarkTheme ? 'mapbox://styles/mapbox/dark-v10' : 'mapbox://styles/mapbox/light-v10',
@@ -169,43 +203,27 @@ export class Tab5Page implements OnInit, OnDestroy {
 
     // Añadir nuevos marcadores
     this.stores.forEach(store => {
-      // Crear el elemento del marcador
       const markerElement = document.createElement('div');
       markerElement.className = 'store-marker';
       markerElement.innerHTML = `
         <div class="marker-dot ${store.isOpen ? 'open' : 'closed'}"></div>
       `;
 
-      // Crear el popup con la información del mercado
-      const popup = new mapboxgl.Popup({ offset: 25, className: 'custom-popup' })
+      const popup = new mapboxgl.Popup({ offset: 25 })
         .setHTML(`
-          <div class="popup-content">
-            <h3>${store.name}</h3>
-            <p class="description">${store.description}</p>
-            <p class="schedule">
-              <ion-icon name="time-outline"></ion-icon>
-              ${store.schedule}
-            </p>
-            <p class="phone">
-              <ion-icon name="call-outline"></ion-icon>
-              ${store.phone}
-            </p>
-            <div class="status ${store.isOpen ? 'open' : 'closed'}">
-              ${store.isOpen ? 'Abierto' : 'Cerrado'}
-            </div>
-          </div>
+          <h3>${store.name}</h3>
+          <p>${store.schedule}</p>
+          <p>${store.phone}</p>
+          <p>${store.isOpen ? 'Abierto' : 'Cerrado'}</p>
         `);
 
-      // Crear y añadir el marcador al mapa
       const marker = new mapboxgl.Marker(markerElement)
         .setLngLat(store.coordinates)
         .setPopup(popup)
         .addTo(this.map);
 
-      // Añadir el marcador al array de marcadores
       this.markers.push(marker);
 
-      // Añadir evento click al marcador
       markerElement.addEventListener('click', () => {
         this.focusOnStore(store);
       });
@@ -216,24 +234,14 @@ export class Tab5Page implements OnInit, OnDestroy {
     this.isDarkTheme = !this.isDarkTheme;
     if (this.map) {
       this.map.setStyle(this.isDarkTheme ? 'mapbox://styles/mapbox/dark-v10' : 'mapbox://styles/mapbox/light-v10');
-      // Volver a añadir los marcadores después de cambiar el estilo
       this.map.once('style.load', () => {
         this.addStoreMarkers();
       });
     }
   }
 
-  toggleStoresPanel() {
-    this.showStores = !this.showStores;
-  }
-
-  toggleFilters() {
-    this.showFilters = !this.showFilters;
-  }
-
-  searchStores(event: any) {
-    const searchTerm = event.target.value.toLowerCase();
-    // Implementar lógica de búsqueda
+  toggleBottomSheet() {
+    this.isBottomSheetActive = !this.isBottomSheetActive;
   }
 
   focusOnStore(store: Store) {
@@ -243,16 +251,40 @@ export class Tab5Page implements OnInit, OnDestroy {
       essential: true
     });
 
-    // Encontrar y mostrar el popup del marcador
     const marker = this.markers.find(m => 
       m.getLngLat().lng === store.coordinates[0] && 
       m.getLngLat().lat === store.coordinates[1]
     );
-    marker?.togglePopup();
+    
+    if (marker) {
+      marker.togglePopup();
+      // Asegurarse de que el bottom sheet esté visible
+      this.isBottomSheetActive = true;
+    }
+  }
+
+  toggleFilters() {
+    this.showFilters = !this.showFilters;
   }
 
   applyFilters() {
-    // Implementar lógica de filtros
-    this.toggleFilters();
+    // Comenzar con todas las tiendas originales
+    let filteredStores = [...this.originalStores];
+
+    // Aplicar filtros
+    if (this.showOnlyOpen) {
+      filteredStores = filteredStores.filter(store => store.isOpen);
+    }
+
+    filteredStores = filteredStores.filter(store => store.distance <= this.maxDistance);
+
+    // Actualizar la lista de tiendas
+    this.stores = filteredStores;
+
+    // Actualizar los marcadores en el mapa
+    this.addStoreMarkers();
+
+    // Cerrar el modal de filtros
+    this.showFilters = false;
   }
 } 
