@@ -13,6 +13,7 @@ import {
 import { addIcons } from 'ionicons';
 import { arrowBackOutline, eyeOffOutline, eyeOutline } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
+import { SupabaseService } from '../services/supabase.service';
 
 @Component({
   selector: 'app-tab2',
@@ -40,7 +41,8 @@ export class Tab2Page {
   constructor(
     private router: Router,
     private alertController: AlertController,
-    private authService: AuthService
+    private authService: AuthService,
+    private supabaseService: SupabaseService
   ) {
     addIcons({
       'eye-outline': eyeOutline,
@@ -59,22 +61,23 @@ export class Tab2Page {
 
   async register() {
     if (this.validateForm()) {
-      console.log('Register:', this.fullName, this.email);
-      // Implementar lógica de registro aquí
-      try{
-        const success = await this.authService.register(
-          this.fullName,
-          this.email,
-          this.password
-        );
-        if (success) {
-          await this.showAlert('Success', 'Registration successful');
-          this.router.navigate(['/home']);
-        } else {
-          this.showAlert('Error', 'Registration failed');
-        }
-      } catch (error) {
-        this.showAlert('Error', 'An error has occurred. Please try again.');
+      try {
+        const { error } = await this.supabaseService.getClient().auth.signUp({
+          email: this.email,
+          password: this.password,
+          options: {
+            data: {
+              full_name: this.fullName
+            }
+          }
+        });
+
+        if (error) throw error;
+
+        await this.showAlert('Success', 'Registration successful. Please check your email to verify your account.');
+        this.router.navigate(['/login']);
+      } catch (error: any) {
+        this.showAlert('Error', error.message || 'An error occurred during registration');
       }
     }
   }
@@ -96,7 +99,7 @@ export class Tab2Page {
   }
 
   goToLogin() {
-    this.router.navigate(['/tabs/tab1']);
+    this.router.navigate(['/login']);
   }
 
   private async showAlert(header: string, message: string) {

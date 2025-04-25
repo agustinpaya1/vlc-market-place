@@ -3,15 +3,15 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import {
-    IonButton,
-    IonContent,
-    IonIcon,
-    IonInput,
-    IonItem,
-    IonLabel
+  IonButton,
+  IonContent,
+  IonIcon,
+  IonInput,
+  IonItem,
+  IonLabel
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { arrowBackOutline, eyeOffOutline, eyeOutline, logoApple, logoGoogle} from 'ionicons/icons';
+import { arrowBackOutline, eyeOffOutline, eyeOutline, logoApple, logoGoogle } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
 
@@ -20,11 +20,11 @@ import { SupabaseService } from '../services/supabase.service';
   templateUrl: './tab1.page.html',
   styleUrls: ['./tab1.page.scss'],
   imports: [
-    IonContent, 
-    IonButton, 
-    IonIcon, 
-    IonItem, 
-    IonInput, 
+    IonContent,
+    IonButton,
+    IonIcon,
+    IonItem,
+    IonInput,
     IonLabel,
     FormsModule
   ],
@@ -50,7 +50,7 @@ export class Tab1Page {
     });
   }
 
-  
+
 
   togglePassword() {
     this.showPassword = !this.showPassword;
@@ -64,7 +64,7 @@ export class Tab1Page {
         const success = await this.authService.login(this.email, this.password);
         if (success) {
           //Redirigir al usuario a la página principal
-          this.router.navigate(['/tabs/tab3']);
+          this.router.navigate(['/main-page']);
         } else {
           this.showAlert('Error', 'Invalid email or password');
         }
@@ -132,15 +132,15 @@ export class Tab1Page {
                 const { error } = await this.supabaseService.getClient().auth.resetPasswordForEmail(
                   data.email,
                   {
-                    redirectTo: 'http://localhost:8100/reset-password'
+                    redirectTo: `${window.location.origin}/reset-password`
                   }
                 );
-  
+
                 if (error) {
                   this.showAlert('Error', 'Failed to send reset link. Please try again.');
                 } else {
                   this.showAlert(
-                    'Success', 
+                    'Success',
                     'Password reset link has been sent to your email. Please check your inbox.'
                   );
                 }
@@ -155,7 +155,7 @@ export class Tab1Page {
         }
       ]
     });
-  
+
     await alert.present();
   }
 
