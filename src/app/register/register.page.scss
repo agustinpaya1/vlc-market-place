@@ -17,7 +17,7 @@
   }
   
   .register-form {
-    padding: 0 16 px;
+    padding: 0 16px;
     margin: 0 auto;
     max-width: 400px;
 
@@ -77,9 +77,42 @@
     }
   }
 
+  ion-content {
+    --background: var(--ion-color-light);
+  }
+
   form {
-    display: flex;
-    flex-direction: column;
-    max-width: 400px;
+    max-width: 500px;
     margin: 0 auto;
+  }
+
+  ion-list {
+    background: transparent;
+    padding: 0;
+  }
+
+  ion-item {
+    --background: var(--ion-color-light);
+    margin-bottom: 16px;
+    --border-radius: 8px;
+    --border-width: 1px;
+    --border-style: solid;
+    --border-color: var(--ion-color-medium);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .business-fields {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--ion-color-medium);
+  }
+
+  ion-button {
+    margin-top: 24px;
+    --border-radius: 8px;
+    height: 48px;
+    font-weight: 600;
   }

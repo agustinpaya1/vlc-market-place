@@ -1,67 +1,72 @@
-<ion-content [fullscreen]="true" class="ion-padding">
-  <div class="register-container">
-    <h1 class="title">Register</h1>
-    <p class="subtitle">Create your account</p>
-
-    <form class="register-form" (ngSubmit)="register()">
-      <ion-item>
-        <ion-label position="stacked">Full Name</ion-label>
-        <ion-input 
-          type="text" 
-          [(ngModel)]="fullName" 
-          name="fullName"
-          placeholder="ferdinand Sinaga">
-        </ion-input>
-      </ion-item>
-
-      <ion-item>
-        <ion-label position="stacked">Email</ion-label>
-        <ion-input 
-          type="email" 
-          [(ngModel)]="email" 
-          name="email"
-          placeholder="ferdinand@gmail.com">
-        </ion-input>
-      </ion-item>
-
-      <ion-item>
-        <ion-label position="stacked">Password</ion-label>
-        <ion-input 
-          [type]="showPassword ? 'text' : 'password'"
-          [(ngModel)]="password"
-          name="password"
-          placeholder="********">
-        </ion-input>
-        <ion-icon 
-          [name]="showPassword ? 'eye-outline' : 'eye-off-outline'" 
-          slot="end"
-          (click)="togglePassword()">
-        </ion-icon>
-      </ion-item>
-
-      <ion-item>
-        <ion-label position="stacked">Repeat Password</ion-label>
-        <ion-input 
-          [type]="showConfirmPassword ? 'text' : 'password'"
-          [(ngModel)]="confirmPassword"
-          name="confirmPassword"
-          placeholder="********">
-        </ion-input>
-        <ion-icon 
-          [name]="showConfirmPassword ? 'eye-outline' : 'eye-off-outline'" 
-          slot="end"
-          (click)="toggleConfirmPassword()">
-        </ion-icon>
-      </ion-item>
-
-
-      <ion-button expand="block" type="submit" class="register-btn">
-        Register
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goToLogin()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
       </ion-button>
+    </ion-buttons>
+    <ion-title>Registro</ion-title>
+  </ion-toolbar>
+</ion-header>
 
-      <p class="login-text">
-        I have an account? <a (click)="goToLogin()">Log in</a>
-      </p>
+<ion-content class="ion-padding">
+  <div class="register-container">
+    <form [formGroup]="registerForm" (ngSubmit)="register()" class="register-form">
+      <ion-list>
+        <!-- Tipo de perfil -->
+        <ion-item>
+          <ion-label>Tipo de perfil</ion-label>
+          <ion-select formControlName="type">
+            <ion-select-option value="user">Usuario</ion-select-option>
+            <ion-select-option value="business">Negocio</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <!-- Campos comunes -->
+        <ion-item>
+          <ion-label position="floating">Nombre completo</ion-label>
+          <ion-input type="text" formControlName="fullName"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">Correo electrónico</ion-label>
+          <ion-input type="email" formControlName="email"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">Contraseña</ion-label>
+          <ion-input type="password" formControlName="password"></ion-input>
+        </ion-item>
+
+        <!-- Campos de negocio -->
+        @if (showBusinessFields) {
+          <div class="business-fields">
+            <ion-item>
+              <ion-label position="floating">Nombre del negocio</ion-label>
+              <ion-input type="text" formControlName="businessName"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="floating">RFC</ion-label>
+              <ion-input type="text" formControlName="taxId"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="floating">Dirección</ion-label>
+              <ion-input type="text" formControlName="address"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="floating">Teléfono</ion-label>
+              <ion-input type="tel" formControlName="phone"></ion-input>
+            </ion-item>
+          </div>
+        }
+
+        <ion-button expand="block" type="submit" class="register-btn" [disabled]="!registerForm.valid">
+          Registrarse
+        </ion-button>
+      </ion-list>
     </form>
   </div>
 </ion-content>

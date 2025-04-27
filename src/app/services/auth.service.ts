@@ -6,6 +6,16 @@ export interface User {
   id: string;
   email: string;
   fullName?: string;
+  type?: 'user' | 'business';
+  vlcoinBalance?: number;
+}
+
+export interface BusinessProfile {
+  id: string;
+  businessName: string;
+  taxId: string;
+  address: string;
+  phone: string;
 }
 
 @Injectable({
@@ -22,12 +32,109 @@ export class AuthService {
   private async initializeUser() {
     const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
     if (session) {
-      this.user.next(session.user as unknown as User);
+      const user = session.user;
+      const { data: profile } = await this.supabaseService.getClient()
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      this.user.next({
+        id: user.id,
+        email: user.email!,
+        fullName: profile?.full_name,
+        type: profile?.type,
+        vlcoinBalance: profile?.vlcoin_balance
+      });
     }
 
-    this.supabaseService.getClient().auth.onAuthStateChange((_event, session) => {
-      this.user.next(session?.user as unknown as User || null);
+    this.supabaseService.getClient().auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const { data: profile } = await this.supabaseService.getClient()
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        this.user.next({
+          id: session.user.id,
+          email: session.user.email!,
+          fullName: profile?.full_name,
+          type: profile?.type,
+          vlcoinBalance: profile?.vlcoin_balance
+        });
+      } else {
+        this.user.next(null);
+      }
     });
+  }
+
+  async register(fullName: string, email: string, password: string, type: 'user' | 'business', businessData?: BusinessProfile): Promise<boolean> {
+    try {
+      console.log('Iniciando registro con:', { fullName, email, type });
+
+      // Paso 1: Registrar al usuario pero NO crear perfiles
+      const { data: authData, error: authError } = await this.supabaseService.getClient().auth.signUp({
+        email,
+        password,
+        options: {
+          data: { 
+            full_name: fullName,
+            user_type: type 
+          }
+        }
+      });
+
+      if (authError) {
+        console.error('Error en auth.signUp:', authError);
+        throw authError;
+      }
+
+      console.log('Usuario registrado exitosamente:', authData);
+      
+      if (!authData.user) {
+        console.error('No se pudo obtener el ID del usuario después del registro');
+        return false;
+      }
+
+      // En este punto, el usuario está registrado pero no creamos perfiles
+      // Informamos al usuario que debe verificar su correo
+      return true;
+    } catch (error) {
+      console.error('Error detallado en el registro:', error);
+      throw error;
+    }
+  }
+
+  async getBusinessProfile(userId: string): Promise<BusinessProfile | null> {
+    try {
+      const { data, error } = await this.supabaseService.getClient()
+        .from('business_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error getting business profile:', error);
+      return null;
+    }
+  }
+
+  async updateVLCoinBalance(userId: string, amount: number): Promise<boolean> {
+    try {
+      const { error } = await this.supabaseService.getClient()
+        .from('profiles')
+        .update({ vlcoin_balance: amount })
+        .eq('id', userId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error updating VLCoin balance:', error);
+      return false;
+    }
   }
 
   async login(email: string, password: string): Promise<boolean> {
@@ -41,25 +148,6 @@ export class AuthService {
       return !!data.user;
     } catch (error) {
       console.error('Login error:', error);
-      return false;
-    }
-  }
-  async register(fullName: string, email: string, password: string): Promise<boolean> {
-    try {
-      const { data, error } = await this.supabaseService.getClient().auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName
-          }
-        }
-      });
-
-      if (error) throw error;
-      return !!data.user;
-    } catch (error) {
-      console.error('Register error:', error);
       return false;
     }
   }
