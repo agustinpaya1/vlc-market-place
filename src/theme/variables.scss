@@ -1,2 +1,103 @@
 // For information on how to create your own theme, please see:
 // http://ionicframework.com/docs/theming/
+
+// Agrega las variables de la paleta de colores al principio del archivo
+:root {
+  // Nuestra paleta personalizada
+  --ion-color-artemis-primary: #05668D;
+  --ion-color-artemis-secondary: #028090;
+  --ion-color-artemis-tertiary: #00A896;
+  --ion-color-artemis-accent: #02C39A;
+  --ion-color-artemis-light: #F0F3BD;
+  --ion-color-artemis-dark: #05668D;
+
+  // ... resto del código de variables existente ...
+}
+
+// Estilos globales para botones de acción principal
+ion-button.login-btn,
+ion-button.register-btn {
+  --background: var(--ion-color-artemis-accent);
+  --background-activated: var(--ion-color-artemis-accent);
+  --background-focused: var(--ion-color-artemis-accent);
+  --background-hover: #01b38b; /* Color ligeramente más oscuro para hover */
+  --color: white;
+  --border-radius: 8px;
+  margin: 24px 0;
+  height: 48px;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(2, 195, 154, 0.3);
+  transition: all 0.3s ease;
+  text-transform: none;
+  font-size: 16px;
+  
+  &:hover {
+    --background: #01b38b;
+    box-shadow: 0 6px 12px rgba(2, 195, 154, 0.4);
+  }
+}
+
+// Define clases de utilidad para usar nuestros colores
+.ion-color-artemis-primary {
+  --ion-color-base: var(--ion-color-artemis-primary);
+  --ion-color-base-rgb: 5, 102, 141;
+  --ion-color-contrast: #ffffff;
+  --ion-color-contrast-rgb: 255, 255, 255;
+  --ion-color-shade: #045a7c;
+  --ion-color-tint: #1e7699;
+}
+
+.ion-color-artemis-secondary {
+  --ion-color-base: var(--ion-color-artemis-secondary);
+  --ion-color-base-rgb: 2, 128, 144;
+  --ion-color-contrast: #ffffff;
+  --ion-color-contrast-rgb: 255, 255, 255;
+  --ion-color-shade: #02717f;
+  --ion-color-tint: #1b8d9c;
+}
+
+.ion-color-artemis-tertiary {
+  --ion-color-base: var(--ion-color-artemis-tertiary);
+  --ion-color-base-rgb: 0, 168, 150;
+  --ion-color-contrast: #ffffff;
+  --ion-color-contrast-rgb: 255, 255, 255;
+  --ion-color-shade: #009484;
+  --ion-color-tint: #1ab1a1;
+}
+
+.ion-color-artemis-accent {
+  --ion-color-base: var(--ion-color-artemis-accent);
+  --ion-color-base-rgb: 2, 195, 154;
+  --ion-color-contrast: #ffffff;
+  --ion-color-contrast-rgb: 255, 255, 255;
+  --ion-color-shade: #02ac87;
+  --ion-color-tint: #1bc9a4;
+}
+
+.ion-color-artemis-light {
+  --ion-color-base: var(--ion-color-artemis-light);
+  --ion-color-base-rgb: 240, 243, 189;
+  --ion-color-contrast: #05668D;
+  --ion-color-contrast-rgb: 5, 102, 141;
+  --ion-color-shade: #d3d6a6;
+  --ion-color-tint: #f2f4c4;
+}
+
+// Opcional: redefine algunos de los colores estándar de Ionic para usar nuestra paleta
+:root {
+  --ion-color-primary: var(--ion-color-artemis-accent);
+  --ion-color-primary-rgb: 2, 195, 154;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #02ac87;
+  --ion-color-primary-tint: #1bc9a4;
+  
+  --ion-color-secondary: var(--ion-color-artemis-secondary);
+  --ion-color-secondary-rgb: 2, 128, 144;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #02717f;
+  --ion-color-secondary-tint: #1b8d9c;
+}
+
+// ... resto del código original ...

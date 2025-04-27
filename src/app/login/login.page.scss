@@ -1,3 +1,12 @@
+// Variables de colores de la nueva paleta
+$color-primary: #05668D; // Azul oscuro
+$color-secondary: #028090; // Azul verdoso
+$color-tertiary: #00A896; // Verde azulado
+$color-accent: #02C39A; // Verde brillante
+$color-background: #F0F3BD; // Amarillo pálido
+$color-text-dark: #05668D; // Para texto oscuro
+$color-text-light: #F0F3BD; // Para texto claro
+
 .login-container {
   padding: 20px;
   max-width: 500px;
@@ -7,34 +16,43 @@
     font-size: 32px;
     font-weight: bold;
     margin-bottom: 8px;
-    color: var(--ion-text-color);
+    color: $color-primary;
   }
 
   .subtitle {
-    color: var(--ion-color-medium);
+    color: $color-secondary;
     margin-bottom: 32px;
   }
 }
 
 .login-form {
   ion-item {
-    --background: var(--ion-item-background);
+    --background: white;
     --border-radius: 8px;
     --padding-start: 16px;
     --padding-end: 16px;
     --padding-top: 12px;
     --padding-bottom: 12px;
     margin-bottom: 16px;
+    --border-color: $color-tertiary;
+    --highlight-color: $color-accent;
 
     ion-label {
-      color: var(--ion-text-color);
+      color: $color-primary;
+      font-weight: 500;
     }
 
     ion-input {
       --padding-start: 0;
-      --placeholder-color: var(--ion-color-medium);
+      --placeholder-color: rgba(5, 102, 141, 0.5);
       --placeholder-opacity: 0.7;
-      color: var(--ion-text-color);
+      color: $color-secondary;
+    }
+
+    ion-icon {
+      color: $color-secondary;
+      font-size: 20px;
+      cursor: pointer;
     }
   }
 }
@@ -45,24 +63,25 @@
   cursor: pointer;
   
   a {
-    color: #92c43c;
+    color: $color-tertiary;
     text-decoration: none;
+    font-weight: 500;
   }
 }
 
+// Restauramos el efecto hover para el botón de login
 .login-btn {
-  --background: #92c43c;
-  --border-radius: 8px;
-  --color: #000;
-  margin: 24px 0;
-  height: 48px;
+  &:hover {
+    --background: darken($color-accent, 5%);
+    box-shadow: 0 6px 12px rgba(2, 195, 154, 0.4);
+  }
 }
 
 .divider {
   text-align: center;
   position: relative;
   margin: 30px 0;
-  color: var(--ion-color-medium);
+  color: $color-secondary;
 
   &::before,
   &::after {
@@ -71,7 +90,7 @@
     top: 50%;
     width: 45%;
     height: 1px;
-    background-color: #000;
+    background-color: rgba(2, 128, 144, 0.3);
   }
 
   &::before {
@@ -83,7 +102,7 @@
   }
 
   span {
-    background-color: var(--ion-background-color);
+    background-color: white;
     padding: 0 15px;
     font-size: 14px;
   }
@@ -98,25 +117,39 @@
   max-width: 400px;
 
   ion-button {
-    --background: #ffffff;
-    --border-color: #ddd;
-    --border-width: 1px;
-    --border-style: solid;
+    --background: white;
     --border-radius: 8px;
-    --color: #666;
     height: 44px;
     font-size: 14px;
     text-transform: none;
     margin: 0;
+    transition: all 0.2s ease;
 
     &.google-btn {
-      --border-color: #4285f4;
-      --color: #4285f4;
+      --border-color: $color-primary;
+      --color: $color-primary;
+      
+      &:hover {
+        --background: rgba(5, 102, 141, 0.1);
+      }
     }
 
     &.apple-btn {
-      --border-color: #000000;
-      --color: #000000;
+      --border-color: $color-secondary;
+      --color: $color-secondary;
+      
+      &:hover {
+        --background: rgba(2, 128, 144, 0.1);
+      }
+    }
+
+    &.facebook-btn {
+      --border-color: #3b5998;
+      --color: #3b5998;
+      
+      &:hover {
+        --background: rgba(59, 89, 152, 0.1);
+      }
     }
 
     ion-icon {
@@ -128,12 +161,24 @@
 
 .register-text {
   text-align: center;
-  color: #666;
+  color: $color-secondary;
+  margin-top: 30px;
+  font-size: 15px;
   cursor: pointer;
 
   a {
-    color: #92c43c;
+    color: $color-accent;
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 600;
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: darken($color-accent, 10%);
+    }
   }
+}
+
+// Estilo global para la página
+ion-content {
+  --background: linear-gradient(135deg, white 60%, #{$color-background} 100%);
 }

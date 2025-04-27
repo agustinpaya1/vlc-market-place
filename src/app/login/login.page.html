@@ -1,7 +1,7 @@
 <ion-content [fullscreen]="true" class="ion-padding">
   <div class="login-container">
-    <h1 class="title">Sign in to your Account</h1>
-    <p class="subtitle">Sign in to your Account</p>
+    <h1 class="title">Bienvenido de nuevo</h1>
+    <p class="subtitle">Inicia sesión para continuar</p>
 
     <form class="login-form" (ngSubmit)="login()">
       <ion-item>
@@ -10,12 +10,12 @@
           type="email" 
           [(ngModel)]="email" 
           name="email"
-          placeholder="ferdinand@gmail.com">
+          placeholder="tucorreo@ejemplo.com">
         </ion-input>
       </ion-item>
 
       <ion-item>
-        <ion-label position="stacked">Password</ion-label>
+        <ion-label position="stacked">Contraseña</ion-label>
         <ion-input 
           [type]="showPassword ? 'text' : 'password'"
           [(ngModel)]="password"
@@ -30,15 +30,15 @@
       </ion-item>
 
       <div class="forgot-password">
-        <a (click)="forgotPassword()">Forgot Password?</a>
+        <a (click)="forgotPassword()">¿Olvidaste tu contraseña?</a>
       </div>
 
       <ion-button expand="block" type="submit" class="login-btn">
-        Login
+        Iniciar sesión
       </ion-button>
 
       <div class="divider">
-        <span>Or login with</span>
+        <span>O continúa con</span>
       </div>
 
       <div class="social-buttons">
@@ -46,14 +46,14 @@
           <ion-icon name="logo-google" slot="start"></ion-icon>
           Google
         </ion-button>
-        <ion-button fill="outline" class="apple-btn" (click)="loginWithApple()">
-          <ion-icon name="logo-apple" slot="start"></ion-icon>
-          Apple
+        <ion-button fill="outline" class="facebook-btn" (click)="loginWithFacebook()">
+          <ion-icon name="logo-facebook" slot="start"></ion-icon>
+          Facebook
         </ion-button>
       </div>
 
       <p class="register-text">
-        Don't have an account? <a (click)="goToRegister()">Register</a>
+        ¿No tienes una cuenta? <a (click)="goToRegister()">Regístrate</a>
       </p>
     </form>
   </div>
