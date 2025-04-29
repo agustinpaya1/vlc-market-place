@@ -13,14 +13,11 @@
           <ion-badge color="danger">{{ cartItemsCount }}</ion-badge>
         }
       </ion-button>
-      <ion-button (click)="toggleTheme()">
-        <ion-icon slot="icon-only" [name]="isDarkTheme ? 'sunny' : 'moon'"></ion-icon>
-      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [class.dark]="isDarkTheme">
+<ion-content>
   @if (store) {
     <div class="store-header">
       <img [src]="store.imageUrl" (error)="handleImageError($event)" alt="Imagen de la tienda">
@@ -59,14 +56,14 @@
       <ion-searchbar [(ngModel)]="searchTerm" 
                     (ionChange)="filterProducts()" 
                     placeholder="Buscar productos"
-                    [color]="isDarkTheme ? 'light' : 'primary'">
+                    color="primary">
       </ion-searchbar>
 
       <ion-grid>
         <ion-row>
           @for (product of filteredProducts; track product.id) {
             <ion-col size="6" size-md="4" size-lg="3">
-              <ion-card class="product-card" [class.dark]="isDarkTheme">
+              <ion-card class="product-card">
                 <ion-card-header>
                   <img [src]="product.imageUrl" (error)="handleImageError($event)" [alt]="product.name">
                 </ion-card-header>
@@ -83,7 +80,7 @@
                       <span class="price">{{ product.price | currency:'EUR' }}</span>
                     }
                   </div>
-                  <ion-button expand="block" (click)="addToCart(product)" [color]="isDarkTheme ? 'light' : 'primary'">
+                  <ion-button expand="block" (click)="addToCart(product)" color="primary">
                     <ion-icon name="cart" slot="start"></ion-icon>
                     Añadir al carrito
                   </ion-button>

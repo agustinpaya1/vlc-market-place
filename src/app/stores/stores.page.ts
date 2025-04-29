@@ -309,6 +309,14 @@ export class StoresPage implements OnInit {
   get filteredStores(): Store[] {
     let result = [...this.stores];
 
+    // Aplicar filtro por categoría
+    if (this.selectedCategory !== 'Todos') {
+      result = result.filter(store => 
+        store.categories?.includes(this.selectedCategory) || 
+        store.category === this.selectedCategory
+      );
+    }
+
     // Ordenar según la opción seleccionada
     switch (this.selectedSort) {
       case 'distance':
@@ -334,8 +342,8 @@ export class StoresPage implements OnInit {
   }
 
   selectCategory(category: string) {
-    this.selectedCategory = 'Todos';
-    console.log('Categoría seleccionada (forzada a Todos):', this.selectedCategory);
+    this.selectedCategory = category;
+    console.log('Categoría seleccionada:', this.selectedCategory);
   }
 
   selectSort(sort: string) {

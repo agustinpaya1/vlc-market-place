@@ -33,7 +33,6 @@ export class StorePage implements OnInit {
   products: Product[] = [];
   filteredProducts: Product[] = [];
   searchTerm: string = '';
-  isDarkTheme: boolean = false;
   cartItemsCount = 0;
   isLoading = true;
 
@@ -150,13 +149,6 @@ export class StorePage implements OnInit {
   ) {
     addIcons({ star, location, time, pricetag, cart, arrowBack, searchOutline, sunny, moon });
     
-    // Check if dark mode was previously selected
-    const savedDarkMode = localStorage.getItem('darkMode');
-    if (savedDarkMode) {
-      this.isDarkTheme = JSON.parse(savedDarkMode);
-      this.applyTheme();
-    }
-
     // Subscribe to cart changes
     this.cartService.cartItems$.subscribe(items => {
       this.cartItemsCount = this.cartService.getTotalItems();
@@ -335,16 +327,6 @@ export class StorePage implements OnInit {
     if (img) {
       img.src = '/assets/products/default-product.jpg';
     }
-  }
-
-  toggleTheme() {
-    this.isDarkTheme = !this.isDarkTheme;
-    localStorage.setItem('darkMode', JSON.stringify(this.isDarkTheme));
-    this.applyTheme();
-  }
-
-  private applyTheme() {
-    document.body.classList.toggle('dark', this.isDarkTheme);
   }
 
   async addToCart(product: Product) {
