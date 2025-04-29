@@ -7,6 +7,7 @@ import { environment } from '../../environments/environment';
 })
 export class SupabaseService {
   private supabase: SupabaseClient;
+  private bucketName = 'fotostiendas';
 
   constructor() {
     this.supabase = createClient(
@@ -41,60 +42,125 @@ export class SupabaseService {
     return result;
   }
 
+  // Método para obtener la URL pública de una imagen del bucket
+  private getPublicUrl(path: string | null): string {
+    if (!path) {
+      return this.getDefaultImageUrl();
+    }
+
+    try {
+      // Construir la URL usando el endpoint público de Supabase Storage
+      const { data } = this.supabase
+        .storage
+        .from(this.bucketName)
+        .getPublicUrl(path);
+
+      console.log('URL generada para', path, ':', data.publicUrl);
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error al obtener URL pública:', error);
+      return this.getDefaultImageUrl();
+    }
+  }
+
+  // Método para obtener la URL de la imagen por defecto
+  private getDefaultImageUrl(): string {
+    try {
+      const { data } = this.supabase
+        .storage
+        .from(this.bucketName)
+        .getPublicUrl('default-store.jpg');
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error al obtener URL de imagen por defecto:', error);
+      return ''; // Retornar string vacío si todo falla
+    }
+  }
+
   // Método específico para obtener tiendas
   async getStores() {
-    const { data, error } = await this.supabase
-      .from('stores')
-      .select('*');
-    
-    if (error) throw error;
-    console.log('Datos de tiendas recibidos de Supabase:', data);
-    // Mapear location_text a location para compatibilidad con la aplicación
-    return data.map(store => ({
-      ...store,
-      location: store.location_text || 'Valencia'
-    }));
+    try {
+      const { data: stores, error } = await this.supabase
+        .from('stores')
+        .select('*');
+      
+      if (error) throw error;
+
+      console.log('Datos de tiendas recibidos:', stores);
+      
+      const mappedStores = stores.map(store => {
+        const imageUrl = this.getPublicUrl(store.image_url);
+        console.log(`Tienda ${store.name}:`, {
+          nombre: store.name,
+          imagen_original: store.image_url,
+          imagen_url: imageUrl
+        });
+        
+        return {
+          ...store,
+          location: store.location_text || 'Valencia',
+          imageUrl
+        };
+      });
+
+      return mappedStores;
+    } catch (error) {
+      console.error('Error al obtener tiendas:', error);
+      throw error;
+    }
   }
 
   // Método para obtener productos de una tienda específica
   async getStoreProducts(storeId: string) {
-    console.log('Buscando productos para la tienda ID:', storeId);
-    const { data, error } = await this.supabase
-      .from('products')
-      .select('*')
-      .eq('store_id', storeId);
-    
-    if (error) {
+    try {
+      const { data, error } = await this.supabase
+        .from('products')
+        .select('*')
+        .eq('store_id', storeId);
+      
+      if (error) throw error;
+      
+      return data.map(product => ({
+        ...product,
+        imageUrl: this.getPublicUrl(product.image_url)
+      }));
+    } catch (error) {
       console.error('Error al obtener productos:', error);
       throw error;
     }
-    console.log('Productos encontrados:', data);
-    return data;
   }
 
   // Método para obtener detalles de una tienda específica
   async getStoreById(storeId: string) {
-    console.log('Buscando tienda con ID:', storeId);
-    const { data, error } = await this.supabase
-      .from('stores')
-      .select('*')
-      .eq('id', storeId)
-      .single();
-    
-    if (error) {
+    try {
+      const { data, error } = await this.supabase
+        .from('stores')
+        .select('*')
+        .eq('id', storeId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        const imageUrl = this.getPublicUrl(data.image_url);
+        console.log(`Tienda ${data.name}:`, {
+          nombre: data.name,
+          imagen_original: data.image_url,
+          imagen_url: imageUrl
+        });
+        
+        return {
+          ...data,
+          location: data.location_text || 'Valencia',
+          imageUrl
+        };
+      }
+      
+      return null;
+    } catch (error) {
       console.error('Error al obtener tienda:', error);
       throw error;
     }
-    console.log('Tienda encontrada:', data);
-    
-    // Mapear location_text a location para compatibilidad con la aplicación
-    if (data) {
-      return {
-        ...data,
-        location: data.location_text || 'Valencia'
-      };
-    }
-    
-    return data;
   }
 }

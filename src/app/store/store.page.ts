@@ -35,118 +35,15 @@ export class StorePage implements OnInit {
   searchTerm: string = '';
   isDarkTheme: boolean = false;
   cartItemsCount = 0;
-  isLoading = true;
-
-  // Tiendas de respaldo en caso de error
-  private fallbackStores = [
-    {
-      id: '1',
-      name: 'Mercado Central',
-      description: 'El mercado más emblemático de Valencia',
-      imageUrl: '/assets/stores/mercado-central.jpg',
-      location: 'Plaza del Mercado, Valencia',
-      openTime: 'Lun-Sab: 7:00-15:00',
-      rating: 4.8,
-      categories: ['Mercado', 'Productos frescos'],
-      hasOffers: true,
-      distance: '0.5 km',
-      products: [
-        {
-          id: 'mercado-1',
-          name: 'Jamón Ibérico',
-          category: 'Embutidos',
-          description: 'Jamón ibérico de bellota de primera calidad',
-          price: 89.99,
-          offerPrice: 79.99,
-          imageUrl: '/assets/products/jamon.jpg',
-          inStock: true
-        },
-        {
-          id: 'mercado-2',
-          name: 'Queso Manchego',
-          category: 'Lácteos',
-          description: 'Queso manchego curado D.O.',
-          price: 24.99,
-          imageUrl: '/assets/products/queso.jpg',
-          inStock: true
-        }
-      ]
-    },
-    {
-      id: '3',
-      name: 'Frutas y Verduras El Huerto',
-      description: 'Los mejores productos de la huerta valenciana',
-      imageUrl: '/assets/stores/fruteria.jpg',
-      location: 'Calle de Ruzafa, 15',
-      openTime: 'Lun-Sab: 8:00-20:00',
-      rating: 4.6,
-      categories: ['Frutas', 'Verduras'],
-      hasOffers: true,
-      distance: '0.8 km',
-      products: [
-        {
-          id: 'fruteria-1',
-          name: 'Naranjas Valencianas',
-          category: 'Frutas',
-          description: 'Naranjas dulces de temporada',
-          price: 2.99,
-          offerPrice: 2.49,
-          imageUrl: '/assets/products/naranjas.jpg',
-          inStock: true
-        },
-        {
-          id: 'fruteria-2',
-          name: 'Tomates Raf',
-          category: 'Verduras',
-          description: 'Tomates premium para ensalada',
-          price: 4.99,
-          imageUrl: '/assets/products/tomates.jpg',
-          inStock: true
-        }
-      ]
-    },
-    {
-      id: '2',
-      name: 'Panadería La Valenciana',
-      description: 'Pan artesanal y pasteles tradicionales',
-      imageUrl: '/assets/stores/panaderia.jpg',
-      location: 'Calle Colón, Valencia',
-      openTime: 'Lun-Sab: 6:00-21:00',
-      rating: 4.5,
-      categories: ['Panadería', 'Dulcería'],
-      hasOffers: true,
-      distance: '1.2 km',
-      products: [
-        {
-          id: 'panaderia-1',
-          name: 'Pan de Pueblo',
-          category: 'Panadería',
-          description: 'Pan artesanal de masa madre',
-          price: 2.80,
-          imageUrl: '/assets/products/pan.jpg',
-          inStock: true
-        },
-        {
-          id: 'panaderia-2',
-          name: 'Fartons',
-          category: 'Dulcería',
-          description: 'Perfectos para mojar en horchata',
-          price: 4.50,
-          offerPrice: 3.50,
-          imageUrl: '/assets/products/fartons.jpg',
-          inStock: true
-        }
-      ]
-    }
-  ];
+  isLoading = false;
 
   constructor(
     private route: ActivatedRoute,
+    private supabaseService: SupabaseService,
     private router: Router,
-    private cartService: CartService,
-    private toastController: ToastController,
     private loadingController: LoadingController,
-    private supabaseService: SupabaseService
+    private toastController: ToastController,
+    private cartService: CartService
   ) {
     addIcons({ star, location, time, pricetag, cart, arrowBack, searchOutline, sunny, moon });
     
@@ -164,9 +61,9 @@ export class StorePage implements OnInit {
   }
 
   async ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      await this.loadStoreData(id);
+    const storeId = this.route.snapshot.paramMap.get('id');
+    if (storeId) {
+      await this.loadStoreData(storeId);
     }
   }
 
@@ -178,111 +75,45 @@ export class StorePage implements OnInit {
     await loading.present();
 
     try {
-      // Obtener datos de la tienda de Supabase
       const storeData = await this.supabaseService.getStoreById(storeId);
       
       if (storeData) {
-        // Adaptar el formato de los datos
-        this.store = {
-          id: storeData.id,
-          name: storeData.name,
-          description: storeData.description || 'Tienda local con productos de calidad',
-          imageUrl: storeData.image_url || '/assets/stores/default-store.jpg',
-          location: storeData.location || 'Valencia',
-          openTime: storeData.open_time || '9:00 - 20:00',
-          rating: storeData.rating || 4.5,
-          categories: storeData.category ? [storeData.category] : ['Especialidad'],
-          hasOffers: storeData.has_offers || false,
-          distance: '1.2 km'
+        const mappedStore = {
+          ...storeData,
+          location: storeData.location_text || 'Valencia',
+          imageUrl: storeData.image_url || 'assets/stores/default-store.jpg',
+          products: storeData.products.map((product: any) => ({
+            ...product,
+            imageUrl: product.image_url || 'assets/products/default-product.jpg'
+          }))
         };
 
-        // Obtener productos de la tienda
-        const productsData = await this.supabaseService.getStoreProducts(storeId);
-        
-        if (productsData && productsData.length > 0) {
-          console.log('Productos obtenidos de Supabase:', productsData);
-          this.products = productsData.map(product => ({
-            id: product.id,
-            name: product.name,
-            description: product.description || 'Producto de calidad local',
-            price: product.price,
-            offerPrice: product.price * 0.9, // Precio de oferta simulado
-            imageUrl: product.image_url || '/assets/products/default-product.jpg',
-            category: product.category || 'General',
-            inStock: product.stock > 0
-          }));
-          this.filteredProducts = [...this.products];
-        } else {
-          // Si no hay productos en Supabase, intentar obtenerlos del localStorage
-          const fallbackProductsJSON = localStorage.getItem('fallbackStoreProducts');
-          if (fallbackProductsJSON) {
-            const fallbackProducts = JSON.parse(fallbackProductsJSON);
-            console.log('Productos obtenidos del localStorage:', fallbackProducts);
-            
-            if (fallbackProducts && fallbackProducts.length > 0) {
-              this.products = fallbackProducts.map((product: any) => ({
-                id: product.id,
-                name: product.name,
-                description: product.description || 'Producto de calidad local',
-                price: product.price,
-                offerPrice: product.price * 0.9, // Precio de oferta simulado
-                imageUrl: product.image_url || '/assets/products/default-product.jpg',
-                category: product.category || 'General',
-                inStock: product.stock > 0
-              }));
-              this.filteredProducts = [...this.products];
-            } else {
-              // Si no hay productos en localStorage, usar los de respaldo
-              const fallbackStore = this.fallbackStores.find(s => s.id === storeId);
-              if (fallbackStore && fallbackStore.products) {
-                console.log('Productos obtenidos del fallbackStore:', fallbackStore.products);
-                this.products = fallbackStore.products;
-                this.filteredProducts = [...this.products];
-              } else {
-                this.showNoProductsMessage();
-              }
-            }
-          } else {
-            // Si no hay productos en localStorage, usar los de respaldo
-            const fallbackStore = this.fallbackStores.find(s => s.id === storeId);
-            if (fallbackStore && fallbackStore.products) {
-              console.log('Productos obtenidos del fallbackStore:', fallbackStore.products);
-              this.products = fallbackStore.products;
-              this.filteredProducts = [...this.products];
-            } else {
-              this.showNoProductsMessage();
-            }
-          }
-        }
+        this.store = {
+          id: mappedStore.id,
+          name: mappedStore.name,
+          description: mappedStore.description || 'Tienda local con productos de calidad',
+          imageUrl: mappedStore.imageUrl,
+          location: mappedStore.location,
+          openTime: mappedStore.open_time || '9:00 - 20:00',
+          rating: mappedStore.rating || 4.5,
+          categories: mappedStore.category ? [mappedStore.category] : ['Especialidad'],
+          hasOffers: mappedStore.has_offers || false,
+          distance: mappedStore.distance || '1.2 km'
+        };
+
+        this.products = mappedStore.products;
+        this.filteredProducts = [...this.products];
       } else {
-        // Si no se encuentra la tienda, buscar en las de respaldo
-        const fallbackStore = this.fallbackStores.find(s => s.id === storeId);
-        if (fallbackStore) {
-          this.store = fallbackStore;
-          this.products = fallbackStore.products || [];
-          this.filteredProducts = [...this.products];
-        } else {
-          this.showStoreNotFoundMessage();
-          this.router.navigate(['/tabs/stores']);
-        }
+        await this.showStoreNotFoundMessage();
+        this.router.navigate(['/tabs/stores']);
       }
     } catch (error) {
       console.error('Error al cargar la tienda:', error);
-      // En caso de error, intentar cargar desde el respaldo
-      const fallbackStore = this.fallbackStores.find(s => s.id === storeId);
-      if (fallbackStore) {
-        this.store = fallbackStore;
-        this.products = fallbackStore.products || [];
-        this.filteredProducts = [...this.products];
-      } else {
-        this.showErrorMessage();
-        this.router.navigate(['/tabs/stores']);
-      }
+      await this.showErrorMessage();
+      this.router.navigate(['/tabs/stores']);
     } finally {
       this.isLoading = false;
       loading.dismiss();
-      // Limpiar localStorage después de cargar
-      localStorage.removeItem('fallbackStoreProducts');
     }
   }
 
@@ -333,7 +164,7 @@ export class StorePage implements OnInit {
   handleImageError(event: Event) {
     const img = event.target as HTMLImageElement;
     if (img) {
-      img.src = '/assets/products/default-product.jpg';
+      img.src = 'assets/products/default-product.jpg';
     }
   }
 
