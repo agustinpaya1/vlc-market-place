@@ -3,15 +3,15 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import {
-    IonButton,
-    IonContent,
-    IonIcon,
-    IonInput,
-    IonItem,
-    IonLabel
+  IonButton,
+  IonContent,
+  IonIcon,
+  IonInput,
+  IonItem,
+  IonLabel
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { arrowBackOutline, eyeOffOutline, eyeOutline, logoApple, logoGoogle} from 'ionicons/icons';
+import { arrowBackOutline, eyeOffOutline, eyeOutline, logoFacebook, logoGoogle } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
 
@@ -20,11 +20,11 @@ import { SupabaseService } from '../services/supabase.service';
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
   imports: [
-    IonContent, 
-    IonButton, 
-    IonIcon, 
-    IonItem, 
-    IonInput, 
+    IonContent,
+    IonButton,
+    IonIcon,
+    IonItem,
+    IonInput,
     IonLabel,
     FormsModule
   ],
@@ -41,16 +41,10 @@ export class LoginPage {
     private authService: AuthService,
     private supabaseService: SupabaseService
   ) {
-    addIcons({
-      'logo-google': logoGoogle,
-      'logo-apple': logoApple,
-      'eye-outline': eyeOutline,
-      'eye-off-outline': eyeOffOutline,
-      'arrow-back-outline': arrowBackOutline
-    });
+    addIcons({logoGoogle,logoFacebook,eyeOutline,eyeOffOutline,arrowBackOutline});
   }
 
-  
+
 
   togglePassword() {
     this.showPassword = !this.showPassword;
@@ -95,16 +89,17 @@ export class LoginPage {
     }
   }
 
-  async loginWithApple() {
+  async loginWithFacebook() {
     try {
-      const success = await this.authService.loginWithApple();
+      // Usando un método temporal mientras implementas el login con Facebook real
+      const success = await this.authService.loginWithGoogle(); // Reutilizamos el de Google temporalmente
       if (success) {
         this.router.navigate(['/tabs/stores']);
       } else {
-        this.showAlert('Error', 'Apple login failed');
+        this.showAlert('Error', 'Facebook login failed');
       }
     } catch (error) {
-      this.showAlert('Error', 'Apple login failed. Please try again.');
+      this.showAlert('Error', 'Facebook login failed. Please try again.');
     }
   }
 
@@ -132,15 +127,15 @@ export class LoginPage {
                 const { error } = await this.supabaseService.getClient().auth.resetPasswordForEmail(
                   data.email,
                   {
-                    redirectTo: 'http://localhost:8100/reset-password'
+                    redirectTo: `${window.location.origin}/reset-password`
                   }
                 );
-  
+
                 if (error) {
                   this.showAlert('Error', 'Failed to send reset link. Please try again.');
                 } else {
                   this.showAlert(
-                    'Success', 
+                    'Success',
                     'Password reset link has been sent to your email. Please check your inbox.'
                   );
                 }
@@ -155,7 +150,7 @@ export class LoginPage {
         }
       ]
     });
-  
+
     await alert.present();
   }
 

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import {
@@ -8,104 +8,160 @@ import {
     IonIcon,
     IonInput,
     IonItem,
-    IonLabel
+    IonLabel,
+    IonList,
+    IonSelect,
+    IonSelectOption,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { arrowBackOutline, eyeOffOutline, eyeOutline } from 'ionicons/icons';
-import { AuthService } from '../services/auth.service';
+import { AuthService, BusinessProfile } from '../services/auth.service';
+import { SupabaseService } from '../services/supabase.service';
 
 @Component({
   selector: 'app-register',
   templateUrl: './register.page.html',
   styleUrls: ['./register.page.scss'],
   imports: [
+    ReactiveFormsModule,
     IonContent,
     IonButton,
     IonIcon,
     IonItem,
     IonInput,
     IonLabel,
-    FormsModule
+    IonList,
+    IonSelect,
+    IonSelectOption,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons
   ],
   standalone: true
 })
 export class RegisterPage {
-  fullName: string = '';
-  email: string = '';
-  password: string = '';
-  confirmPassword: string = '';
-  showPassword: boolean = false;
-  showConfirmPassword: boolean = false;
+  registerForm: FormGroup;
+  showBusinessFields = false;
 
   constructor(
+    private formBuilder: FormBuilder,
+    private authService: AuthService,
     private router: Router,
-    private alertController: AlertController,
-    private authService: AuthService
+    private alertController: AlertController
   ) {
-    addIcons({
-      'eye-outline': eyeOutline,
-      'eye-off-outline': eyeOffOutline,
-      'arrow-back-outline': arrowBackOutline
+    addIcons({eyeOutline, eyeOffOutline, arrowBackOutline});
+
+    this.registerForm = this.formBuilder.group({
+      type: ['user', Validators.required],
+      fullName: ['', [Validators.required, Validators.minLength(3)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      businessName: [''],
+      taxId: [''],
+      address: [''],
+      phone: ['']
+    });
+
+    this.registerForm.get('type')?.valueChanges.subscribe(value => {
+      this.showBusinessFields = value === 'business';
+      this.updateValidators();
     });
   }
 
-  togglePassword() {
-    this.showPassword = !this.showPassword;
-  }
-
-  toggleConfirmPassword() {
-    this.showConfirmPassword = !this.showConfirmPassword;
+  private updateValidators() {
+    const businessFields = ['businessName', 'taxId', 'address', 'phone'];
+    
+    if (this.showBusinessFields) {
+      businessFields.forEach(field => {
+        this.registerForm.get(field)?.setValidators([Validators.required]);
+      });
+    } else {
+      businessFields.forEach(field => {
+        this.registerForm.get(field)?.clearValidators();
+      });
+    }
+    
+    businessFields.forEach(field => {
+      this.registerForm.get(field)?.updateValueAndValidity();
+    });
   }
 
   async register() {
-    if (this.validateForm()) {
-      console.log('Register:', this.fullName, this.email);
-      // Implementar lógica de registro aquí
-      try{
-        const success = await this.authService.register(
-          this.fullName,
-          this.email,
-          this.password
-        );
-        if (success) {
-          await this.showAlert('Success', 'Registration successful');
-          this.router.navigate(['/home']);
-        } else {
-          this.showAlert('Error', 'Registration failed');
+    if (this.registerForm.valid) {
+      try {
+        const formValue = this.registerForm.value;
+        let businessData: BusinessProfile | undefined;
+
+        if (formValue.type === 'business') {
+          businessData = {
+            id: '', // Se asignará automáticamente
+            businessName: formValue.businessName,
+            taxId: formValue.taxId,
+            address: formValue.address,
+            phone: formValue.phone
+          };
         }
-      } catch (error) {
-        this.showAlert('Error', 'An error has occurred. Please try again.');
+
+        console.log('Intentando registrar con datos:', {
+          fullName: formValue.fullName,
+          email: formValue.email,
+          type: formValue.type,
+          businessData
+        });
+
+        const success = await this.authService.register(
+          formValue.fullName,
+          formValue.email,
+          formValue.password,
+          formValue.type,
+          businessData
+        );
+
+        if (success) {
+          await this.showSuccessAlert('Registro exitoso. Por favor revisa tu correo electrónico para verificar tu cuenta.');
+          this.router.navigate(['/login']);
+        } else {
+          await this.showErrorAlert('El registro falló. Por favor verifica tus datos e intenta nuevamente.');
+        }
+      } catch (error: any) {
+        console.error('Error detallado en el registro:', error);
+        let errorMessage = 'Ha ocurrido un error durante el registro.';
+        
+        if (error?.message) {
+          errorMessage += ' ' + error.message;
+        }
+        
+        await this.showErrorAlert(errorMessage);
       }
+    } else {
+      await this.showErrorAlert('Por favor, completa todos los campos requeridos correctamente.');
     }
   }
 
-  private validateForm(): boolean {
-    if (!this.fullName || !this.email || !this.password || !this.confirmPassword) {
-      this.showAlert('Error', 'Please fill in all fields');
-      return false;
-    }
-    if (this.password !== this.confirmPassword) {
-      this.showAlert('Error', 'Passwords do not match');
-      return false;
-    }
-    if (this.password.length < 6) {
-      this.showAlert('Error', 'Password must be at least 6 characters long');
-      return false;
-    }
-    return true;
+  private async showSuccessAlert(message: string) {
+    const alert = await this.alertController.create({
+      header: 'Registro exitoso',
+      message: message,
+      buttons: ['OK']
+    });
+    await alert.present();
+  }
+
+  private async showErrorAlert(message: string) {
+    const alert = await this.alertController.create({
+      header: 'Error',
+      message: message,
+      buttons: ['OK']
+    });
+    await alert.present();
   }
 
   goToLogin() {
     this.router.navigate(['/login']);
-  }
-
-  private async showAlert(header: string, message: string) {
-    const alert = await this.alertController.create({
-      header,
-      message,
-      buttons: ['OK']
-    });
-
-    await alert.present();
   }
 }

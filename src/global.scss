@@ -38,3 +38,15 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
+
+/**
+ * Custom Global Styles
+ * -----------------------------------------------------
+ */
+:root {
+  --ion-font-family: 'Roboto', sans-serif;
+}
+
+body, ion-content, ion-item, ion-label, ion-button, ion-input, ion-textarea, ion-select {
+  font-family: 'Roboto', sans-serif;
+}

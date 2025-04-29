@@ -1,66 +1,63 @@
 <ion-content [fullscreen]="true" class="ion-padding">
   <div class="register-container">
-    <h1 class="title">Register</h1>
-    <p class="subtitle">Create your account</p>
+    <h1 class="title">Registro</h1>
+    <p class="subtitle">Crea tu cuenta para comenzar</p>
 
-    <form class="register-form" (ngSubmit)="register()">
+    <form [formGroup]="registerForm" (ngSubmit)="register()" class="register-form">
       <ion-item>
-        <ion-label position="stacked">Full Name</ion-label>
-        <ion-input 
-          type="text" 
-          [(ngModel)]="fullName" 
-          name="fullName"
-          placeholder="ferdinand Sinaga">
-        </ion-input>
+        <ion-label position="stacked">Tipo de perfil</ion-label>
+        <ion-select formControlName="type" placeholder="Selecciona un tipo">
+          <ion-select-option value="user">Usuario</ion-select-option>
+          <ion-select-option value="business">Negocio</ion-select-option>
+        </ion-select>
       </ion-item>
 
       <ion-item>
-        <ion-label position="stacked">Email</ion-label>
-        <ion-input 
-          type="email" 
-          [(ngModel)]="email" 
-          name="email"
-          placeholder="ferdinand@gmail.com">
-        </ion-input>
+        <ion-label position="stacked">Nombre completo</ion-label>
+        <ion-input type="text" formControlName="fullName" placeholder="Ingresa tu nombre completo"></ion-input>
       </ion-item>
 
       <ion-item>
-        <ion-label position="stacked">Password</ion-label>
-        <ion-input 
-          [type]="showPassword ? 'text' : 'password'"
-          [(ngModel)]="password"
-          name="password"
-          placeholder="********">
-        </ion-input>
-        <ion-icon 
-          [name]="showPassword ? 'eye-outline' : 'eye-off-outline'" 
-          slot="end"
-          (click)="togglePassword()">
-        </ion-icon>
+        <ion-label position="stacked">Correo electrónico</ion-label>
+        <ion-input type="email" formControlName="email" placeholder="tucorreo@ejemplo.com"></ion-input>
       </ion-item>
 
       <ion-item>
-        <ion-label position="stacked">Repeat Password</ion-label>
-        <ion-input 
-          [type]="showConfirmPassword ? 'text' : 'password'"
-          [(ngModel)]="confirmPassword"
-          name="confirmPassword"
-          placeholder="********">
-        </ion-input>
-        <ion-icon 
-          [name]="showConfirmPassword ? 'eye-outline' : 'eye-off-outline'" 
-          slot="end"
-          (click)="toggleConfirmPassword()">
-        </ion-icon>
+        <ion-label position="stacked">Contraseña</ion-label>
+        <ion-input type="password" formControlName="password" placeholder="********"></ion-input>
       </ion-item>
 
+      <!-- Campos de negocio -->
+      @if (showBusinessFields) {
+        <div class="business-fields">
+          <ion-item>
+            <ion-label position="stacked">Nombre del negocio</ion-label>
+            <ion-input type="text" formControlName="businessName" placeholder="Nombre de tu empresa"></ion-input>
+          </ion-item>
 
-      <ion-button expand="block" type="submit" class="register-btn">
-        Register
+          <ion-item>
+            <ion-label position="stacked">RFC</ion-label>
+            <ion-input type="text" formControlName="taxId" placeholder="Registro Federal de Contribuyentes"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Dirección</ion-label>
+            <ion-input type="text" formControlName="address" placeholder="Dirección completa"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Teléfono</ion-label>
+            <ion-input type="tel" formControlName="phone" placeholder="Número de teléfono"></ion-input>
+          </ion-item>
+        </div>
+      }
+
+      <ion-button expand="block" type="submit" class="register-btn" [disabled]="!registerForm.valid">
+        Registrarse
       </ion-button>
 
       <p class="login-text">
-        I have an account? <a (click)="goToLogin()">Log in</a>
+        ¿Ya tienes una cuenta? <a (click)="goToLogin()">Inicia sesión</a>
       </p>
     </form>
   </div>
