@@ -176,6 +176,27 @@ $dark-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       }
     }
   }
+
+  .suggestions-container {
+    background: $dark-card-bg;
+    box-shadow: $dark-shadow;
+    border: 1px solid $dark-border;
+    
+    .suggestions-list {
+      ion-item {
+        --background: #{$dark-card-bg};
+        --color: #{$dark-text};
+        
+        ion-icon {
+          color: $accent-green;
+        }
+        
+        &:hover {
+          --background: #{$dark-bg};
+        }
+      }
+    }
+  }
 }
 
 // Page styles
@@ -478,5 +499,92 @@ ion-col {
     font-size: 14px;
     margin: 0;
     color: #558b6e;
+  }
+}
+
+// Contenedor de búsqueda
+.search-container {
+  position: relative;
+  width: 100%;
+}
+
+// Sugerencias de búsqueda
+.suggestions-container {
+  position: absolute;
+  width: 100%;
+  z-index: 10000;
+  background: $card-bg;
+  border-radius: 0 0 16px 16px;
+  box-shadow: $card-shadow;
+  max-height: 300px;
+  overflow-y: auto;
+  top: 100%;
+  left: 0;
+  
+  .suggestions-list {
+    margin: 0;
+    padding: 0;
+    
+    ion-item {
+      --padding-start: 16px;
+      --padding-end: 16px;
+      --padding-top: 8px;
+      --padding-bottom: 8px;
+      --min-height: 44px;
+      
+      &:last-child {
+        --border-width: 0;
+      }
+      
+      ion-icon {
+        color: $accent-green;
+        margin-right: 8px;
+      }
+      
+      &:hover {
+        --background: #{$light-green};
+      }
+    }
+  }
+}
+
+// Estilos para la barra de búsqueda y sugerencias
+.suggestions-toolbar {
+  --background: white;
+  --border-style: none;
+  
+  .suggestions-list {
+    margin: 0;
+    padding: 0;
+    
+    ion-item {
+      --padding-start: 16px;
+      --padding-end: 16px;
+      --min-height: 44px;
+      
+      &:last-child {
+        --border-width: 0;
+      }
+      
+      &:hover {
+        --background: var(--ion-color-light);
+      }
+    }
+  }
+}
+
+// Aplicar estilos en modo oscuro
+:host-context(.dark) {
+  .suggestions-toolbar {
+    --background: var(--ion-color-dark);
+    
+    .suggestions-list ion-item {
+      --background: var(--ion-color-dark);
+      --color: var(--ion-color-light);
+      
+      &:hover {
+        --background: var(--ion-color-medium);
+      }
+    }
   }
 } 

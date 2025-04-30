@@ -20,7 +20,10 @@ import {
   IonSelectOption,
   IonButtons,
   IonSkeletonText,
-  IonSpinner
+  IonSpinner,
+  IonItem,
+  IonList,
+  IonSearchbar
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -37,9 +40,13 @@ import {
   starHalf,
   sunny,
   moon, 
-  searchOutline 
+  searchOutline,
+  search 
 } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { AiSuggestionsService } from '../services/ai-suggestions.service';
 
 interface Product {
   id: string;
@@ -102,7 +109,10 @@ interface Store {
     IonSelectOption,
     IonButtons,
     IonSkeletonText,
-    IonSpinner
+    IonSpinner,
+    IonSearchbar,
+    IonList,
+    IonItem
   ]
 })
 export class StoresPage implements OnInit {
@@ -110,6 +120,9 @@ export class StoresPage implements OnInit {
   selectedCategory: string = 'Todos';
   selectedSort: string = 'default';
   isLoading = false;
+  searchTerm: string = '';
+  showSearchBar: boolean = false;
+  allStores: Store[] = []; // Original unfiltered stores
   categories: string[] = [
     'Todos',
     'Mercado',
@@ -133,10 +146,14 @@ export class StoresPage implements OnInit {
   ];
 
   stores: Store[] = [];
+  searchSuggestions: string[] = [];
+  showSuggestions: boolean = false;
+  private searchTerms = new Subject<string>();
 
   constructor(
     private router: Router,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private aiSuggestionsService: AiSuggestionsService
   ) {
     addIcons({
       storefront,
@@ -149,7 +166,8 @@ export class StoresPage implements OnInit {
       starHalf,
       sunny,
       moon,
-      searchOutline
+      searchOutline,
+      search
     });
 
     // Check if dark mode was previously selected
@@ -158,6 +176,19 @@ export class StoresPage implements OnInit {
       this.isDarkMode = JSON.parse(savedDarkMode);
       this.applyTheme();
     }
+
+    // Set up search suggestions
+    this.searchTerms.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(term => {
+      if (term.length > 2) {
+        this.getAiSuggestions(term);
+      } else {
+        this.searchSuggestions = [];
+        this.showSuggestions = false;
+      }
+    });
   }
 
   async ngOnInit() {
@@ -183,6 +214,9 @@ export class StoresPage implements OnInit {
           console.log(`Tienda ${store.name} - URL de imagen:`, mappedStore.imageUrl);
           return mappedStore;
         });
+        
+        // Save a copy of all stores for search filtering
+        this.allStores = [...this.stores];
       }
     } catch (error) {
       console.error('Error al cargar tiendas:', error);
@@ -268,5 +302,76 @@ export class StoresPage implements OnInit {
   async viewStore(storeId: string) {
     console.log('Navegando a la tienda con ID:', storeId);
     this.router.navigate(['/store', storeId]);
+  }
+
+  toggleSearch() {
+    this.showSearchBar = !this.showSearchBar;
+    if (!this.showSearchBar) {
+      this.searchTerm = '';
+      this.searchSuggestions = [];
+      this.showSuggestions = false;
+      this.stores = [...this.allStores]; // Restore original stores when search is closed
+    }
+  }
+
+  onSearchInput(event: any) {
+    const term = event.target.value.trim();
+    console.log('Entrada de búsqueda:', term);
+    this.searchTerms.next(term);
+  }
+
+  searchStores() {
+    if (!this.searchTerm.trim()) {
+      this.stores = [...this.allStores]; // Restore original stores when search is empty
+      this.searchSuggestions = [];
+      this.showSuggestions = false;
+      return;
+    }
+    
+    const term = this.searchTerm.toLowerCase().trim();
+    
+    // Filter stores by name, description, categories, or products if available
+    this.stores = this.allStores.filter(store => {
+      const nameMatch = store.name.toLowerCase().includes(term);
+      const descMatch = store.description?.toLowerCase().includes(term);
+      const categoryMatch = store.categories?.some(cat => cat.toLowerCase().includes(term));
+      
+      // Also search within products if they are loaded
+      const productMatch = store.products?.some(
+        product => 
+          product.name.toLowerCase().includes(term) || 
+          product.category.toLowerCase().includes(term) ||
+          product.description?.toLowerCase().includes(term)
+      );
+      
+      return nameMatch || descMatch || categoryMatch || productMatch;
+    });
+    
+    // Hide suggestions after search
+    this.searchSuggestions = [];
+    this.showSuggestions = false;
+  }
+  
+  selectSuggestion(suggestion: string) {
+    this.searchTerm = suggestion;
+    this.searchStores();
+    this.showSuggestions = false;
+  }
+  
+  private getAiSuggestions(term: string) {
+    console.log('Solicitando sugerencias para:', term);
+    this.aiSuggestionsService.getSuggestions(term).subscribe(
+      suggestions => {
+        console.log('Sugerencias recibidas:', suggestions);
+        this.searchSuggestions = suggestions;
+        this.showSuggestions = this.searchSuggestions.length > 0;
+        console.log('¿Mostrar sugerencias?', this.showSuggestions, 'Cantidad:', this.searchSuggestions.length);
+      },
+      error => {
+        console.error('Error al obtener sugerencias:', error);
+        this.searchSuggestions = [];
+        this.showSuggestions = false;
+      }
+    );
   }
 } 

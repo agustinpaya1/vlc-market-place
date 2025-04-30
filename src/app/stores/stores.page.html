@@ -1,6 +1,35 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>Tiendas</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleSearch()">
+        <ion-icon name="search"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  
+  <!-- Barra de búsqueda -->
+  <ion-toolbar *ngIf="showSearchBar">
+    <ion-searchbar 
+      [(ngModel)]="searchTerm" 
+      (ionChange)="searchStores()"
+      (ionInput)="onSearchInput($event)"
+      placeholder="Buscar tiendas y productos"
+      animated
+      debounce="300"
+      showCancelButton="always"
+      (ionCancel)="toggleSearch()">
+    </ion-searchbar>
+  </ion-toolbar>
+  
+  <!-- Sugerencias de búsqueda -->
+  <ion-toolbar *ngIf="showSuggestions" class="suggestions-toolbar">
+    <ion-list lines="full" class="suggestions-list">
+      <ion-item *ngFor="let suggestion of searchSuggestions" (click)="selectSuggestion(suggestion)" button>
+        <ion-icon name="search-outline" slot="start" color="primary"></ion-icon>
+        <ion-label>{{ suggestion }}</ion-label>
+      </ion-item>
+    </ion-list>
   </ion-toolbar>
 </ion-header>
 
