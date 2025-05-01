@@ -23,7 +23,8 @@ import {
   IonSpinner,
   IonItem,
   IonList,
-  IonSearchbar
+  IonSearchbar,
+  IonItemDivider
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -41,8 +42,7 @@ import {
   sunny,
   moon, 
   searchOutline,
-  search 
-} from 'ionicons/icons';
+  search, leafOutline, nutritionOutline, restaurantOutline, waterOutline } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -81,6 +81,15 @@ interface Store {
   owner_id?: string;
 }
 
+// Interface for categorized suggestions
+interface CategorizedSuggestions {
+  vegetables: string[];
+  fruits: string[];
+  meats: string[];
+  dairy: string[];
+  others: string[];
+}
+
 @Component({
   selector: 'app-stores',
   templateUrl: './stores.page.html',
@@ -112,7 +121,8 @@ interface Store {
     IonSpinner,
     IonSearchbar,
     IonList,
-    IonItem
+    IonItem,
+    IonItemDivider
   ]
 })
 export class StoresPage implements OnInit {
@@ -147,6 +157,13 @@ export class StoresPage implements OnInit {
 
   stores: Store[] = [];
   searchSuggestions: string[] = [];
+  categorizedSuggestions: CategorizedSuggestions = {
+    vegetables: [],
+    fruits: [],
+    meats: [],
+    dairy: [],
+    others: []
+  };
   showSuggestions: boolean = false;
   private searchTerms = new Subject<string>();
 
@@ -155,20 +172,7 @@ export class StoresPage implements OnInit {
     private supabaseService: SupabaseService,
     private aiSuggestionsService: AiSuggestionsService
   ) {
-    addIcons({
-      storefront,
-      location,
-      time,
-      arrowForward,
-      star,
-      trendingUp,
-      map,
-      starHalf,
-      sunny,
-      moon,
-      searchOutline,
-      search
-    });
+    addIcons({search,leafOutline,nutritionOutline,restaurantOutline,waterOutline,searchOutline,trendingUp,location,time,storefront,star,arrowForward,map,starHalf,sunny,moon});
 
     // Check if dark mode was previously selected
     const savedDarkMode = localStorage.getItem('darkMode');
@@ -186,6 +190,13 @@ export class StoresPage implements OnInit {
         this.getAiSuggestions(term);
       } else {
         this.searchSuggestions = [];
+        this.categorizedSuggestions = {
+          vegetables: [],
+          fruits: [],
+          meats: [],
+          dairy: [],
+          others: []
+        };
         this.showSuggestions = false;
       }
     });
@@ -309,6 +320,13 @@ export class StoresPage implements OnInit {
     if (!this.showSearchBar) {
       this.searchTerm = '';
       this.searchSuggestions = [];
+      this.categorizedSuggestions = {
+        vegetables: [],
+        fruits: [],
+        meats: [],
+        dairy: [],
+        others: []
+      };
       this.showSuggestions = false;
       this.stores = [...this.allStores]; // Restore original stores when search is closed
     }
@@ -316,8 +334,20 @@ export class StoresPage implements OnInit {
 
   onSearchInput(event: any) {
     const term = event.target.value.trim();
-    console.log('Entrada de búsqueda:', term);
-    this.searchTerms.next(term);
+    if (term.length > 2) {
+      this.searchTerms.next(term);
+      this.showSuggestions = true;
+    } else {
+      this.searchSuggestions = [];
+      this.categorizedSuggestions = {
+        vegetables: [],
+        fruits: [],
+        meats: [],
+        dairy: [],
+        others: []
+      };
+      this.showSuggestions = false;
+    }
   }
 
   searchStores() {
@@ -359,19 +389,52 @@ export class StoresPage implements OnInit {
   }
   
   private getAiSuggestions(term: string) {
-    console.log('Solicitando sugerencias para:', term);
-    this.aiSuggestionsService.getSuggestions(term).subscribe(
-      suggestions => {
-        console.log('Sugerencias recibidas:', suggestions);
-        this.searchSuggestions = suggestions;
-        this.showSuggestions = this.searchSuggestions.length > 0;
-        console.log('¿Mostrar sugerencias?', this.showSuggestions, 'Cantidad:', this.searchSuggestions.length);
-      },
-      error => {
-        console.error('Error al obtener sugerencias:', error);
-        this.searchSuggestions = [];
-        this.showSuggestions = false;
+    this.aiSuggestionsService.getSuggestions(term).subscribe(suggestions => {
+      this.searchSuggestions = suggestions;
+      this.categorizedSuggestions = this.categorizeSuggestions(suggestions);
+      this.showSuggestions = suggestions.length > 0;
+    });
+  }
+
+  // Categorize suggestions by type
+  private categorizeSuggestions(suggestions: string[]): CategorizedSuggestions {
+    const categorized: CategorizedSuggestions = {
+      vegetables: [],
+      fruits: [],
+      meats: [],
+      dairy: [],
+      others: []
+    };
+
+    // Vegetables keywords
+    const vegetablesKeywords = ['verdura', 'vegetal', 'hortaliza', 'tomate', 'cebolla', 'lechuga', 'zanahoria', 'pimiento', 'patata', 'calabacín', 'berenjena'];
+    
+    // Fruits keywords
+    const fruitsKeywords = ['fruta', 'manzana', 'naranja', 'plátano', 'fresa', 'melón', 'sandía', 'pera', 'uva', 'kiwi', 'melocotón'];
+    
+    // Meats keywords
+    const meatsKeywords = ['carne', 'pollo', 'cerdo', 'ternera', 'cordero', 'jamón', 'embutido', 'salchicha', 'pechuga', 'filete'];
+    
+    // Dairy keywords
+    const dairyKeywords = ['lácteo', 'queso', 'leche', 'yogur', 'mantequilla', 'nata', 'crema', 'helado', 'yogurt'];
+
+    // Categorize each suggestion
+    for (const suggestion of suggestions) {
+      const lowerSuggestion = suggestion.toLowerCase();
+      
+      if (vegetablesKeywords.some(keyword => lowerSuggestion.includes(keyword))) {
+        categorized.vegetables.push(suggestion);
+      } else if (fruitsKeywords.some(keyword => lowerSuggestion.includes(keyword))) {
+        categorized.fruits.push(suggestion);
+      } else if (meatsKeywords.some(keyword => lowerSuggestion.includes(keyword))) {
+        categorized.meats.push(suggestion);
+      } else if (dairyKeywords.some(keyword => lowerSuggestion.includes(keyword))) {
+        categorized.dairy.push(suggestion);
+      } else {
+        categorized.others.push(suggestion);
       }
-    );
+    }
+
+    return categorized;
   }
 } 

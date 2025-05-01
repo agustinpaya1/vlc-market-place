@@ -552,22 +552,51 @@ ion-col {
 .suggestions-toolbar {
   --background: white;
   --border-style: none;
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.15);
   
   .suggestions-list {
     margin: 0;
     padding: 0;
+    max-height: 450px;
+    overflow-y: auto;
+    
+    ion-item-divider {
+      --background: #f8fcf8;
+      --color: $dark-green;
+      font-weight: 600;
+      min-height: 30px;
+      
+      ion-label {
+        margin: 8px 0;
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 0.5px;
+      }
+    }
     
     ion-item {
       --padding-start: 16px;
       --padding-end: 16px;
       --min-height: 44px;
+      --background: white;
+      --transition: background-color 0.2s ease;
       
       &:last-child {
         --border-width: 0;
       }
       
+      ion-icon {
+        font-size: 18px;
+        margin-right: 12px;
+      }
+      
+      ion-label {
+        font-size: 14px;
+        color: #444;
+      }
+      
       &:hover {
-        --background: var(--ion-color-light);
+        --background: #f0f8f0;
       }
     }
   }
@@ -577,13 +606,25 @@ ion-col {
 :host-context(.dark) {
   .suggestions-toolbar {
     --background: var(--ion-color-dark);
+    box-shadow: $dark-shadow;
     
-    .suggestions-list ion-item {
-      --background: var(--ion-color-dark);
-      --color: var(--ion-color-light);
+    .suggestions-list {
+      ion-item-divider {
+        --background: #222;
+        --color: $accent-green;
+      }
       
-      &:hover {
-        --background: var(--ion-color-medium);
+      ion-item {
+        --background: var(--ion-color-dark);
+        --color: var(--ion-color-light);
+        
+        ion-label {
+          color: #ddd;
+        }
+        
+        &:hover {
+          --background: #333;
+        }
       }
     }
   }
