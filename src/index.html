@@ -14,6 +14,9 @@
 
   <link rel="icon" type="image/png" href="assets/icon/favicon.png" />
   
+  <!-- Mapbox CSS -->
+  <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+  
   <!-- Google Fonts - Roboto -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,6 +29,16 @@
 
 <body>
   <app-root></app-root>
+  
+  <!-- Mapbox JS -->
+  <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+  <script>
+    // Verificar que Mapbox se ha cargado correctamente
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Verificando carga de Mapbox GL...');
+      console.log('mapboxgl definido:', typeof mapboxgl !== 'undefined');
+    });
+  </script>
 </body>
 
 </html>

@@ -6,95 +6,153 @@
 
 <ion-content [fullscreen]="true" class="ion-no-padding">
   <!-- Mapa a pantalla completa -->
-  <div id="mapbox-map" class="fullscreen-map"></div>
+  <div id="mapbox-map" class="fullscreen-map" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;"></div>
 
-  <!-- Bottom Sheet deslizable -->
-  <div class="bottom-sheet" [class.active]="isBottomSheetActive">
+  <!-- Loading indicator -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-container">
+      <ion-spinner name="circular"></ion-spinner>
+      <span>Cargando tiendas...</span>
+    </div>
+  </div>
+
+  <!-- Bottom Sheet de tiendas deslizable -->
+  <div class="bottom-sheet dark-theme" [class.active]="isBottomSheetActive" [class.reduced]="isProductSheetActive">
     <div class="bottom-sheet-handle" (click)="toggleBottomSheet()">
       <div class="handle-bar"></div>
     </div>
     
     <!-- Barra de búsqueda -->
     <div class="search-section">
-      <ion-searchbar placeholder="Buscar mercados..." mode="ios"></ion-searchbar>
+      <ion-searchbar placeholder="Buscar mercados y tiendas..." 
+                     mode="ios" 
+                     [debounce]="300" 
+                     (ionInput)="onSearchInput($event)"
+                     [value]="searchQuery"
+                     animated></ion-searchbar>
     </div>
 
     <!-- Lista de tiendas -->
-    <div class="stores-list">
-      <div class="store-item" *ngFor="let store of stores" (click)="focusOnStore(store)">
-        <h2>{{store.name}}</h2>
-        <p class="distance">
-          <ion-icon name="location-outline"></ion-icon>
-          {{store.distance}} km
-        </p>
-        <p>
-          <ion-icon name="time-outline"></ion-icon>
-          {{store.schedule}}
-        </p>
-        <p>
-          <ion-icon name="call-outline"></ion-icon>
-          {{store.phone}}
-        </p>
-        <div class="status-chip" [class.open]="store.isOpen">
-          <ion-icon [name]="store.isOpen ? 'checkmark-circle' : 'close-circle'"></ion-icon>
-          <span>{{store.isOpen ? 'Abierto' : 'Cerrado'}}</span>
+    <div class="stores-list" *ngIf="!isLoading; else loadingTemplate">
+      <div class="store-item" *ngFor="let store of stores" (click)="selectStore(store)">
+        <div class="store-image">
+          <ion-img [src]="store.imageUrl || 'assets/store-placeholder.jpg'" (ionError)="$event.target.src = 'assets/store-placeholder.jpg'"></ion-img>
+          <ion-badge [color]="store.isOpen ? 'success' : 'medium'" class="store-status">
+            {{store.isOpen ? 'Abierto' : 'Cerrado'}}
+          </ion-badge>
+        </div>
+        <div class="store-details">
+          <h2>{{store.name}}</h2>
+          <p class="category">{{store.category}}</p>
+          <p class="distance">
+            <ion-icon name="location-outline"></ion-icon>
+            {{store.distance}} km
+          </p>
+          <p class="schedule">
+            <ion-icon name="time-outline"></ion-icon>
+            {{store.open_time || store.openTime || 'Horario no disponible'}}
+          </p>
+          <div class="rating" *ngIf="store.rating">
+            <ion-icon name="star"></ion-icon>
+            <span>{{store.rating | number:'1.1-1'}}</span>
+          </div>
         </div>
       </div>
+      
+      <div class="empty-state" *ngIf="stores.length === 0">
+        <ion-icon name="storefront-outline" size="large"></ion-icon>
+        <h3>¡Ups! No hay tiendas disponibles</h3>
+        <p>Intenta cambiar los filtros o ampliar la búsqueda</p>
+      </div>
     </div>
+    
+    <ng-template #loadingTemplate>
+      <div class="loading-stores">
+        <ion-skeleton-text animated style="width: 100%; height: 80px; margin-bottom: 16px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 100%; height: 80px; margin-bottom: 16px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 100%; height: 80px;"></ion-skeleton-text>
+      </div>
+    </ng-template>
   </div>
 
-  <!-- Botón de filtros flotante -->
-  <ion-fab vertical="top" horizontal="end" slot="fixed">
-    <ion-fab-button (click)="toggleFilters()">
-      <ion-icon name="options-outline"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
+  <!-- Bottom Sheet de productos -->
+  <div class="product-sheet dark-theme" [class.active]="isProductSheetActive" #productBottomSheet>
+    <div class="product-sheet-handle">
+      <div class="handle-bar"></div>
+      <ion-button fill="clear" class="close-button" (click)="hideProductSheet()">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+    </div>
 
-  <!-- Modal de filtros -->
-  <ion-modal [isOpen]="showFilters" [breakpoints]="[0, 0.5, 0.8]" [initialBreakpoint]="0.5" (didDismiss)="toggleFilters()">
-    <ng-template>
-      <ion-header class="ion-no-border">
-        <ion-toolbar>
-          <ion-title>Filtros</ion-title>
-          <ion-buttons slot="end">
-            <ion-button (click)="toggleFilters()">
-              <ion-icon name="close-outline"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
+    <div class="product-sheet-header" *ngIf="selectedStore">
+      <h1>{{selectedStore.name}}</h1>
+      <p class="store-description">{{selectedStore.description || 'Tienda local en Valencia'}}</p>
+      
+      <div class="store-info">
+        <span class="address">
+          <ion-icon name="location-outline"></ion-icon>
+          {{selectedStore.address || selectedStore.location || 'Valencia, España'}}
+        </span>
+        <span class="phone" *ngIf="selectedStore.phone || selectedStore.contact_phone">
+          <ion-icon name="call-outline"></ion-icon>
+          {{selectedStore.phone || selectedStore.contact_phone}}
+        </span>
+      </div>
+      
+      <div class="view-details-button">
+        <ion-button expand="block" fill="outline" (click)="viewStoreDetails(selectedStore)">
+          Ver tienda completa
+          <ion-icon name="arrow-forward" slot="end"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
 
-      <ion-content>
-        <ion-list>
-          <ion-item>
-            <ion-label>Mostrar solo abiertos</ion-label>
-            <ion-toggle [(ngModel)]="showOnlyOpen"></ion-toggle>
-          </ion-item>
-
-          <ion-item>
-            <ion-label position="stacked">Distancia máxima: {{maxDistance}}km</ion-label>
-            <ion-range min="1" max="20" step="1" [(ngModel)]="maxDistance">
-              <ion-label slot="start">1km</ion-label>
-              <ion-label slot="end">20km</ion-label>
-            </ion-range>
-          </ion-item>
-
-          <ion-item>
-            <ion-label position="stacked">Categorías</ion-label>
-            <ion-select multiple="true" [(ngModel)]="selectedCategories">
-              <ion-select-option value="food">Alimentación</ion-select-option>
-              <ion-select-option value="clothing">Ropa</ion-select-option>
-              <ion-select-option value="electronics">Electrónica</ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-list>
-
-        <div class="ion-padding">
-          <ion-button expand="block" (click)="applyFilters()">
-            Aplicar Filtros
-          </ion-button>
+    <div class="product-sheet-content">
+      <h2>Productos</h2>
+      
+      <div class="products-list" *ngIf="!isLoading && storeProducts.length > 0; else noProductsTemplate">
+        <ion-card class="product-card" *ngFor="let product of storeProducts">
+          <div class="product-image">
+            <ion-img [src]="product.imageUrl || 'assets/product-placeholder.jpg'" (ionError)="$event.target.src = 'assets/product-placeholder.jpg'"></ion-img>
+            <div class="product-badge" *ngIf="product.isOffer">Oferta</div>
+          </div>
+          <ion-card-header>
+            <ion-card-title>{{product.name}}</ion-card-title>
+            <ion-card-subtitle>{{product.category}}</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <p class="product-description">{{product.description}}</p>
+            
+            <div class="product-footer">
+              <div class="price">
+                <span class="current-price">{{product.price | currency:'EUR':'symbol':'1.2-2'}}</span>
+                <span class="original-price" *ngIf="product.isOffer && product.offerPrice">
+                  {{product.offerPrice | currency:'EUR':'symbol':'1.2-2'}}
+                </span>
+              </div>
+              
+              <div class="stock" [class.low]="product.stock < 10">
+                <ion-icon name="checkmark-circle" *ngIf="product.stock > 0"></ion-icon>
+                <ion-icon name="close-circle" *ngIf="product.stock <= 0"></ion-icon>
+                {{product.stock > 0 ? 'En stock' : 'Agotado'}}
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+      
+      <ng-template #noProductsTemplate>
+        <div class="empty-products" *ngIf="!isLoading">
+          <ion-icon name="cart-outline" size="large"></ion-icon>
+          <h3>No hay productos disponibles</h3>
+          <p>Esta tienda aún no ha añadido productos.</p>
         </div>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
+        
+        <div class="loading-products" *ngIf="isLoading">
+          <ion-skeleton-text animated style="width: 100%; height: 200px; margin-bottom: 16px;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 100%; height: 200px; margin-bottom: 16px;"></ion-skeleton-text>
+        </div>
+      </ng-template>
+    </div>
+  </div>
 </ion-content> 
