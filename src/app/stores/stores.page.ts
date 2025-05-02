@@ -312,7 +312,7 @@ export class StoresPage implements OnInit {
 
   async viewStore(storeId: string) {
     console.log('Navegando a la tienda con ID:', storeId);
-    this.router.navigate(['/store', storeId]);
+    this.router.navigate(['/tabs/store', storeId]);
   }
 
   toggleSearch() {

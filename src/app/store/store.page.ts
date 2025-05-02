@@ -67,33 +67,25 @@ export class StorePage implements OnInit {
     await loading.present();
 
     try {
+      // Obtener la tienda desde Supabase
       const storeData = await this.supabaseService.getStoreById(storeId);
-      
+      // Obtener los productos de la tienda desde Supabase
+      const productsData = await this.supabaseService.getStoreProducts(storeId);
+
       if (storeData) {
-        const mappedStore = {
-          ...storeData,
-          location: storeData.location_text || 'Valencia',
-          imageUrl: storeData.image_url || 'assets/stores/default-store.jpg',
-          products: storeData.products.map((product: any) => ({
-            ...product,
-            imageUrl: product.image_url || 'assets/products/default-product.jpg'
-          }))
-        };
-
         this.store = {
-          id: mappedStore.id,
-          name: mappedStore.name,
-          description: mappedStore.description || 'Tienda local con productos de calidad',
-          imageUrl: mappedStore.imageUrl,
-          location: mappedStore.location,
-          openTime: mappedStore.open_time || '9:00 - 20:00',
-          rating: mappedStore.rating || 4.5,
-          categories: mappedStore.category ? [mappedStore.category] : ['Especialidad'],
-          hasOffers: mappedStore.has_offers || false,
-          distance: mappedStore.distance || '1.2 km'
+          id: storeData.id,
+          name: storeData.name,
+          description: storeData.description || 'Tienda local con productos de calidad',
+          imageUrl: storeData.imageUrl,
+          location: storeData.location,
+          openTime: storeData.open_time || '9:00 - 20:00',
+          rating: storeData.rating || 4.5,
+          categories: storeData.category ? [storeData.category] : ['Especialidad'],
+          hasOffers: storeData.has_offers || false,
+          distance: storeData.distance || '1.2 km'
         };
-
-        this.products = mappedStore.products;
+        this.products = productsData || [];
         this.filteredProducts = [...this.products];
       } else {
         await this.showStoreNotFoundMessage();

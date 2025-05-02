@@ -3,6 +3,8 @@ import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
 import { MapService } from '../services/map.service';
+import { Router } from '@angular/router';
+import { SupabaseService } from '../services/supabase.service';
 
 interface Store {
   name: string;
@@ -17,7 +19,11 @@ interface Store {
   imports: [IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
 })
 export class LocationsPage implements OnInit, AfterViewInit {
-  constructor(private mapService: MapService) {}
+  constructor(
+    private mapService: MapService,
+    private router: Router,
+    private supabaseService: SupabaseService
+  ) {}
 
   ngOnInit() {}
 
@@ -35,5 +41,13 @@ export class LocationsPage implements OnInit, AfterViewInit {
         this.mapService.addMarker(store.coordinates, store.name);
       });
     }, 500);
+  }
+
+  viewStore(storeId: string) {
+    this.router.navigate(['/tabs/store', storeId]);
+  }
+
+  getPublicImageUrl(path: string): string {
+    return this.supabaseService.getPublicImageUrl(path);
   }
 } 

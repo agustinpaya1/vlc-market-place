@@ -201,4 +201,18 @@ export class SupabaseService {
       throw error;
     }
   }
+
+  // Método público para obtener la URL pública de una imagen
+  public getPublicImageUrl(path: string): string {
+    if (!path) return '';
+    try {
+      return this.supabase
+        .storage
+        .from(this.bucketName)
+        .getPublicUrl(path).data.publicUrl;
+    } catch (error) {
+      console.error('Error al obtener la URL pública de la imagen:', error);
+      return '';
+    }
+  }
 }
