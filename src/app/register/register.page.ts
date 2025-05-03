@@ -5,22 +5,13 @@ import { AlertController } from '@ionic/angular';
 import {
     IonButton,
     IonContent,
-    IonIcon,
     IonInput,
     IonItem,
     IonLabel,
-    IonList,
     IonSelect,
-    IonSelectOption,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons
+    IonSelectOption
 } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import { arrowBackOutline, eyeOffOutline, eyeOutline } from 'ionicons/icons';
 import { AuthService, BusinessProfile } from '../services/auth.service';
-import { SupabaseService } from '../services/supabase.service';
 
 @Component({
   selector: 'app-register',
@@ -30,17 +21,11 @@ import { SupabaseService } from '../services/supabase.service';
     ReactiveFormsModule,
     IonContent,
     IonButton,
-    IonIcon,
     IonItem,
     IonInput,
     IonLabel,
-    IonList,
     IonSelect,
-    IonSelectOption,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons
+    IonSelectOption
   ],
   standalone: true
 })
@@ -54,8 +39,6 @@ export class RegisterPage {
     private router: Router,
     private alertController: AlertController
   ) {
-    addIcons({eyeOutline, eyeOffOutline, arrowBackOutline});
-
     this.registerForm = this.formBuilder.group({
       type: ['user', Validators.required],
       fullName: ['', [Validators.required, Validators.minLength(3)]],

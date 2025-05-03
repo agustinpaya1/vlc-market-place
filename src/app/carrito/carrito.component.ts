@@ -20,11 +20,8 @@ import {
   IonRow,
   IonCol,
   IonImg,
-  IonBadge,
   IonButtons,
-  IonText,
-  IonCardSubtitle,
-  IonInput
+  IonCardSubtitle
 } from '@ionic/angular/standalone';
 import { CartService, CartItem } from '../services/cart.service';
 import { ProductService } from '../services/product.service';
@@ -56,11 +53,8 @@ import { trash, arrowBack, add, remove } from 'ionicons/icons';
     IonRow,
     IonCol,
     IonImg,
-    IonBadge,
     IonButtons,
-    IonText,
-    IonCardSubtitle,
-    IonInput
+    IonCardSubtitle
   ]
 })
 export class CarritoComponent implements OnInit {

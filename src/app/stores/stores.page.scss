@@ -1,11 +1,11 @@
 // Variables
-$primary-color: var(--ion-color-primary);
-$secondary-color: var(--ion-color-secondary);
+$primary-color: var(--ion-color-artemis-primary);
+$secondary-color: var(--ion-color-artemis-secondary);
 $eco-bg: #f5f9f5;
 $card-bg: #ffffff;
 $text-color: #2c4a3e;
-$accent-green: #2ecc71;
-$dark-green: #27ae60;
+$accent-green: var(--ion-color-artemis-accent);
+$dark-green: var(--ion-color-artemis-tertiary);
 $light-green: #e8f5e9;
 $card-shadow: 0 4px 12px rgba(46, 204, 113, 0.08);
 $transition-speed: 0.3s;
@@ -176,63 +176,29 @@ $dark-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       }
     }
   }
-
-  .suggestions-container {
-    background: $dark-card-bg;
-    box-shadow: $dark-shadow;
-    border: 1px solid $dark-border;
-    
-    .suggestions-list {
-      ion-item {
-        --background: #{$dark-card-bg};
-        --color: #{$dark-text};
-        
-        ion-icon {
-          color: $accent-green;
-        }
-        
-        &:hover {
-          --background: #{$dark-bg};
-        }
-      }
-    }
-  }
 }
 
 // Page styles
 ion-content {
   --background: #{$eco-bg};
+  --padding-top: 0;
   --padding-start: 16px;
   --padding-end: 16px;
-  --padding-top: 16px;
   --padding-bottom: 16px;
 }
 
-.page-header {
-  background: linear-gradient(to right, #e8f5e9, #f1f8e9);
-  border-radius: 16px;
-  padding: 24px 16px;
-  margin-bottom: 24px;
-  box-shadow: $card-shadow;
-  border: 1px solid rgba(46, 204, 113, 0.1);
+// Título y cabecera
+ion-header ion-toolbar {
+  --background: #{$accent-green};
+  --color: white;
+  
+  ion-title {
+    font-weight: 600;
+    font-size: 18px;
+  }
 }
 
-.page-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: $dark-green;
-  margin: 0 0 8px 0;
-  text-align: center;
-}
-
-.page-subtitle {
-  font-size: 16px;
-  color: #558b6e;
-  text-align: center;
-  margin: 0;
-}
-
-// Filters container
+// Filtros container
 .filters-container {
   background: $card-bg;
   border-radius: 12px;
@@ -357,6 +323,7 @@ ion-content {
   box-shadow: $card-shadow;
   transition: transform $transition-speed ease, box-shadow $transition-speed ease;
   border: 1px solid rgba(46, 204, 113, 0.1);
+  cursor: pointer;
 
   &:hover {
     transform: translateY(-4px);
@@ -437,22 +404,6 @@ ion-content {
       }
     }
   }
-
-  .view-button {
-    margin: 0 16px 16px;
-    --border-radius: 8px;
-    --box-shadow: none;
-    --background: #{$accent-green};
-    font-weight: 500;
-    
-    ion-icon {
-      margin-left: 8px;
-    }
-
-    &:hover {
-      --background: #{$dark-green};
-    }
-  }
 }
 
 // Responsive grid
@@ -470,6 +421,89 @@ ion-col {
   justify-content: center;
   align-items: center;
   height: 200px;
+}
+
+// Contenedor de búsqueda
+ion-searchbar {
+  --background: rgba(255, 255, 255, 0.95);
+  --color: #333;
+  --placeholder-color: #558b6e;
+  --icon-color: #2ecc71;
+  --clear-button-color: #2ecc71;
+  --border-radius: 12px;
+  --box-shadow: 0 3px 10px rgba(46, 204, 113, 0.15);
+  padding: 0 8px;
+  font-weight: 500;
+  
+  &.ios {
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+  
+  &.md {
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+  
+  &::part(search-icon) {
+    font-size: 1.2em;
+  }
+  
+  &::part(cancel-button) {
+    color: #2ecc71;
+    font-weight: 500;
+  }
+  
+  &:focus-within {
+    --background: white;
+    --box-shadow: 0 4px 12px rgba(46, 204, 113, 0.25);
+  }
+}
+
+// Dark mode search bar styles
+:host-context(.dark) {
+  ion-searchbar {
+    --background: rgba(45, 45, 45, 0.95);
+    --color: #ffffff;
+    --placeholder-color: #aaaaaa;
+    --icon-color: #2ecc71;
+    --clear-button-color: #2ecc71;
+    --box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    
+    &:focus-within {
+      --background: #2d2d2d;
+      --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    &::part(cancel-button) {
+      color: #2ecc71;
+    }
+  }
+}
+
+// Notification badge
+ion-button {
+  position: relative;
+  
+  .notification-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    font-size: 10px;
+    font-weight: 600;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    background: #ff3b30;
+    color: white;
+    margin: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border: 1px solid white;
+  }
 }
 
 // Empty state
@@ -502,130 +536,594 @@ ion-col {
   }
 }
 
-// Contenedor de búsqueda
-.search-container {
-  position: relative;
-  width: 100%;
-}
-
-// Sugerencias de búsqueda
-.suggestions-container {
-  position: absolute;
-  width: 100%;
-  z-index: 10000;
-  background: $card-bg;
-  border-radius: 0 0 16px 16px;
-  box-shadow: $card-shadow;
-  max-height: 300px;
-  overflow-y: auto;
-  top: 100%;
-  left: 0;
+// New header styles
+ion-header {
+  padding: 0;
   
-  .suggestions-list {
-    margin: 0;
-    padding: 0;
+  ion-toolbar {
+    --background: transparent;
+    --border-width: 0;
+    --min-height: 60px;
+    padding: 10px 16px 5px;
+    background-color: #fff;
+  }
+  
+  .location-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-left: 4px;
     
-    ion-item {
-      --padding-start: 16px;
-      --padding-end: 16px;
-      --padding-top: 8px;
-      --padding-bottom: 8px;
-      --min-height: 44px;
+    .location-icon {
+      color: #000;
+      font-size: 20px;
+    }
+    
+    .location-label {
+      font-size: 16px;
+      font-weight: 500;
+      color: #000;
+    }
+    
+    .dropdown-icon {
+      font-size: 14px;
+      color: #777;
+    }
+  }
+  
+  .search-container {
+    display: flex;
+    padding: 0 16px 16px;
+    gap: 10px;
+    
+    .search-bar {
+      flex: 1;
+      background: #f5f5f5;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      height: 48px;
       
-      &:last-child {
-        --border-width: 0;
-      }
-      
-      ion-icon {
-        color: $accent-green;
+      .search-icon {
+        color: #999;
         margin-right: 8px;
-      }
-      
-      &:hover {
-        --background: #{$light-green};
-      }
-    }
-  }
-}
-
-// Estilos para la barra de búsqueda y sugerencias
-.suggestions-toolbar {
-  --background: white;
-  --border-style: none;
-  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.15);
-  
-  .suggestions-list {
-    margin: 0;
-    padding: 0;
-    max-height: 450px;
-    overflow-y: auto;
-    
-    ion-item-divider {
-      --background: #f8fcf8;
-      --color: $dark-green;
-      font-weight: 600;
-      min-height: 30px;
-      
-      ion-label {
-        margin: 8px 0;
-        text-transform: uppercase;
-        font-size: 12px;
-        letter-spacing: 0.5px;
-      }
-    }
-    
-    ion-item {
-      --padding-start: 16px;
-      --padding-end: 16px;
-      --min-height: 44px;
-      --background: white;
-      --transition: background-color 0.2s ease;
-      
-      &:last-child {
-        --border-width: 0;
-      }
-      
-      ion-icon {
         font-size: 18px;
-        margin-right: 12px;
       }
       
-      ion-label {
-        font-size: 14px;
-        color: #444;
-      }
-      
-      &:hover {
-        --background: #f0f8f0;
+      input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        font-size: 16px;
+        outline: none;
+        color: #333;
+        
+        &::placeholder {
+          color: #999;
+        }
       }
     }
-  }
-}
-
-// Aplicar estilos en modo oscuro
-:host-context(.dark) {
-  .suggestions-toolbar {
-    --background: var(--ion-color-dark);
-    box-shadow: $dark-shadow;
     
-    .suggestions-list {
-      ion-item-divider {
-        --background: #222;
-        --color: $accent-green;
-      }
-      
-      ion-item {
-        --background: var(--ion-color-dark);
-        --color: var(--ion-color-light);
+    .filter-button {
+      .options-button {
+        --background: var(--ion-color-artemis-primary);
+        --border-radius: 8px;
+        --padding-start: 12px;
+        --padding-end: 12px;
+        --box-shadow: 0 2px 8px rgba(5, 102, 141, 0.3);
+        height: 48px;
+        width: 48px;
+        margin: 0;
         
-        ion-label {
-          color: #ddd;
+        ion-icon {
+          color: white;
+          font-size: 20px;
         }
         
         &:hover {
-          --background: #333;
+          --background: var(--ion-color-artemis-secondary);
+          --box-shadow: 0 4px 12px rgba(5, 102, 141, 0.4);
         }
       }
     }
+  }
+}
+
+// Dark mode header adjustment
+.dark ion-header ion-toolbar {
+  background-color: $dark-bg;
+}
+
+// Estilos actualizados para categorías con imágenes de color
+.category-slider {
+  margin-bottom: 12px;
+  background-color: white;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(5, 102, 141, 0.08);
+  
+  .category-scroll {
+    display: flex;
+    overflow-x: auto;
+    padding: 5px 12px;
+    gap: 16px;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+    
+    &::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+  }
+  
+  .category-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 70px;
+    max-width: 80px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    position: relative;
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
+    
+    .category-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        border-radius: 50%;
+        background: transparent;
+        border: 2px solid transparent;
+        transition: border-color 0.3s ease;
+      }
+      
+      .category-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(5, 102, 141, 0.2);
+        will-change: transform;
+      }
+    }
+    
+    .category-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ion-color-artemis-secondary);
+      text-align: center;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+    
+    &.active {
+      .category-icon {
+        transform: scale(1.05);
+        
+        &::after {
+          border-color: var(--ion-color-artemis-accent);
+        }
+        
+        .category-img {
+          box-shadow: 0 3px 12px rgba(2, 195, 154, 0.4);
+        }
+      }
+      
+      .category-name {
+        color: var(--ion-color-artemis-accent);
+        font-weight: 600;
+      }
+    }
+    
+    &:active .category-icon {
+      transform: scale(0.95);
+    }
+  }
+}
+
+// Animación al seleccionar categoría
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.category-icon.pulse {
+  animation: pulse 0.3s ease-in-out;
+}
+
+// Dark mode category styles
+@media (prefers-color-scheme: dark) {
+  .category-slider {
+    background-color: #1e1e1e;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    
+    .category-item {
+      .category-name {
+        color: rgba(255, 255, 255, 0.8);
+      }
+      
+      &.active {
+        .category-name {
+          color: var(--ion-color-artemis-accent);
+        }
+      }
+    }
+  }
+}
+
+// Estilos para el botón flotante de la cámara
+ion-fab-button.camera-fab {
+  --background: var(--ion-color-artemis-accent);
+  --background-activated: var(--ion-color-artemis-tertiary);
+  --background-hover: var(--ion-color-artemis-tertiary);
+  --border-radius: 50%;
+  --box-shadow: 0 4px 16px rgba(2, 195, 154, 0.4);
+  --color: white;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    --box-shadow: 0 6px 20px rgba(2, 195, 154, 0.6);
+    transform: scale(1.05);
+  }
+}
+
+// Estilo para el botón de la cámara en modo oscuro
+@media (prefers-color-scheme: dark) {
+  ion-fab-button.camera-fab {
+    --background: var(--ion-color-artemis-accent);
+    --background-activated: var(--ion-color-artemis-tertiary);
+    --background-hover: var(--ion-color-artemis-tertiary);
+    --box-shadow: 0 4px 16px rgba(2, 195, 154, 0.2);
+  }
+}
+
+// Store cards
+.store-card {
+  background: $card-bg;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  box-shadow: $card-shadow;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 16px;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(46, 204, 113, 0.12);
+  }
+  
+  .store-image {
+    height: 180px;
+    width: 100%;
+    object-fit: cover;
+    background-color: #f0f0f0; /* Color de fondo temporal mientras carga */
+    will-change: transform;
+  }
+  
+  ion-card-header {
+    padding: 12px 16px;
+    background: $card-bg;
+    
+    ion-card-title {
+      font-weight: 600;
+      font-size: 18px;
+      color: $text-color;
+      margin-top: 8px;
+    }
+    
+    .store-category-chip {
+      --background: #{$light-green};
+      --color: #{$dark-green};
+      margin-right: 6px;
+      margin-bottom: 6px;
+      font-size: 11px;
+      height: 22px;
+    }
+  }
+  
+  .store-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px 16px;
+    
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #678;
+      font-size: 13px;
+      
+      ion-icon {
+        color: $accent-green;
+        font-size: 16px;
+      }
+      
+      ion-label {
+        color: #678;
+        font-size: 13px;
+      }
+    }
+    
+    .rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      
+      ion-icon {
+        color: #ffcc00;
+        font-size: 16px;
+      }
+      
+      ion-label {
+        font-weight: 600;
+        color: #2c4a3e;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// Empty state
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background: $card-bg;
+  border-radius: 16px;
+  box-shadow: $card-shadow;
+  margin: 32px 0;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  
+  ion-icon {
+    font-size: 64px;
+    color: $accent-green;
+    margin-bottom: 16px;
+  }
+  
+  h3 {
+    font-weight: 600;
+    color: $text-color;
+    margin-bottom: 8px;
+  }
+  
+  p {
+    color: #678;
+    margin-bottom: 0;
+  }
+}
+
+// Loading state
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  
+  ion-spinner {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+// Filter popover styles
+.filter-popover {
+  --width: 200px;
+  --max-width: 90%;
+  --backdrop-opacity: 0.3;
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+// Estilos para las opciones de filtrado dentro del popover
+.filter-options {
+  padding: 8px 0;
+  
+  .filter-option {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    
+    .filter-option-icon {
+      margin-right: 10px;
+      font-size: 18px;
+      color: #777;
+    }
+    
+    &:hover {
+      background-color: #f5f5f5;
+    }
+    
+    &.active {
+      color: $accent-green;
+      font-weight: 600;
+      background-color: rgba(46, 204, 113, 0.1);
+      position: relative;
+      
+      .filter-option-icon {
+        color: $accent-green;
+      }
+      
+      &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background-color: $accent-green;
+      }
+    }
+  }
+}
+
+// Notification button styling
+.notification-button {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --background: transparent;
+  height: 44px;
+  width: 44px;
+  margin: 0;
+  position: relative;
+  
+  ion-icon {
+    color: #333;
+    font-size: 24px;
+  }
+}
+
+// Notification badge
+.notification-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  background: #ff3b30;
+  color: white;
+  margin: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  border: 1px solid white;
+  z-index: 1;
+}
+
+// Dark mode styles
+.dark {
+  // Header y barra de búsqueda
+  ion-header ion-toolbar {
+    background-color: $dark-bg;
+  }
+  
+  .location-container {
+    .location-icon, .location-label, .dropdown-icon {
+      color: $dark-text;
+    }
+  }
+  
+  .search-bar {
+    background: $dark-card-bg;
+    
+    .search-icon {
+      color: $dark-text-secondary;
+    }
+    
+    input {
+      color: $dark-text;
+      
+      &::placeholder {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+  
+  // Category slider
+  .category-slider {
+    background-color: $dark-bg;
+    border-bottom-color: $dark-border;
+    
+    .category-item .category-name {
+      color: $dark-text-secondary;
+    }
+    
+    .category-item.active .category-name {
+      color: $accent-green;
+    }
+  }
+  
+  // Store cards
+  .store-card {
+    background: $dark-card-bg;
+    border-color: $dark-border;
+    box-shadow: $dark-shadow;
+    
+    ion-card-header {
+      background: $dark-card-bg;
+      
+      ion-card-title {
+        color: $dark-text;
+      }
+    }
+    
+    .store-info {
+      .info-item {
+        color: $dark-text-secondary;
+        
+        ion-label {
+          color: $dark-text-secondary;
+        }
+      }
+      
+      .rating ion-label {
+        color: $dark-text;
+      }
+    }
+    
+    .store-image {
+      background-color: #333; /* Color de fondo temporal oscuro mientras carga */
+    }
+  }
+  
+  // Empty state
+  .empty-state {
+    background: $dark-card-bg;
+    border-color: $dark-border;
+    box-shadow: $dark-shadow;
+    
+    h3 {
+      color: $dark-text;
+    }
+    
+    p {
+      color: $dark-text-secondary;
+    }
+  }
+  
+  // Filter popover
+  .filter-popover {
+    --background: #{$dark-card-bg};
+    --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  }
+  
+  .filter-option {
+    color: $dark-text;
+    
+    &:hover {
+      background-color: #2a2a2a;
+    }
+    
+    &.active {
+      background-color: rgba(46, 204, 113, 0.2);
+    }
+  }
+  
+  // Notification button
+  .notification-button ion-icon {
+    color: $dark-text;
   }
 } 

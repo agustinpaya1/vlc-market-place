@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
+import { IonContent, IonHeader } from '@ionic/angular/standalone';
 import { MapService } from '../services/map.service';
 import { Router } from '@angular/router';
 import { SupabaseService } from '../services/supabase.service';
@@ -16,7 +16,7 @@ interface Store {
   templateUrl: './locations.page.html',
   styleUrls: ['./locations.page.scss'],
   standalone: true,
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [IonContent, IonHeader, CommonModule, FormsModule]
 })
 export class LocationsPage implements OnInit, AfterViewInit {
   constructor(

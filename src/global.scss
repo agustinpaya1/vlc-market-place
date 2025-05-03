@@ -35,8 +35,6 @@
  * https://ionicframework.com/docs/theming/dark-mode
  */
 
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
 
 /**
@@ -45,8 +43,118 @@
  */
 :root {
   --ion-font-family: 'Roboto', sans-serif;
+  
+  /* Variables de la paleta Artemis */
+  --ion-color-artemis-primary: #05668D;
+  --ion-color-artemis-secondary: #028090;
+  --ion-color-artemis-tertiary: #00A896;
+  --ion-color-artemis-accent: #02C39A;
+  --ion-color-artemis-light: #F0F3BD;
+  --ion-color-artemis-dark: #2C3E50;
 }
 
 body, ion-content, ion-item, ion-label, ion-button, ion-input, ion-textarea, ion-select {
   font-family: 'Roboto', sans-serif;
+}
+
+/* Utilidades para rendimiento*/
+.will-change-transform {
+  will-change: transform;
+}
+
+.backdrop-filter {
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.content-visibility-auto {
+  content-visibility: auto;
+}
+
+/* Optimizaciones para carga de imágenes */
+img.lazy-load {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+img.lazy-loaded {
+  opacity: 1;
+}
+
+/* Simplificar los estilos globales para mejorar rendimiento */
+ion-content {
+  --background: linear-gradient(135deg, white 60%, var(--ion-color-artemis-light) 100%);
+}
+
+ion-header, ion-toolbar {
+  --background: var(--ion-color-artemis-primary);
+  --color: white;
+}
+
+ion-tab-bar {
+  --background: white;
+  --border: 1px solid rgba(5, 102, 141, 0.1);
+}
+
+ion-tab-button {
+  --color: var(--ion-color-artemis-secondary);
+  --color-selected: var(--ion-color-artemis-accent);
+}
+
+ion-searchbar {
+  --background: white;
+  --color: var(--ion-color-artemis-dark);
+  --icon-color: var(--ion-color-artemis-secondary);
+  --placeholder-color: rgba(5, 102, 141, 0.5);
+  --border-radius: 8px;
+  --box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+ion-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+ion-button {
+  --border-radius: 8px;
+  --box-shadow: 0 4px 8px rgba(2, 195, 154, 0.2);
+  font-weight: 500;
+}
+
+ion-button.button-solid {
+  --background: var(--ion-color-artemis-accent);
+  --color: white;
+}
+
+ion-button.button-outline {
+  --border-color: var(--ion-color-artemis-secondary);
+  --color: var(--ion-color-artemis-secondary);
+}
+
+/* Simplificación de estilos para modo oscuro */
+@media (prefers-color-scheme: dark) {
+  ion-content {
+    --background: #121212;
+  }
+  
+  ion-card {
+    --background: #1e1e1e;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  ion-item {
+    --background: #1e1e1e;
+    --border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  ion-searchbar {
+    --background: #1e1e1e;
+    --color: white;
+    --placeholder-color: rgba(255, 255, 255, 0.5);
+  }
+  
+  ion-tab-bar {
+    --background: #1e1e1e;
+  }
 }

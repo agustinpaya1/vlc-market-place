@@ -6,7 +6,6 @@ import { Platform } from '@ionic/angular';
 import {
   IonBadge,
   IonButton,
-  IonButtons,
   IonCard,
   IonCardContent,
   IonCardHeader,
@@ -16,9 +15,6 @@ import {
   IonHeader,
   IonIcon,
   IonImg,
-  IonItem,
-  IonLabel,
-  IonList,
   IonSearchbar,
   IonSkeletonText,
   IonSpinner,
@@ -39,10 +35,14 @@ import {
   storefrontOutline,
   timeOutline
 } from 'ionicons/icons';
-import mapboxgl from 'mapbox-gl';
+// Importar Mapbox GL sin asignarlo a una variable constante para evitar errores de inmutabilidad
+import 'mapbox-gl';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
+
+// Accedemos a mapboxgl a través del objeto window para evitar problemas con la inmutabilidad
+const mapboxgl = (window as any).mapboxgl;
 
 interface Product {
   id: string;
@@ -104,10 +104,6 @@ interface Store {
     IonCardContent,
     IonButton,
     IonIcon,
-    IonButtons,
-    IonList,
-    IonItem,
-    IonLabel,
     IonSearchbar,
     IonImg,
     IonSkeletonText,
@@ -168,7 +164,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     });
     
     console.log('Configurando token de Mapbox...');
-    // Set Mapbox access token
+    // Configurar el token de mapbox de manera segura
     mapboxgl.accessToken = this.mapboxToken;
     console.log('Token configurado:', mapboxgl.accessToken);
     

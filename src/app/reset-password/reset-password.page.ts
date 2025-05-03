@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
+import { CommonModule } from '@angular/common';
 import {
     IonContent,
     IonHeader,
@@ -22,6 +23,7 @@ import { SupabaseService } from '../services/supabase.service';
   styleUrls: ['./reset-password.page.scss'],
   imports: [
     FormsModule,
+    CommonModule,
     IonContent,
     IonHeader,
     IonToolbar,

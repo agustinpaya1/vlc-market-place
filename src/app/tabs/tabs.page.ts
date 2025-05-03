@@ -5,8 +5,7 @@ import {
   IonTabButton,
   IonIcon,
   IonLabel,
-  IonBadge,
-  IonContent
+  IonBadge
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { storefront, map, cart, person } from 'ionicons/icons';
@@ -27,8 +26,7 @@ import { RouterModule, Router } from '@angular/router';
     IonTabButton,
     IonIcon,
     IonLabel,
-    IonBadge,
-    IonContent
+    IonBadge
   ]
 })
 export class TabsPage {
