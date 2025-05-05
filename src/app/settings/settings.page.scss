@@ -1,0 +1,183 @@
+// Variables
+$primary-color: var(--ion-color-artemis-primary);
+$secondary-color: var(--ion-color-artemis-secondary);
+$tertiary-color: var(--ion-color-artemis-tertiary);
+$accent-color: var(--ion-color-artemis-accent);
+$light-color: var(--ion-color-artemis-light);
+$border-radius-small: 8px;
+$border-radius-medium: 12px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 30px;
+$card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+$transition-speed: 0.3s;
+
+:host {
+  --page-padding: 16px;
+}
+
+ion-content {
+  --padding-top: var(--page-padding);
+  --padding-start: var(--page-padding);
+  --padding-end: var(--page-padding);
+  --padding-bottom: var(--page-padding);
+}
+
+// Estilos para secciones
+.settings-section {
+  margin-bottom: $spacing-lg;
+  
+  .section-header {
+    padding: 0 $spacing-sm;
+    margin-bottom: $spacing-sm;
+    
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: $primary-color;
+      margin: 0;
+    }
+    
+    p {
+      font-size: 14px;
+      color: var(--ion-color-medium);
+      margin: 4px 0 0;
+    }
+  }
+  
+  .section-content {
+    background: white;
+    border-radius: $border-radius-medium;
+    box-shadow: $card-shadow;
+    overflow: hidden;
+    
+    ion-item {
+      --padding-start: $spacing-md;
+      --padding-end: $spacing-md;
+      --border-color: rgba(0, 0, 0, 0.05);
+      --min-height: 56px;
+      
+      ion-icon {
+        color: $secondary-color;
+        margin-right: $spacing-md;
+        font-size: 20px;
+      }
+      
+      ion-label {
+        h4 {
+          font-size: 16px;
+          font-weight: 500;
+          color: var(--ion-color-dark);
+          margin: 0 0 4px;
+        }
+        
+        p {
+          font-size: 14px;
+          color: var(--ion-color-medium);
+          margin: 0;
+        }
+      }
+      
+      ion-toggle {
+        --background: var(--ion-color-medium-tint);
+        --background-checked: $accent-color;
+        --handle-background: white;
+        --handle-background-checked: white;
+      }
+      
+      ion-select {
+        --placeholder-color: var(--ion-color-medium);
+        max-width: 50%;
+      }
+      
+      &:hover {
+        --background: rgba(0, 0, 0, 0.02);
+      }
+    }
+  }
+}
+
+// Botón de logout
+.logout-button {
+  margin-top: $spacing-xl;
+  
+  ion-button {
+    --border-radius: $border-radius-small;
+    --background: transparent;
+    --color: var(--ion-color-danger);
+    --border-color: var(--ion-color-danger);
+    --border-style: solid;
+    --border-width: 1px;
+    height: 48px;
+    font-weight: 500;
+    transition: all $transition-speed ease;
+    
+    &:hover {
+      --background: rgba(var(--ion-color-danger-rgb), 0.05);
+      --box-shadow: 0 4px 8px rgba(var(--ion-color-danger-rgb), 0.1);
+    }
+  }
+}
+
+// Popover personalizado
+.popover-menu {
+  border-radius: $border-radius-small;
+  overflow: hidden;
+  
+  ion-item {
+    --padding-start: $spacing-md;
+    --padding-end: $spacing-md;
+    --min-height: 48px;
+    
+    ion-icon {
+      margin-right: $spacing-sm;
+    }
+    
+    &:hover {
+      --background: rgba(0, 0, 0, 0.02);
+    }
+  }
+}
+
+// Modo oscuro
+:host-context(.dark) {
+  .settings-section {
+    .section-header {
+      h3 {
+        color: $accent-color;
+      }
+    }
+    
+    .section-content {
+      background: var(--ion-card-background);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      
+      ion-item {
+        --background: var(--ion-item-background);
+        --border-color: rgba(255, 255, 255, 0.1);
+        
+        &:hover {
+          --background: rgba(255, 255, 255, 0.05);
+        }
+      }
+    }
+  }
+  
+  .logout-button ion-button {
+    --color: var(--ion-color-danger-tint);
+    --border-color: var(--ion-color-danger-tint);
+    
+    &:hover {
+      --background: rgba(var(--ion-color-danger-rgb), 0.1);
+    }
+  }
+  
+  .popover-menu ion-item {
+    --background: var(--ion-card-background);
+    
+    &:hover {
+      --background: rgba(255, 255, 255, 0.05);
+    }
+  }
+}

@@ -1,11 +1,17 @@
 // Variables
-$primary-color: var(--ion-color-primary);
+$primary-color: var(--ion-color-artemis-primary);
+$secondary-color: var(--ion-color-artemis-secondary);
+$tertiary-color: var(--ion-color-artemis-tertiary);
+$accent-color: var(--ion-color-artemis-accent);
+$light-color: var(--ion-color-artemis-light);
 $border-radius-small: 8px;
 $border-radius-medium: 12px;
 $spacing-sm: 8px;
 $spacing-md: 16px;
 $spacing-lg: 24px;
 $spacing-xl: 30px;
+$card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+$transition-speed: 0.3s;
 
 // User profile section
 .user-profile-header {
@@ -20,6 +26,11 @@ $spacing-xl: 30px;
 .user-avatar-container {
   position: relative;
   margin-bottom: $spacing-md;
+  transition: transform $transition-speed ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
 }
 
 .user-avatar-icon {
@@ -38,6 +49,13 @@ $spacing-xl: 30px;
   --border-radius: 50%;
   --background: var(--ion-color-light);
   --color: $primary-color;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all $transition-speed ease;
+  
+  &:hover {
+    --background: $light-color;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  }
 }
 
 .user-fullname {
@@ -56,22 +74,83 @@ $spacing-xl: 30px;
 // User info lists
 .user-info-list {
   margin-bottom: $spacing-lg;
-  border-radius: $border-radius-small;
+  border-radius: $border-radius-medium;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: $card-shadow;
+  
+  ion-item {
+    --padding-start: $spacing-md;
+    --padding-end: $spacing-md;
+    --padding-top: $spacing-sm;
+    --padding-bottom: $spacing-sm;
+    --border-color: rgba(0, 0, 0, 0.05);
+    
+    ion-icon {
+      color: $secondary-color;
+      margin-right: $spacing-sm;
+    }
+    
+    ion-label {
+      h3 {
+        font-weight: 500;
+        color: var(--ion-color-dark);
+      }
+      
+      p {
+        color: var(--ion-color-medium);
+      }
+    }
+  }
 }
 
 .user-menu-list {
   margin-bottom: $spacing-xl;
-  border-radius: $border-radius-small;
+  border-radius: $border-radius-medium;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: $card-shadow;
+  
+  ion-item {
+    --padding-start: $spacing-md;
+    --padding-end: $spacing-md;
+    --padding-top: $spacing-md;
+    --padding-bottom: $spacing-md;
+    --border-color: rgba(0, 0, 0, 0.05);
+    transition: background-color $transition-speed ease;
+    
+    ion-icon {
+      color: $tertiary-color;
+      margin-right: $spacing-md;
+      font-size: 20px;
+      transition: transform $transition-speed ease;
+    }
+    
+    &:hover {
+      --background: rgba(0, 0, 0, 0.03);
+      
+      ion-icon {
+        transform: translateX(4px);
+      }
+    }
+  }
 }
 
 // Footer actions
 .user-actions-container {
   padding: 0 $spacing-md;
   margin-top: $spacing-xl;
+  
+  ion-button {
+    --border-radius: $border-radius-small;
+    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    height: 48px;
+    font-weight: 500;
+    transition: all $transition-speed ease;
+    
+    &:hover {
+      --box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+  }
 }
 
 // Dark mode adjustments
@@ -86,7 +165,23 @@ $spacing-xl: 30px;
   
   .user-info-list,
   .user-menu-list {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .user-edit-button {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    
+    &:hover {
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+    }
+  }
+  
+  ion-item {
+    --background: var(--ion-item-background);
+    
+    &:hover {
+      --background: rgba(255, 255, 255, 0.05);
+    }
   }
 }
 

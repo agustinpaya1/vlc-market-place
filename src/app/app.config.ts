@@ -9,8 +9,8 @@ const mapboxgl = (window as any).mapboxgl;
 
 // Configurar token de Mapbox globalmente
 if (mapboxgl) {
-  mapboxgl.accessToken = MAPBOX_TOKEN;
-  console.log('Mapbox token configurado globalmente:', mapboxgl.accessToken);
+mapboxgl.accessToken = MAPBOX_TOKEN;
+console.log('Mapbox token configurado globalmente:', mapboxgl.accessToken); 
 } else {
   console.warn('mapboxgl no está disponible en window, el token no se ha configurado');
 } 

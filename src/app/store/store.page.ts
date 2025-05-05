@@ -12,10 +12,9 @@ import {
   time, 
   pricetag, 
   cart, 
-  arrowBack,
+  chevronBack,
   searchOutline,
-  sunny,
-  moon
+  arrowBack
 } from 'ionicons/icons';
 import { CartService } from '../services/cart.service';
 import { ToastController, LoadingController } from '@ionic/angular';
@@ -34,7 +33,9 @@ export class StorePage implements OnInit {
   filteredProducts: Product[] = [];
   searchTerm: string = '';
   cartItemsCount = 0;
-  isLoading = false;
+  isLoading = true;
+  loadedStoreData = false;
+  loadedProductsData = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -44,7 +45,17 @@ export class StorePage implements OnInit {
     private toastController: ToastController,
     private cartService: CartService
   ) {
-    addIcons({ star, location, time, pricetag, cart, arrowBack, searchOutline, sunny, moon });
+    // Cargar solo los iconos necesarios
+    addIcons({ 
+      star, 
+      location, 
+      time, 
+      pricetag, 
+      cart, 
+      arrowBack,
+      chevronBack,
+      searchOutline 
+    });
     
     // Subscribe to cart changes
     this.cartService.cartItems$.subscribe(items => {
@@ -55,23 +66,36 @@ export class StorePage implements OnInit {
   async ngOnInit() {
     const storeId = this.route.snapshot.paramMap.get('id');
     if (storeId) {
-      await this.loadStoreData(storeId);
+      // Cargar los datos de la tienda y los productos de forma paralela
+      this.loadStoreAndProductsParallel(storeId);
     }
   }
 
-  private async loadStoreData(storeId: string) {
-    const loading = await this.loadingController.create({
+  private async loadStoreAndProductsParallel(storeId: string) {
+    this.isLoading = true;
+    
+    // Mostrar indicador de carga inicial mínimo
+    const loadingIndicator = await this.loadingController.create({
       message: 'Cargando tienda...',
-      spinner: 'circles'
+      spinner: 'circles',
+      duration: 5000 // Timeout de seguridad
     });
-    await loading.present();
+    await loadingIndicator.present();
 
     try {
-      // Obtener la tienda desde Supabase
-      const storeData = await this.supabaseService.getStoreById(storeId);
-      // Obtener los productos de la tienda desde Supabase
-      const productsData = await this.supabaseService.getStoreProducts(storeId);
+      // Cargar datos en paralelo
+      const [storeData, productsData] = await Promise.all([
+        this.supabaseService.getStoreById(storeId).catch(err => {
+          console.error('Error al cargar datos de la tienda:', err);
+          return null;
+        }),
+        this.supabaseService.getStoreProducts(storeId).catch(err => {
+          console.error('Error al cargar productos:', err);
+          return [];
+        })
+      ]);
 
+      // Procesar datos de la tienda
       if (storeData) {
         this.store = {
           id: storeData.id,
@@ -85,19 +109,34 @@ export class StorePage implements OnInit {
           hasOffers: storeData.has_offers || false,
           distance: storeData.distance || '1.2 km'
         };
-        this.products = productsData || [];
-        this.filteredProducts = [...this.products];
+        this.loadedStoreData = true;
       } else {
         await this.showStoreNotFoundMessage();
         this.router.navigate(['/tabs/stores']);
       }
+
+      // Procesar datos de productos
+      if (productsData && productsData.length > 0) {
+        // Procesar los productos en lotes para mejorar el rendimiento
+        setTimeout(() => {
+          this.products = productsData || [];
+          this.filteredProducts = [...this.products];
+          this.loadedProductsData = true;
+        }, 100);
+      } else {
+        this.products = [];
+        this.filteredProducts = [];
+        this.loadedProductsData = true;
+        setTimeout(() => this.showNoProductsMessage(), 1000);
+      }
     } catch (error) {
-      console.error('Error al cargar la tienda:', error);
+      console.error('Error al cargar datos:', error);
       await this.showErrorMessage();
       this.router.navigate(['/tabs/stores']);
     } finally {
+      // Ocultar indicador de carga
+      loadingIndicator.dismiss();
       this.isLoading = false;
-      loading.dismiss();
     }
   }
 
@@ -143,6 +182,11 @@ export class StorePage implements OnInit {
       product.category.toLowerCase().includes(searchTerm) ||
       product.description.toLowerCase().includes(searchTerm)
     );
+  }
+
+  // Función de seguimiento para trackBy en ngFor
+  trackProduct(index: number, product: Product) {
+    return product.id;
   }
 
   handleImageError(event: Event) {
