@@ -61,10 +61,10 @@
     </ng-template>
   </ion-popover>
 
-  <!-- Floating camera button for product photos -->
+  <!-- Floating AI chat button instead of camera -->
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button (click)="takeProductPhoto()" class="camera-fab">
-      <ion-icon name="camera" size="large"></ion-icon>
+    <ion-fab-button (click)="openAiChat()" class="ai-fab">
+      <img src="assets/icons/ai-logo.svg" alt="AI Assistant" class="ai-logo-img">
     </ion-fab-button>
   </ion-fab>
 

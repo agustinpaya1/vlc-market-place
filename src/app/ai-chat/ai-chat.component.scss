@@ -1,0 +1,185 @@
+// Variables para colores
+:host {
+  --ai-primary-color: #02C39A;
+  --ai-secondary-color: #028090;
+  --ai-background: #f8f9fa;
+  --ai-text-color: #333;
+  --user-message-bg: #05668D;
+  --user-message-text: #fff;
+  --ai-message-bg: #e9ecef;
+  --ai-message-text: #333;
+}
+
+// Contenedor del chat
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  max-width: 100%;
+  height: 100%;
+}
+
+// Contenedor de mensajes
+.message-container {
+  display: flex;
+  width: 100%;
+  margin: 4px 0;
+}
+
+// Estilos para los mensajes
+.message {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  position: relative;
+  margin-bottom: 12px;
+  
+  .message-content {
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  
+  .message-time {
+    font-size: 10px;
+    opacity: 0.7;
+    position: absolute;
+    bottom: -16px;
+    right: 8px;
+  }
+}
+
+// Mensaje de usuario
+.user-message {
+  background-color: var(--user-message-bg);
+  color: var(--user-message-text);
+  border-bottom-right-radius: 4px;
+  margin-left: auto;
+  text-align: right;
+  
+  .message-time {
+    right: 8px;
+    color: #888;
+  }
+}
+
+// Mensaje del asistente IA
+.ai-message {
+  background-color: var(--ai-message-bg);
+  color: var(--ai-message-text);
+  border-bottom-left-radius: 4px;
+  margin-right: auto;
+  
+  .message-time {
+    left: 8px;
+    color: #888;
+  }
+}
+
+// Spinner de carga
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+  
+  ion-spinner {
+    --color: var(--ai-primary-color);
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// Footer con input
+.footer-container {
+  padding: 8px 16px;
+  background-color: white;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  background-color: var(--ai-background);
+  border-radius: 24px;
+  padding: 4px 8px 4px 16px;
+  
+  .message-input {
+    --padding-start: 0;
+    --padding-end: 0;
+    --background: transparent;
+    font-size: 14px;
+  }
+}
+
+.send-button-container {
+  display: flex;
+  align-items: center;
+  
+  .send-button {
+    margin: 0;
+    --padding-start: 8px;
+    --padding-end: 8px;
+    --color: var(--ai-primary-color);
+    height: 36px;
+    width: 36px;
+    
+    &[disabled] {
+      --color: #ccc;
+    }
+  }
+}
+
+// Estilos para el header
+ion-header {
+  ion-toolbar {
+    --background: white;
+  }
+  
+  ion-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ai-text-color);
+  }
+  
+  ion-button {
+    --color: var(--ai-text-color);
+  }
+}
+
+// Estilos para el logo en el encabezado
+.title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ai-logo {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+}
+
+// Contenido
+ion-content {
+  --background: white;
+}
+
+// Estilos específicos para el modal
+:host-context(.ai-chat-modal) {
+  ion-content {
+    --padding-top: 10px;
+    --padding-bottom: 10px;
+  }
+  
+  ion-header {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .chat-container {
+    height: 100%;
+    overflow-y: auto;
+  }
+} 

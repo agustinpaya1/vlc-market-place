@@ -1,0 +1,65 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-title class="ion-text-center">
+      <div class="title-container">
+        <img src="assets/icons/ai-logo.svg" alt="AI Assistant" class="ai-logo">
+        <span>Asistente IA</span>
+      </div>
+    </ion-title>
+    <ion-buttons slot="start">
+      <ion-button (click)="dismissModal()">
+        <ion-icon name="close-outline" size="large"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button (click)="clearChat()">
+        <ion-icon name="trash-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content #chatContent class="ion-padding">
+  <div class="chat-container">
+    <!-- Mensajes del chat -->
+    <div class="message-container" *ngFor="let message of chatMessages">
+      <div class="message" [ngClass]="{'user-message': message.role === 'user', 'ai-message': message.role === 'assistant'}">
+        <div class="message-content">{{ message.content }}</div>
+        <div class="message-time" *ngIf="message.timestamp">
+          {{ message.timestamp | date:'shortTime' }}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Indicador de carga -->
+    <div class="loading-indicator" *ngIf="isLoading">
+      <ion-spinner name="dots"></ion-spinner>
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="footer-container">
+    <div class="input-container">
+      <ion-input 
+        #messageInput
+        type="text" 
+        placeholder="Escribe un mensaje..." 
+        [(ngModel)]="userMessage" 
+        (keyup.enter)="sendMessage()"
+        class="message-input"
+      ></ion-input>
+      
+      <div class="send-button-container">
+        <ion-button 
+          fill="clear" 
+          [disabled]="!userMessage.trim() || isLoading" 
+          (click)="sendMessage()" 
+          class="send-button"
+        >
+          <ion-icon name="send-outline" size="small"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
+  </div>
+</ion-footer> 

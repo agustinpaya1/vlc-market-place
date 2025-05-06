@@ -1126,4 +1126,16 @@ ion-fab-button.camera-fab {
   .notification-button ion-icon {
     color: $dark-text;
   }
+}
+
+.ai-fab {
+  --background: #ffffff;
+  height: 56px;
+  width: 56px;
+}
+
+.ai-logo-img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
 } 

@@ -158,3 +158,18 @@ ion-button.button-outline {
     --background: #1e1e1e;
   }
 }
+
+/* Estilos para el modal del chat IA */
+.ai-chat-modal {
+  --width: 90%;
+  --height: 80%;
+  --border-radius: 16px;
+  --backdrop-opacity: 0.4;
+}
+
+@media (min-width: 768px) {
+  .ai-chat-modal {
+    --width: 400px;
+    --height: 600px;
+  }
+}

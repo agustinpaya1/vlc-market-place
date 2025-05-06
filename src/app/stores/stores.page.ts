@@ -20,7 +20,8 @@ import {
   IonPopover,
   IonRow,
   IonSpinner,
-  IonToolbar
+  IonToolbar,
+  ModalController
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -47,6 +48,7 @@ import {
   timeOutline, 
   arrowForwardOutline,
   camera,
+  chatbubbleEllipses,
   shirtOutline,
   pizzaOutline,
   fishOutline,
@@ -61,6 +63,7 @@ import { SupabaseService } from '../services/supabase.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { ToastController } from '@ionic/angular/standalone';
+import { AiChatComponent } from '../ai-chat/ai-chat.component';
 
 interface Product {
   id: string;
@@ -166,9 +169,10 @@ export class StoresPage implements OnInit {
   constructor(
     private router: Router,
     private supabaseService: SupabaseService,
-    private toastController: ToastController,
     private zone: NgZone,
-    private changeDetector: ChangeDetectorRef
+    private changeDetector: ChangeDetectorRef,
+    private toastController: ToastController,
+    private modalController: ModalController
   ) {
     addIcons({
       locationOutline,
@@ -199,7 +203,8 @@ export class StoresPage implements OnInit {
       leafOutline,
       restaurantOutline,
       fastFoodOutline,
-      waterOutline
+      waterOutline,
+      chatbubbleEllipses
     });
 
     // Check if dark mode was previously selected
@@ -580,32 +585,6 @@ export class StoresPage implements OnInit {
   }
 
   /**
-   * Opens the camera to take product photos
-   */
-  async takeProductPhoto() {
-    try {
-      // Check if we're on a device with camera access
-      if (!('Camera' in window)) {
-        this.showToast('La cámara no está disponible en este dispositivo');
-        return;
-      }
-      
-      // Here we would integrate with Camera API
-      // For now just show a toast
-      this.showToast('Función de cámara en desarrollo');
-      
-      // In a real implementation, you would:
-      // 1. Open the camera
-      // 2. Take a photo
-      // 3. Process the photo
-      // 4. Upload or save it
-    } catch (error) {
-      console.error('Error al acceder a la cámara:', error);
-      this.showToast('Error al acceder a la cámara');
-    }
-  }
-
-  /**
    * Shows a toast message
    */
   private async showToast(message: string) {
@@ -871,4 +850,23 @@ export class StoresPage implements OnInit {
       console.log('Forced UI update with new filters');
     });
   }
-} 
+
+  /**
+   * Abre el chat con la IA como modal
+   */
+  async openAiChat() {
+    try {
+      const modal = await this.modalController.create({
+        component: AiChatComponent,
+        componentProps: {},
+        cssClass: 'ai-chat-modal'
+      });
+      
+      await modal.present();
+      
+    } catch (error) {
+      console.error('Error al abrir el chat de IA:', error);
+      this.showToast('Error al abrir el asistente de IA');
+    }
+  }
+}
