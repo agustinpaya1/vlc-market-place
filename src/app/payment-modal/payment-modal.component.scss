@@ -1,0 +1,60 @@
+.stripe-card-element {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  min-height: 40px;
+}
+
+.card-status {
+  margin-top: 8px;
+  font-size: 14px;
+  
+  ion-icon {
+    vertical-align: middle;
+    margin-right: 5px;
+  }
+}
+
+.test-card-info {
+  margin: 16px 0;
+  padding: 12px;
+  background-color: rgba(var(--ion-color-tertiary-rgb), 0.1);
+  border: 1px dashed var(--ion-color-tertiary);
+  border-radius: 4px;
+
+  p {
+    margin: 6px 0;
+    font-size: 14px;
+    color: var(--ion-color-medium);
+  }
+
+  strong {
+    color: var(--ion-color-tertiary);
+  }
+}
+
+.error-message {
+  color: var(--ion-color-danger);
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.success-message {
+  color: var(--ion-color-success);
+  font-size: 16px;
+  text-align: center;
+  margin: 16px 0;
+  
+  ion-icon {
+    font-size: 24px;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+}
+
+ion-spinner {
+  margin-right: 8px;
+} 

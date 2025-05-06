@@ -17,6 +17,7 @@
     <div class="search-bar">
       <ion-icon name="search-outline" class="search-icon"></ion-icon>
       <input type="text" [(ngModel)]="searchTerm" (input)="updateSearchTerm($event)" placeholder="Buscar tiendas o productos">
+      <ion-icon name="scan-outline" class="scan-icon" (click)="openScanner()"></ion-icon>
     </div>
     <div class="filter-button">
       <ion-button fill="clear" class="options-button" (click)="presentFilterOptions($event)">

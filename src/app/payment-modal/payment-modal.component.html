@@ -1,0 +1,81 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Pago con Tarjeta</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Resumen de la Compra</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item *ngFor="let item of cartItems">
+          <ion-label>
+            {{ item.name }}
+            <p>Cantidad: {{ item.quantity }}</p>
+          </ion-label>
+          <ion-note slot="end">${{ (item.price * item.quantity).toFixed(2) }}</ion-note>
+        </ion-item>
+        <ion-item>
+          <ion-label><strong>Total</strong></ion-label>
+          <ion-note slot="end" color="primary"><strong>${{ totalAmount.toFixed(2) }}</strong></ion-note>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Información de Pago</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div class="form-row">
+        <div id="card-element" class="stripe-card-element">
+          <!-- Stripe Card Element will be inserted here -->
+        </div>
+        <div class="card-status">
+          <ion-text *ngIf="isCardComplete" color="success">
+            <ion-icon name="checkmark-circle"></ion-icon> Tarjeta lista
+          </ion-text>
+          <ion-text *ngIf="!isCardComplete" color="medium">
+            <ion-icon name="card-outline"></ion-icon> Introduce los datos de la tarjeta
+          </ion-text>
+        </div>
+      </div>
+
+      <!-- Test card information -->
+      <div class="test-card-info">
+        <p><strong>Tarjetas de prueba:</strong></p>
+        <p>Número: 4242 4242 4242 4242</p>
+        <p>Fecha: Cualquier fecha futura</p>
+        <p>CVC: Cualquier 3 dígitos</p>
+        <p>CP: Cualquier 5 dígitos</p>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-message ion-padding-top">
+        <ion-text color="danger">{{ errorMessage }}</ion-text>
+      </div>
+
+      <div *ngIf="paymentSuccess" class="success-message ion-padding-top">
+        <ion-text color="success">
+          <ion-icon name="checkmark-circle"></ion-icon>
+          ¡Pago completado con éxito!
+        </ion-text>
+      </div>
+
+      <div class="ion-padding-top">
+        <ion-button expand="block" (click)="processPayment()" [disabled]="isLoading || paymentSuccess" [color]="isCardComplete ? 'primary' : 'medium'">
+          <ion-spinner *ngIf="isLoading" name="circles"></ion-spinner>
+          <span *ngIf="!isLoading">Pagar ${{ totalAmount.toFixed(2) }}</span>
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+</ion-content> 

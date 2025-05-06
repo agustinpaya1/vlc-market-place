@@ -21,12 +21,15 @@ import {
   IonCol,
   IonImg,
   IonButtons,
-  IonCardSubtitle
+  IonCardSubtitle,
+  IonSpinner,
+  ModalController
 } from '@ionic/angular/standalone';
 import { CartService, CartItem } from '../services/cart.service';
 import { ProductService } from '../services/product.service';
 import { addIcons } from 'ionicons';
-import { trash, arrowBack, add, remove } from 'ionicons/icons';
+import { trash, arrowBack, add, remove, checkmarkCircle, home } from 'ionicons/icons';
+import { PaymentModalComponent } from '../payment-modal/payment-modal.component';
 
 @Component({
   selector: 'app-carrito',
@@ -54,20 +57,25 @@ import { trash, arrowBack, add, remove } from 'ionicons/icons';
     IonCol,
     IonImg,
     IonButtons,
-    IonCardSubtitle
+    IonCardSubtitle,
+    IonSpinner,
+    PaymentModalComponent
   ]
 })
 export class CarritoComponent implements OnInit {
   cartItems: CartItem[] = [];
   totalItems = 0;
   totalPrice = 0;
+  paymentSuccess = false;
+  paymentId = '';
 
   constructor(
     private cartService: CartService,
     private productService: ProductService,
-    private router: Router
+    private router: Router,
+    private modalCtrl: ModalController
   ) {
-    addIcons({ trash, arrowBack, add, remove });
+    addIcons({ trash, arrowBack, add, remove, checkmarkCircle, home });
   }
 
   ngOnInit() {
@@ -97,8 +105,39 @@ export class CarritoComponent implements OnInit {
     this.router.navigate(['/']);
   }
 
-  proceedToCheckout(): void {
-    // Aquí implementaremos la lógica de pago más adelante
-    console.log('Proceeding to checkout with items:', this.cartItems);
+  async proceedToCheckout(): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: PaymentModalComponent,
+      componentProps: {
+        cartItems: this.cartItems,
+        totalAmount: this.totalPrice
+      },
+      cssClass: 'payment-modal'
+    });
+
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    
+    if (role === 'success' && data?.success) {
+      this.paymentSuccess = true;
+      this.paymentId = data.paymentId;
+      
+      // Clear the cart after successful payment
+      this.cartService.clearCart();
+      
+      // Use a timer to show success message for 3 seconds before redirecting
+      console.log('Payment successful, will redirect to stores in 3 seconds');
+      
+      setTimeout(() => {
+        console.log('Redirecting to stores now...');
+        // Use the correct path according to your router configuration
+        this.router.navigateByUrl('/tabs/stores').then(() => {
+          console.log('Navigation complete');
+        }).catch(err => {
+          console.error('Navigation error:', err);
+        });
+      }, 3000); // Increased to 3 seconds for better user experience
+    }
   }
 } 

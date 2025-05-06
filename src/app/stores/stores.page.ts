@@ -21,7 +21,9 @@ import {
   IonRow,
   IonSpinner,
   IonToolbar,
-  ModalController
+  ModalController,
+  LoadingController,
+  AlertController
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -57,13 +59,16 @@ import {
   leafOutline,
   restaurantOutline,
   fastFoodOutline,
-  waterOutline
+  waterOutline,
+  scanOutline
 } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { ToastController } from '@ionic/angular/standalone';
 import { AiChatComponent } from '../ai-chat/ai-chat.component';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { createWorker } from 'tesseract.js';
 
 interface Product {
   id: string;
@@ -172,7 +177,9 @@ export class StoresPage implements OnInit {
     private zone: NgZone,
     private changeDetector: ChangeDetectorRef,
     private toastController: ToastController,
-    private modalController: ModalController
+    private modalController: ModalController,
+    private loadingController: LoadingController,
+    private alertController: AlertController
   ) {
     addIcons({
       locationOutline,
@@ -204,7 +211,8 @@ export class StoresPage implements OnInit {
       restaurantOutline,
       fastFoodOutline,
       waterOutline,
-      chatbubbleEllipses
+      chatbubbleEllipses,
+      scanOutline
     });
 
     // Check if dark mode was previously selected
@@ -868,5 +876,121 @@ export class StoresPage implements OnInit {
       console.error('Error al abrir el chat de IA:', error);
       this.showToast('Error al abrir el asistente de IA');
     }
+  }
+
+  /**
+   * Abre la cámara para escanear texto usando Tesseract.js
+   */
+  async openScanner() {
+    try {
+      // Mostrar loading
+      const loading = await this.loadingController.create({
+        message: 'Iniciando cámara...',
+        spinner: 'circles'
+      });
+      await loading.present();
+
+      try {
+        // Abrir la cámara
+        const image = await Camera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Camera,
+          promptLabelHeader: 'Escanear texto',
+          promptLabelPicture: 'Tomar foto',
+          promptLabelCancel: 'Cancelar'
+        });
+
+        if (!image.dataUrl) {
+          await loading.dismiss();
+          this.showToast('No se pudo obtener la imagen');
+          return;
+        }
+
+        loading.message = 'Analizando texto...';
+        
+        try {
+          // Inicializar worker con idioma español
+          const worker = await createWorker('spa');
+
+          // Procesar la imagen
+          const result = await worker.recognize(image.dataUrl);
+          console.log('Resultado OCR:', result);
+          
+          // Extraer y limpiar el texto
+          const scannedText = this.cleanScannedText(result.data.text);
+          
+          // Liberar recursos
+          await worker.terminate();
+          await loading.dismiss();
+          
+          if (scannedText) {
+            // Usar el texto para buscar
+            this.searchTerm = scannedText;
+            this.searchStores();
+            this.showToast(`Texto detectado: "${scannedText}"`);
+          } else {
+            this.showAlert(
+              'No se pudo detectar texto en la imagen', 
+              'Intenta nuevamente con mejor iluminación o una imagen más clara.'
+            );
+          }
+        } catch (ocrError) {
+          console.error('Error al procesar OCR:', ocrError);
+          await loading.dismiss();
+          
+          // Si falla Tesseract, mostrar mensaje específico
+          this.showAlert(
+            'Error al procesar el texto', 
+            'No se pudo analizar la imagen correctamente. Intenta de nuevo con una imagen de mejor calidad.'
+          );
+        }
+      } catch (cameraError: any) {
+        console.error('Error con la cámara:', cameraError);
+        await loading.dismiss();
+        
+        if (cameraError.message !== 'User cancelled photos app') {
+          this.showToast('No se pudo acceder a la cámara');
+        }
+      }
+    } catch (generalError: any) {
+      console.error('Error general al escanear:', generalError);
+      this.loadingController.dismiss();
+      this.showToast('Ocurrió un error inesperado');
+    }
+  }
+
+  /**
+   * Limpia el texto escaneado para mejorar la búsqueda
+   */
+  private cleanScannedText(text: string): string {
+    if (!text) return '';
+    
+    // Eliminar saltos de línea y caracteres especiales
+    let cleaned = text.replace(/[\r\n\t]/g, ' ');
+    
+    // Eliminar múltiples espacios
+    cleaned = cleaned.replace(/\s+/g, ' ');
+    
+    // Truncar si es muy largo (para búsqueda)
+    if (cleaned.length > 50) {
+      cleaned = cleaned.substring(0, 50);
+    }
+    
+    return cleaned.trim();
+  }
+
+  /**
+   * Muestra una alerta con información
+   */
+  private async showAlert(header: string, message: string) {
+    const alert = await this.alertController.create({
+      header,
+      message,
+      buttons: ['OK']
+    });
+    
+    await alert.present();
   }
 }

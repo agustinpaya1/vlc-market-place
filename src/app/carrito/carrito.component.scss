@@ -169,4 +169,53 @@ ion-button[fill="clear"] {
   .price, .subtotal {
     font-size: 0.9rem;
   }
+}
+
+// Add styles for the payment success card
+.payment-success {
+  margin: 2rem 0;
+  
+  ion-card {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(var(--ion-color-success-rgb), 0.1);
+    border: 1px solid var(--ion-color-success);
+  }
+  
+  .success-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ion-color-success);
+    
+    ion-icon {
+      font-size: 24px;
+      margin-right: 10px;
+    }
+  }
+  
+  p {
+    margin: 10px 0;
+    color: var(--ion-color-dark);
+  }
+
+  .redirect-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--ion-color-medium);
+
+    p {
+      margin-bottom: 15px;
+      color: var(--ion-color-medium);
+    }
+
+    ion-spinner {
+      width: 40px;
+      height: 40px;
+      color: var(--ion-color-primary);
+    }
+  }
 } 

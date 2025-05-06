@@ -11,7 +11,27 @@
 
 <ion-content [fullscreen]="true" class="ion-padding">
   <div class="cart-container">
-    <div *ngIf="cartItems.length === 0" class="empty-cart">
+    <!-- Success message after payment -->
+    <div *ngIf="paymentSuccess" class="payment-success">
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title class="success-title">
+            <ion-icon name="checkmarkCircle"></ion-icon>
+            ¡Pago Exitoso!
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>Tu pago ha sido procesado correctamente.</p>
+          <p>ID de la transacción: {{ paymentId }}</p>
+          <div class="redirect-message">
+            <p>Serás redirigido a la página de tiendas en unos segundos...</p>
+            <ion-spinner name="dots"></ion-spinner>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <div *ngIf="cartItems.length === 0 && !paymentSuccess" class="empty-cart">
       <ion-card>
         <ion-card-header>
           <ion-card-title>Tu carrito está vacío</ion-card-title>
