@@ -1,26 +1,16 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar>
-    <div class="location-container">
-      <ion-icon name="location-outline" class="location-icon"></ion-icon>
-      <ion-label class="location-label">Valencia, España</ion-label>
-      <ion-icon name="chevron-down-outline" class="dropdown-icon"></ion-icon>
-    </div>
-    <ion-buttons slot="end">
-      <ion-button class="notification-button" (click)="showNotifications()">
-        <ion-icon name="notifications-outline" size="large"></ion-icon>
-        <ion-badge *ngIf="notificationCount > 0" class="notification-badge">{{ notificationCount }}</ion-badge>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-  
   <div class="search-container">
     <div class="search-bar">
       <ion-icon name="search-outline" class="search-icon"></ion-icon>
       <input type="text" [(ngModel)]="searchTerm" (input)="updateSearchTerm($event)" placeholder="Buscar tiendas o productos">
       <ion-icon name="scan-outline" class="scan-icon" (click)="openScanner()"></ion-icon>
     </div>
-    <div class="filter-button">
-      <ion-button fill="clear" class="options-button" (click)="presentFilterOptions($event)">
+    <div class="action-buttons">
+      <ion-button fill="clear" class="notification-button" (click)="showNotifications()">
+        <ion-icon name="notifications-outline"></ion-icon>
+        <ion-badge *ngIf="notificationCount > 0" class="notification-badge">{{ notificationCount }}</ion-badge>
+      </ion-button>
+      <ion-button fill="clear" class="options-button" (click)="presentFilterOptions($event)" aria-label="Filtrar opciones">
         <ion-icon name="options-outline"></ion-icon>
       </ion-button>
     </div>
@@ -28,21 +18,23 @@
 </ion-header>
 
 <ion-content>
-  <!-- Filtros horizontales por categoría con nuevo diseño basado en imágenes -->
-  <div class="category-slider">
-    <div class="category-scroll">
-      <div 
+  <!-- Categorías flotantes -->
+  <div class="categories-wrapper">
+    <ion-segment scrollable mode="ios" class="category-segment" value="{{selectedCategory}}">
+      <ion-segment-button 
         *ngFor="let category of categories" 
-        (click)="selectCategory(category)" 
-        [class.active]="selectedCategory === category"
-        class="category-item"
-      >
-        <div class="category-icon">
-          <img [src]="getCategoryImage(category)" [alt]="category" class="category-img" loading="lazy">
+        [value]="category"
+        [attr.aria-selected]="selectedCategory === category"
+        (click)="selectCategory(category)"
+        mode="ios">
+        <div class="segment-button-content">
+          <div class="category-icon" [class.active]="selectedCategory === category">
+            <img [src]="getCategoryImage(category)" [alt]="category" class="category-img" loading="lazy">
+          </div>
+          <ion-label class="category-name">{{ category }}</ion-label>
         </div>
-        <p class="category-name">{{ category }}</p>
-      </div>
-    </div>
+      </ion-segment-button>
+    </ion-segment>
   </div>
 
   <!-- Filter popover -->
@@ -70,38 +62,40 @@
   </ion-fab>
 
   <!-- Listado de tiendas -->
-  <ion-grid *ngIf="!isLoading; else loadingTemplate">
-    <ion-row>
-      <ion-col size="12" size-md="6" size-lg="4" *ngFor="let store of filteredStores">
-        <ion-card class="store-card" (click)="viewStore(store.id)">
-          <img [src]="store.imageUrl" [alt]="store.name" class="store-image" (error)="handleImageError($event)" loading="lazy" width="100%" height="180px">
-          <ion-card-header>
-            <ion-card-subtitle>
-              <ion-chip *ngFor="let category of store.categories" class="store-category-chip">
-                {{ category }}
-              </ion-chip>
-              <ion-chip *ngIf="store.hasOffers" color="success">Ofertas</ion-chip>
-            </ion-card-subtitle>
-            <ion-card-title>{{ store.name }}</ion-card-title>
-          </ion-card-header>
-          <div class="store-info">
-            <div class="info-item">
-              <ion-icon name="location"></ion-icon>
-              <ion-label>{{ store.location }} ({{ store.distance }}km)</ion-label>
+  <div class="stores-container">
+    <ion-grid *ngIf="!isLoading; else loadingTemplate">
+      <ion-row>
+        <ion-col size="12" size-md="6" size-lg="4" *ngFor="let store of filteredStores">
+          <ion-card class="store-card" (click)="viewStore(store.id)">
+            <img [src]="store.imageUrl" [alt]="store.name" class="store-image" (error)="handleImageError($event)" loading="lazy" width="100%" height="180px">
+            <ion-card-header>
+              <ion-card-subtitle>
+                <ion-chip *ngFor="let category of store.categories" class="store-category-chip">
+                  {{ category }}
+                </ion-chip>
+                <ion-chip *ngIf="store.hasOffers" color="success">Ofertas</ion-chip>
+              </ion-card-subtitle>
+              <ion-card-title>{{ store.name }}</ion-card-title>
+            </ion-card-header>
+            <div class="store-info">
+              <div class="info-item">
+                <ion-icon name="location"></ion-icon>
+                <ion-label>{{ store.location }} ({{ store.distance }}km)</ion-label>
+              </div>
+              <div class="info-item">
+                <ion-icon name="time"></ion-icon>
+                <ion-label>{{ store.openTime }}</ion-label>
+              </div>
+              <div class="rating">
+                <ion-icon name="star"></ion-icon>
+                <ion-label>{{ store.rating }}</ion-label>
+              </div>
             </div>
-            <div class="info-item">
-              <ion-icon name="time"></ion-icon>
-              <ion-label>{{ store.openTime }}</ion-label>
-            </div>
-            <div class="rating">
-              <ion-icon name="star"></ion-icon>
-              <ion-label>{{ store.rating }}</ion-label>
-            </div>
-          </div>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
 
   <!-- Empty state cuando no hay tiendas -->
   <div class="empty-state" *ngIf="!isLoading && filteredStores.length === 0">

@@ -19,6 +19,8 @@ import {
   IonLabel,
   IonPopover,
   IonRow,
+  IonSegment,
+  IonSegmentButton,
   IonSpinner,
   IonToolbar,
   ModalController,
@@ -130,7 +132,9 @@ interface Store {
     IonFab,
     IonFabButton,
     IonPopover,
-    IonBadge
+    IonBadge,
+    IonSegment,
+    IonSegmentButton
   ]
 })
 export class StoresPage implements OnInit {

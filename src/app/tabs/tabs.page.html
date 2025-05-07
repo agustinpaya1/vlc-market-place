@@ -1,25 +1,25 @@
 <ion-tabs>
   <ion-tab-bar slot="bottom">
     <ion-tab-button tab="stores" routerLink="/tabs/stores">
-      <ion-icon aria-hidden="true" name="storefront"></ion-icon>
+      <ion-icon name="storefront-outline"></ion-icon>
       <ion-label>Tiendas</ion-label>
     </ion-tab-button>
 
     <ion-tab-button tab="map" routerLink="/tabs/map">
-      <ion-icon aria-hidden="true" name="map"></ion-icon>
+      <ion-icon name="map-outline"></ion-icon>
       <ion-label>Mapa</ion-label>
     </ion-tab-button>
 
     <ion-tab-button tab="cart" routerLink="/tabs/cart">
-      <ion-icon aria-hidden="true" name="cart"></ion-icon>
+      <ion-icon name="cart-outline"></ion-icon>
       <ion-label>Carrito</ion-label>
-      <ion-badge *ngIf="cartService.getTotalItems() > 0" color="danger" class="cart-badge">
+      <ion-badge *ngIf="cartService.getTotalItems() > 0" class="cart-badge">
         {{ cartService.getTotalItems() }}
       </ion-badge>
     </ion-tab-button>
 
-    <ion-tab-button (click)="navigateToProfile()">
-      <ion-icon aria-hidden="true" name="person"></ion-icon>
+    <ion-tab-button tab="profile" (click)="navigateToProfile()">
+      <ion-icon name="person-outline"></ion-icon>
       <ion-label>Mi Perfil</ion-label>
     </ion-tab-button>
   </ion-tab-bar>
