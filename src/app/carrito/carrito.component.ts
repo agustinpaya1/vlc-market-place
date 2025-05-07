@@ -58,8 +58,7 @@ import { PaymentModalComponent } from '../payment-modal/payment-modal.component'
     IonImg,
     IonButtons,
     IonCardSubtitle,
-    IonSpinner,
-    PaymentModalComponent
+    IonSpinner
   ]
 })
 export class CarritoComponent implements OnInit {

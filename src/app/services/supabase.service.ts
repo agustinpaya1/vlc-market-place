@@ -215,4 +215,46 @@ export class SupabaseService {
       return '';
     }
   }
+
+  // Método para subir un archivo al bucket
+  async uploadFile(file: File, path: string): Promise<string> {
+    try {
+      const { data, error } = await this.supabase
+        .storage
+        .from(this.bucketName)
+        .upload(path, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (error) {
+        console.error('Error al subir el archivo:', error);
+        throw error;
+      }
+
+      // Retornar la URL pública del archivo subido
+      return this.getPublicImageUrl(data.path);
+    } catch (error) {
+      console.error('Error en uploadFile:', error);
+      throw error;
+    }
+  }
+
+  // Método para subir una imagen en formato base64
+  async uploadBase64Image(base64String: string, path: string): Promise<string> {
+    try {
+      // Convertir base64 a blob
+      const base64Response = await fetch(base64String);
+      const blob = await base64Response.blob();
+      
+      // Crear un objeto File
+      const file = new File([blob], 'filename.png', { type: 'image/png' });
+      
+      // Subir el archivo
+      return await this.uploadFile(file, path);
+    } catch (error) {
+      console.error('Error al subir imagen base64:', error);
+      throw error;
+    }
+  }
 }

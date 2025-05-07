@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Fondo circular -->
+  <circle cx="100" cy="100" r="90" fill="#00A884" />
+  
+  <!-- VLC como paths en lugar de texto -->
+  <path d="M50 125 L70 80 L85 80 L105 125 H90 L85 115 H70 L65 125 H50z M70 105 H82 L76 90 L70 105z" fill="white" />
+  <path d="M110 80 H125 V115 H145 V125 H110 V80z" fill="white" />
+  <path d="M150 80 H190 V90 H165 V95 H185 V105 H165 V115 H190 V125 H150 V80z" fill="white" />
+  
+  <!-- Elemento gráfico tipo mercado -->
+  <path d="M140,50 L160,50 L160,70 L140,70 Z" fill="white" />
+  <path d="M120,35 L180,35 L180,45 L120,45 Z" fill="white" />
+</svg> 

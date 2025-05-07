@@ -202,4 +202,135 @@ $transition-speed: 0.3s;
     margin-left: auto;
     margin-right: auto;
   }
+}
+
+// Estilos para la vista de usuario no autenticado
+.not-authenticated-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 90vh;
+  text-align: center;
+  padding-top: 2vh;
+}
+
+.app-logo {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+  img {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 10px;
+    object-fit: contain;
+  }
+  
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ion-color-primary);
+    margin: 0;
+  }
+}
+
+.login-prompt-card {
+  background-color: var(--ion-card-background, #ffffff);
+  border-radius: 16px;
+  padding: $spacing-lg;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: $card-shadow;
+  margin-top: 20px;
+  
+  h2 {
+    margin-top: 10px;
+    color: var(--ion-text-color);
+  }
+  
+  p {
+    color: var(--ion-color-medium);
+    margin-bottom: 25px;
+  }
+  
+  ion-button {
+    --border-radius: 10px;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    height: 48px;
+    
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}
+
+.large-profile-icon {
+  font-size: 70px;
+  color: var(--ion-color-primary);
+  margin-bottom: 5px;
+}
+
+.register-prompt {
+  margin-top: 20px;
+  font-size: 14px;
+  color: var(--ion-color-medium);
+}
+
+.register-prompt a {
+  color: var(--ion-color-primary);
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Dark mode adjustments
+:host-context(.dark-theme) {
+  .app-logo h1 {
+    color: var(--ion-color-primary);
+  }
+  
+  .login-prompt-card {
+    background-color: var(--ion-card-background, #1e1e1e);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    
+    h2 {
+      color: var(--ion-color-light);
+    }
+    
+    p {
+      color: var(--ion-color-medium-tint);
+    }
+  }
+  
+  .large-profile-icon {
+    color: var(--ion-color-primary);
+  }
+  
+  .register-prompt a {
+    color: var(--ion-color-primary-tint);
+  }
+}
+
+// Media queries for responsive design
+@media (min-height: 700px) {
+  .not-authenticated-container {
+    padding-top: 5vh;
+  }
+}
+
+@media (max-width: 360px) {
+  .app-logo h1 {
+    font-size: 20px;
+  }
+  
+  .login-prompt-card {
+    padding: 20px;
+  }
 } 

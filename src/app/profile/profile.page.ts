@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { SupabaseService } from '../services/supabase.service';
 import { addIcons } from 'ionicons';
 import { 
   personCircle, 
@@ -15,7 +16,8 @@ import {
   calendar, 
   receipt, 
   callOutline, 
-  locationOutline 
+  locationOutline,
+  logInOutline
 } from 'ionicons/icons';
 
 @Component({
@@ -34,6 +36,7 @@ export class ProfilePage implements OnInit {
   };
 
   isAuthenticated = false;
+  logoUrl: string = 'assets/vlc-logo.svg'; // Cambiado al nuevo logo SVG
 
   menuItems = [
     { icon: 'bag', label: 'Mis Pedidos', route: '/tabs/orders' },
@@ -44,7 +47,8 @@ export class ProfilePage implements OnInit {
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private supabaseService: SupabaseService
   ) {
     addIcons({
       personCircle,
@@ -56,7 +60,8 @@ export class ProfilePage implements OnInit {
       calendar,
       receipt,
       callOutline,
-      locationOutline
+      locationOutline,
+      logInOutline
     });
   }
 
@@ -98,5 +103,22 @@ export class ProfilePage implements OnInit {
 
   navigate(route: string) {
     this.router.navigate([route]);
+  }
+
+  goToLogin() {
+    this.router.navigate(['/login']);
+  }
+
+  goToRegister() {
+    this.router.navigate(['/register']);
+  }
+
+  onImageError(event: Event) {
+    console.error('Error al cargar la imagen:', (event.target as HTMLImageElement).src);
+    
+    // Si falla el SVG, usar un Data URI directamente
+    const fallbackSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='90' fill='%2300A884'/%3E%3Cg fill='white'%3E%3Cpath d='M65,80 L80,135 L95,135 L110,80 L95,80 L85,120 L75,80 Z'/%3E%3Cpath d='M120,80 L120,135 L150,135 L150,120 L135,120 L135,80 Z'/%3E%3C/g%3E%3C/svg%3E`;
+    
+    (event.target as HTMLImageElement).src = fallbackSvg;
   }
 } 
