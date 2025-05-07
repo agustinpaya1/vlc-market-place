@@ -3,13 +3,17 @@
 
 // Agrega las variables de la paleta de colores al principio del archivo
 :root {
-  // Nuestra paleta personalizada
+  // Tema Claro
   --ion-color-artemis-primary: #05668D;
   --ion-color-artemis-secondary: #028090;
-  --ion-color-artemis-tertiary: #00A896;
-  --ion-color-artemis-accent: #02C39A;
+  --ion-color-artemis-tertiary: #02A396;
   --ion-color-artemis-light: #F0F3BD;
-  --ion-color-artemis-dark: #05668D;
+
+  // Tema Oscuro
+  --ion-color-artemis-dark-primary: #023E58;
+  --ion-color-artemis-dark-secondary: #015A5F;
+  --ion-color-artemis-dark-tertiary: #00736B;
+  --ion-color-artemis-dark-accent: #11916E;
 
   // ... resto del código de variables existente ...
 }
@@ -17,23 +21,23 @@
 // Estilos globales para botones de acción principal
 ion-button.login-btn,
 ion-button.register-btn {
-  --background: var(--ion-color-artemis-accent);
-  --background-activated: var(--ion-color-artemis-accent);
-  --background-focused: var(--ion-color-artemis-accent);
-  --background-hover: #01b38b; /* Color ligeramente más oscuro para hover */
+  --background: var(--ion-color-artemis-tertiary);
+  --background-activated: var(--ion-color-artemis-tertiary);
+  --background-focused: var(--ion-color-artemis-tertiary);
+  --background-hover: #029386; /* Color ligeramente más oscuro para hover */
   --color: white;
   --border-radius: 8px;
   margin: 24px 0;
   height: 48px;
   font-weight: 600;
-  box-shadow: 0 4px 8px rgba(2, 195, 154, 0.3);
+  box-shadow: 0 4px 8px rgba(2, 163, 150, 0.3);
   transition: all 0.3s ease;
   text-transform: none;
   font-size: 16px;
   
   &:hover {
-    --background: #01b38b;
-    box-shadow: 0 6px 12px rgba(2, 195, 154, 0.4);
+    --background: #029386;
+    box-shadow: 0 6px 12px rgba(2, 163, 150, 0.4);
   }
 }
 
@@ -58,20 +62,11 @@ ion-button.register-btn {
 
 .ion-color-artemis-tertiary {
   --ion-color-base: var(--ion-color-artemis-tertiary);
-  --ion-color-base-rgb: 0, 168, 150;
+  --ion-color-base-rgb: 2, 163, 150;
   --ion-color-contrast: #ffffff;
   --ion-color-contrast-rgb: 255, 255, 255;
-  --ion-color-shade: #009484;
-  --ion-color-tint: #1ab1a1;
-}
-
-.ion-color-artemis-accent {
-  --ion-color-base: var(--ion-color-artemis-accent);
-  --ion-color-base-rgb: 2, 195, 154;
-  --ion-color-contrast: #ffffff;
-  --ion-color-contrast-rgb: 255, 255, 255;
-  --ion-color-shade: #02ac87;
-  --ion-color-tint: #1bc9a4;
+  --ion-color-shade: #028f84;
+  --ion-color-tint: #1bacA1;
 }
 
 .ion-color-artemis-light {
@@ -83,14 +78,51 @@ ion-button.register-btn {
   --ion-color-tint: #f2f4c4;
 }
 
+// Clases para temas oscuros
+.ion-color-artemis-dark-primary {
+  --ion-color-base: var(--ion-color-artemis-dark-primary);
+  --ion-color-base-rgb: 2, 62, 88;
+  --ion-color-contrast: #ffffff;
+  --ion-color-contrast-rgb: 255, 255, 255;
+  --ion-color-shade: #02374d;
+  --ion-color-tint: #1a5169;
+}
+
+.ion-color-artemis-dark-secondary {
+  --ion-color-base: var(--ion-color-artemis-dark-secondary);
+  --ion-color-base-rgb: 1, 90, 95;
+  --ion-color-contrast: #ffffff;
+  --ion-color-contrast-rgb: 255, 255, 255;
+  --ion-color-shade: #014f54;
+  --ion-color-tint: #1a6b6f;
+}
+
+.ion-color-artemis-dark-tertiary {
+  --ion-color-base: var(--ion-color-artemis-dark-tertiary);
+  --ion-color-base-rgb: 0, 115, 107;
+  --ion-color-contrast: #ffffff;
+  --ion-color-contrast-rgb: 255, 255, 255;
+  --ion-color-shade: #00655e;
+  --ion-color-tint: #1a817a;
+}
+
+.ion-color-artemis-dark-accent {
+  --ion-color-base: var(--ion-color-artemis-dark-accent);
+  --ion-color-base-rgb: 17, 145, 110;
+  --ion-color-contrast: #ffffff;
+  --ion-color-contrast-rgb: 255, 255, 255;
+  --ion-color-shade: #0f8061;
+  --ion-color-tint: #299c7d;
+}
+
 // Opcional: redefine algunos de los colores estándar de Ionic para usar nuestra paleta
 :root {
-  --ion-color-primary: var(--ion-color-artemis-accent);
-  --ion-color-primary-rgb: 2, 195, 154;
+  --ion-color-primary: var(--ion-color-artemis-primary);
+  --ion-color-primary-rgb: 5, 102, 141;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #02ac87;
-  --ion-color-primary-tint: #1bc9a4;
+  --ion-color-primary-shade: #045a7c;
+  --ion-color-primary-tint: #1e7699;
   
   --ion-color-secondary: var(--ion-color-artemis-secondary);
   --ion-color-secondary-rgb: 2, 128, 144;
@@ -98,6 +130,13 @@ ion-button.register-btn {
   --ion-color-secondary-contrast-rgb: 255, 255, 255;
   --ion-color-secondary-shade: #02717f;
   --ion-color-secondary-tint: #1b8d9c;
+  
+  --ion-color-tertiary: var(--ion-color-artemis-tertiary);
+  --ion-color-tertiary-rgb: 2, 163, 150;
+  --ion-color-tertiary-contrast: #ffffff;
+  --ion-color-tertiary-contrast-rgb: 255, 255, 255;
+  --ion-color-tertiary-shade: #028f84;
+  --ion-color-tertiary-tint: #1bacA1;
 }
 
 // ... resto del código original ...
