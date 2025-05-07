@@ -86,6 +86,11 @@ export class SupabaseService {
       return this.getDefaultImageUrl();
     }
 
+    // Si ya es una URL completa, la devolvemos tal cual
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+
     try {
       // Construir la URL usando el endpoint público de Supabase Storage
       const { data } = this.supabase
