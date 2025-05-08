@@ -56,6 +56,12 @@ export class AiChatComponent implements OnInit {
   chatMessages: ChatMessage[] = [];
   private lastProductQuery: string | null = null;
   private lastShownProductIds: Set<string> = new Set();
+  private lastRelatedProducts: any[] = [];
+
+  // Lista básica de categorías comunes
+  private static readonly COMMON_CATEGORIES = [
+    'frutas', 'verduras', 'vinos', 'quesos', 'lácteos', 'pan', 'carnes', 'pescados', 'gourmet', 'delicatessen', 'orgánicos', 'panadería', 'pescadería', 'carnicería', 'lacteos', 'panaderia', 'pescaderia', 'carniceria'
+  ];
 
   constructor(
     private aiChatService: AiChatService,
@@ -120,6 +126,15 @@ export class AiChatComponent implements OnInit {
     return matrix[bn][an];
   }
 
+  // Extraer la palabra clave principal de la consulta del usuario
+  private extractMainKeyword(text: string): string {
+    // Eliminar palabras comunes y quedarse con la última palabra relevante
+    const stopwords = ['quiero', 'comprar', 'un', 'una', 'buen', 'buena', 'de', 'el', 'la', 'los', 'las', 'en', 'para', 'me', 'gustaría', 'busco', 'dame', 'muéstrame', 'hay', 'tienes', 'tienen', 'puedo', 'dónde', 'donde', 'más', 'otro', 'otra', 'algún', 'alguna', 'alguno', 'algun', 'algunas', 'algunos', 'y', 'por', 'favor', 'porfavor', 'del', 'con', 'sin', 'mejor', 'mejores', 'me', 'quiero', 'ver', 'oferta', 'ofertas', 'ofrecen', 'ofreces', 'ofrecer'];
+    const palabras = this.normalizeText(text).split(/\s+/).filter(Boolean);
+    const keywords = palabras.filter(p => !stopwords.includes(p));
+    return keywords.length > 0 ? keywords[keywords.length - 1] : palabras[palabras.length - 1] || '';
+  }
+
   // Método para enviar un mensaje
   async sendMessage() {
     if (!this.userMessage.trim()) return;
@@ -128,24 +143,55 @@ export class AiChatComponent implements OnInit {
     this.isLoading = true;
 
     // Detectar si la pregunta es de seguimiento
-    const followUpRegex = /(no hay m[aá]s|alguno m[aá]s|otro|y otro|y alguno m[aá]s|y m[aá]s|alg[úu]n otro|más opciones|otra opción|otra alternativa|otra marca|otra variedad)/i;
+    const followUpRegex = /(no hay m[aá]s|alguno m[aá]s|otro|y otro|y alguno m[aá]s|y m[aá]s|alg[úu]n otro|más opciones|otra opción|otra alternativa|otra marca|otra variedad|hay m[aá]s [a-z]+)/i;
+    const mainKeyword = this.extractMainKeyword(message);
+    const isCategory = AiChatComponent.COMMON_CATEGORIES.includes(mainKeyword);
     if (followUpRegex.test(message) && this.lastProductQuery) {
-      const productos = await this.supabaseService.getAllProductsWithStockAndStore();
-      const consulta = this.normalizeText(this.lastProductQuery);
-      const consultaPalabras = consulta.split(/\s+/).filter(Boolean);
-      // Buscar productos relacionados
-      const encontrados = productos.filter(p => {
-        const nombre = this.normalizeText(p.name);
-        if (
-          consulta.includes(nombre) ||
-          nombre.includes(consulta) ||
-          this.levenshtein(consulta, nombre) <= 2 ||
-          this.levenshtein(nombre, consulta) <= 2
-        ) {
-          return true;
+      // Si la pregunta de seguimiento contiene una categoría, hacer nueva búsqueda de esa categoría
+      if (isCategory) {
+        const productos = await this.supabaseService.getAllProductsWithStockAndStore();
+        const encontrados = productos.filter(p => this.normalizeText(String(('category' in p ? p.category : ''))) === mainKeyword);
+        this.lastProductQuery = mainKeyword;
+        this.lastRelatedProducts = encontrados;
+        this.lastShownProductIds = new Set(encontrados.map(p => p.id));
+        if (encontrados.length > 0) {
+          const respuesta = encontrados.map(p => `"${p.name}" está disponible en ${p.store} (${p.stock} unidades)`).join('\n');
+          this.chatMessages.push({
+            role: 'user',
+            content: message,
+            timestamp: new Date()
+          });
+          this.chatMessages.push({
+            role: 'assistant',
+            content: respuesta,
+            timestamp: new Date()
+          });
+          this.isLoading = false;
+          this.scrollToBottom();
+          return;
+        } else {
+          this.chatMessages.push({
+            role: 'user',
+            content: message,
+            timestamp: new Date()
+          });
+          this.chatMessages.push({
+            role: 'assistant',
+            content: 'No hay stock de ese producto en nuestra app.',
+            timestamp: new Date()
+          });
+          this.isLoading = false;
+          this.scrollToBottom();
+          return;
         }
-        return consultaPalabras.some(pal => nombre.includes(pal));
-      });
+      }
+      // Si no, seguir con la lógica de seguimiento anterior
+      let encontrados: any[] = [];
+      if (isCategory) {
+        encontrados = this.lastRelatedProducts.filter(p => this.normalizeText(String(('category' in p ? p.category : ''))) === mainKeyword);
+      } else {
+        encontrados = this.lastRelatedProducts.filter(p => this.normalizeText(p.name).includes(mainKeyword));
+      }
       // Filtrar los que ya se han mostrado
       const nuevos = encontrados.filter(p => !this.lastShownProductIds.has(p.id));
       if (nuevos.length > 0) {
@@ -185,26 +231,16 @@ export class AiChatComponent implements OnInit {
     const stockRegex = /(hay|disponible|stock|d[oó]nde|puedo comprar|queda|quedan|tienen|tiene|venden|vende|encontrar|buscar).*([a-zA-ZáéíóúñüÁÉÍÓÚÑÜ0-9 ]+)/i;
     const match = message.match(stockRegex);
     if (match) {
-      // Guardar el término de búsqueda para contexto
-      this.lastProductQuery = message;
+      this.lastProductQuery = mainKeyword;
       const productos = await this.supabaseService.getAllProductsWithStockAndStore();
-      const consulta = this.normalizeText(message);
-      const consultaPalabras = consulta.split(/\s+/).filter(Boolean);
-      // Buscar coincidencias fuzzy o palabra contenida
-      const encontrados = productos.filter(p => {
-        const nombre = this.normalizeText(p.name);
-        if (
-          consulta.includes(nombre) ||
-          nombre.includes(consulta) ||
-          this.levenshtein(consulta, nombre) <= 2 ||
-          this.levenshtein(nombre, consulta) <= 2
-        ) {
-          return true;
-        }
-        return consultaPalabras.some(pal => nombre.includes(pal));
-      });
-      // Guardar los productos mostrados
+      let encontrados: any[] = [];
+      if (isCategory) {
+        encontrados = productos.filter(p => this.normalizeText(String(('category' in p ? p.category : ''))) === mainKeyword);
+      } else {
+        encontrados = productos.filter(p => this.normalizeText(p.name).includes(mainKeyword));
+      }
       this.lastShownProductIds = new Set(encontrados.map(p => p.id));
+      this.lastRelatedProducts = encontrados;
       if (encontrados.length > 0) {
         const respuesta = encontrados.map(p => `"${p.name}" está disponible en ${p.store} (${p.stock} unidades)`).join('\n');
         this.chatMessages.push({
@@ -236,9 +272,9 @@ export class AiChatComponent implements OnInit {
         return;
       }
     } else {
-      // Si no es búsqueda de producto, limpiar contexto
       this.lastProductQuery = null;
       this.lastShownProductIds = new Set();
+      this.lastRelatedProducts = [];
     }
     // Si no es pregunta de stock, enviar a la IA
     this.aiChatService.sendMessage(message).subscribe({
