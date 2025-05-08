@@ -60,8 +60,7 @@ import {
   restaurantOutline,
   fastFoodOutline,
   waterOutline,
-  scanOutline
-} from 'ionicons/icons';
+  scanOutline, trash } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -135,9 +134,12 @@ interface Store {
 })
 export class StoresPage implements OnInit {
   @ViewChild('filterPopover') filterPopover!: IonPopover;
+  @ViewChild('notificationPopover') notificationPopover!: IonPopover;
   
   // Add property for controlling the popover visibility
   isFilterPopoverOpen = false;
+  notificationPopoverOpen = false;
+  notificationPopoverEvent: any = null;
   
   isDarkMode = false;
   selectedCategory: string = 'Todos';
@@ -146,6 +148,13 @@ export class StoresPage implements OnInit {
   searchTerm: string = '';
   showSearchBar: boolean = false;
   notificationCount: number = 0; // Contador de notificaciones
+  notifications: { 
+    id: string; // id de la notificación
+    type: 'oferta' | 'nuevo' | 'recordatorio';
+    title: string;
+    message: string;
+    storeId?: string;
+  }[] = [];
   allStores: Store[] = []; // Original unfiltered stores
   categories: string[] = [
     'Todos',
@@ -181,39 +190,7 @@ export class StoresPage implements OnInit {
     private loadingController: LoadingController,
     private alertController: AlertController
   ) {
-    addIcons({
-      locationOutline,
-      chevronDownOutline,
-      notificationsOutline,
-      searchOutline,
-      optionsOutline,
-      star,
-      timeOutline,
-      arrowForwardOutline,
-      notifications,
-      search,
-      trendingUp,
-      location,
-      time,
-      storefront,
-      arrowForward,
-      map,
-      starHalf,
-      sunny,
-      moon,
-      camera,
-      shirtOutline,
-      pizzaOutline,
-      fishOutline,
-      basketOutline,
-      wineOutline,
-      leafOutline,
-      restaurantOutline,
-      fastFoodOutline,
-      waterOutline,
-      chatbubbleEllipses,
-      scanOutline
-    });
+    addIcons({searchOutline,scanOutline,notificationsOutline,optionsOutline,location,time,star,storefront,trash,locationOutline,chevronDownOutline,timeOutline,arrowForwardOutline,notifications,search,trendingUp,arrowForward,map,starHalf,sunny,moon,camera,shirtOutline,pizzaOutline,fishOutline,basketOutline,wineOutline,leafOutline,restaurantOutline,fastFoodOutline,waterOutline,chatbubbleEllipses});
 
     // Check if dark mode was previously selected
     const savedDarkMode = localStorage.getItem('darkMode');
@@ -492,13 +469,51 @@ export class StoresPage implements OnInit {
 
   // Simular llegada de notificaciones
   private simulateNotifications() {
-    // Mostrar 2 notificaciones iniciales
-    this.notificationCount = 2;
-    
-    // Simular una nueva notificación cada 30 segundos
+    // Helper para buscar id de tienda por nombre
+    const getStoreIdByName = (name: string) => {
+      const store = this.allStores.find(s => s.name.toLowerCase().includes(name.toLowerCase()));
+      return store ? store.id : undefined;
+    };
+
+    // Solo crear notificaciones si la tienda existe
+    const carniceriaId = getStoreIdByName('Carnicería Torres');
+    const fruteriaId = getStoreIdByName('Frutería Valencia');
+    this.notifications = [];
+    if (carniceriaId) {
+      this.notifications.push({ id: '1', type: 'oferta', title: 'Oferta especial', message: '20% de descuento en Carnicería Torres', storeId: carniceriaId });
+    }
+    if (fruteriaId) {
+      this.notifications.push({ id: '2', type: 'nuevo', title: 'Nuevo producto', message: 'Productos frescos recién llegados a Frutería Valencia', storeId: fruteriaId });
+    }
+    this.notifications.push({ id: '3', type: 'recordatorio', title: 'Recordatorio', message: 'No olvides visitar el mercado hoy' });
+    this.notificationCount = this.notifications.length;
+
     setInterval(() => {
-      if (Math.random() > 0.7) { // 30% de probabilidad de una nueva notificación
-        this.notificationCount++;
+      if (Math.random() > 0.7) {
+        const tiendas = this.allStores;
+        if (tiendas.length === 0) return;
+        const randomStore = tiendas[Math.floor(Math.random() * tiendas.length)];
+        const types = ['oferta', 'nuevo', 'recordatorio'];
+        const type = types[Math.floor(Math.random() * types.length)] as 'oferta' | 'nuevo' | 'recordatorio';
+        if (type === 'recordatorio') {
+          this.notifications.unshift({
+            id: Date.now().toString(),
+            type,
+            title: 'Recordatorio',
+            message: 'Recuerda revisar las ofertas de hoy'
+          });
+        } else {
+          this.notifications.unshift({
+            id: Date.now().toString(),
+            type,
+            title: type === 'oferta' ? 'Oferta especial' : 'Nuevo producto',
+            message: type === 'oferta' ? `¡Oferta relámpago en ${randomStore.name}!` : `Nuevos productos en ${randomStore.name}`,
+            storeId: randomStore.id
+          });
+        }
+        // Filtrar notificaciones para que solo se muestren si la tienda existe (excepto recordatorio)
+        this.notifications = this.notifications.filter(n => n.type === 'recordatorio' || (n.storeId && this.allStores.some(s => s.id === n.storeId)));
+        this.notificationCount = this.notifications.length;
       }
     }, 30000);
   }
@@ -997,6 +1012,32 @@ export class StoresPage implements OnInit {
     });
     
     await alert.present();
+  }
+
+  openNotificationPopover(event: Event) {
+    this.notificationPopoverOpen = true;
+    this.notificationPopoverEvent = event;
+  }
+
+  closeNotificationPopover() {
+    this.notificationPopoverOpen = false;
+  }
+
+  removeNotification(id: string) {
+    this.notifications = this.notifications.filter(n => n.id !== id);
+    this.notificationCount = this.notifications.length;
+  }
+
+  onNotificationClick(n: any) {
+    if (n.type === 'oferta' && n.storeId) {
+      this.closeNotificationPopover();
+      this.viewStore(n.storeId);
+    }
+    // Puedes añadir más acciones según el tipo
+  }
+
+  getStoreById(storeId: string) {
+    return this.allStores.find(s => s.id === storeId);
   }
 }
 
