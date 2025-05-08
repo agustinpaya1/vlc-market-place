@@ -302,4 +302,26 @@ export class SupabaseService {
       return [];
     }
   }
+
+  // Obtiene todas las categorías de todas las tiendas agrupadas por store_id
+  async getAllStoreCategories() {
+    try {
+      const { data, error } = await this.supabase
+        .from('store_categorie')
+        .select('store_id, category');
+      if (error) throw error;
+      // Agrupar por store_id
+      const categoriesByStore: { [key: string]: string[] } = {};
+      (data || []).forEach(row => {
+        if (!categoriesByStore[row.store_id]) {
+          categoriesByStore[row.store_id] = [];
+        }
+        categoriesByStore[row.store_id].push(row.category);
+      });
+      return categoriesByStore;
+    } catch (error) {
+      console.error('Error al obtener categorías de tiendas:', error);
+      return {};
+    }
+  }
 }
