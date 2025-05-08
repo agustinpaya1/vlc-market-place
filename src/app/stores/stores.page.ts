@@ -468,54 +468,54 @@ export class StoresPage implements OnInit {
   }
 
   // Simular llegada de notificaciones
-  private simulateNotifications() {
+  private async simulateNotifications() {
     // Helper para buscar id de tienda por nombre
     const getStoreIdByName = (name: string) => {
       const store = this.allStores.find(s => s.name.toLowerCase().includes(name.toLowerCase()));
       return store ? store.id : undefined;
     };
 
-    // Solo crear notificaciones si la tienda existe
-    const carniceriaId = getStoreIdByName('Carnicería Torres');
-    const fruteriaId = getStoreIdByName('Frutería Valencia');
+    // Limpiar notificaciones previas
     this.notifications = [];
-    if (carniceriaId) {
-      this.notifications.push({ id: '1', type: 'oferta', title: 'Oferta especial', message: '20% de descuento en Carnicería Torres', storeId: carniceriaId });
-    }
-    if (fruteriaId) {
-      this.notifications.push({ id: '2', type: 'nuevo', title: 'Nuevo producto', message: 'Productos frescos recién llegados a Frutería Valencia', storeId: fruteriaId });
-    }
-    this.notifications.push({ id: '3', type: 'recordatorio', title: 'Recordatorio', message: 'No olvides visitar el mercado hoy' });
-    this.notificationCount = this.notifications.length;
 
-    setInterval(() => {
-      if (Math.random() > 0.7) {
-        const tiendas = this.allStores;
-        if (tiendas.length === 0) return;
-        const randomStore = tiendas[Math.floor(Math.random() * tiendas.length)];
-        const types = ['oferta', 'nuevo', 'recordatorio'];
-        const type = types[Math.floor(Math.random() * types.length)] as 'oferta' | 'nuevo' | 'recordatorio';
-        if (type === 'recordatorio') {
-          this.notifications.unshift({
-            id: Date.now().toString(),
-            type,
-            title: 'Recordatorio',
-            message: 'Recuerda revisar las ofertas de hoy'
-          });
-        } else {
-          this.notifications.unshift({
-            id: Date.now().toString(),
-            type,
-            title: type === 'oferta' ? 'Oferta especial' : 'Nuevo producto',
-            message: type === 'oferta' ? `¡Oferta relámpago en ${randomStore.name}!` : `Nuevos productos en ${randomStore.name}`,
-            storeId: randomStore.id
+    // Obtener descuentos reales de las tiendas
+    for (const store of this.allStores) {
+      try {
+        const products = await this.supabaseService.getStoreProducts(store.id);
+        // Buscar el mayor descuento aplicado en los productos de la tienda
+        let maxDiscount = 0;
+        let productWithDiscount = null;
+        for (const product of products) {
+          if (product.isOffer && product.offerPrice && product.price) {
+            const discount = Math.round(100 - (product.offerPrice / product.price) * 100);
+            if (discount > maxDiscount) {
+              maxDiscount = discount;
+              productWithDiscount = product;
+            }
+          }
+        }
+        if (maxDiscount > 0 && productWithDiscount) {
+          this.notifications.push({
+            id: `${store.id}-oferta`,
+            type: 'oferta',
+            title: `¡${maxDiscount}% de descuento en ${store.name}!`,
+            message: `Aprovecha la oferta en ${productWithDiscount.name}: antes ${productWithDiscount.price}€, ahora ${productWithDiscount.offerPrice}€`,
+            storeId: store.id
           });
         }
-        // Filtrar notificaciones para que solo se muestren si la tienda existe (excepto recordatorio)
-        this.notifications = this.notifications.filter(n => n.type === 'recordatorio' || (n.storeId && this.allStores.some(s => s.id === n.storeId)));
-        this.notificationCount = this.notifications.length;
+      } catch (e) {
+        // Si falla, no mostrar notificación de oferta para esa tienda
       }
-    }, 30000);
+    }
+
+    // Notificación de recordatorio genérica
+    this.notifications.push({
+      id: 'recordatorio',
+      type: 'recordatorio',
+      title: 'Recordatorio',
+      message: 'No olvides visitar el mercado hoy'
+    });
+    this.notificationCount = this.notifications.length;
   }
 
   // Mostrar y manejar notificaciones

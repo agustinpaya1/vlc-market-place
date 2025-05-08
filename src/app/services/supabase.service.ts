@@ -164,10 +164,22 @@ export class SupabaseService {
       
       if (error) throw error;
       
-      return data.map(product => ({
-        ...product,
-        imageUrl: this.getPublicUrl(product.image_url)
-      }));
+      return data.map(product => {
+        const imageUrl = this.getPublicUrl(product.image_url);
+        // Si tiene discount y price, calcular offerPrice
+        let offerPrice = product.offerPrice;
+        let isOffer = product.isOffer;
+        if (product.discount && product.price) {
+          offerPrice = +(product.price * (1 - product.discount / 100)).toFixed(2);
+          isOffer = true;
+        }
+        return {
+          ...product,
+          imageUrl,
+          offerPrice,
+          isOffer
+        };
+      });
     } catch (error) {
       console.error('Error al obtener productos:', error);
       throw error;

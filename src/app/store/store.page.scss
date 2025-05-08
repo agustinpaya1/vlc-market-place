@@ -238,20 +238,20 @@ ion-header {
       .price {
         font-weight: 600;
         font-size: 16px;
-        color: var(--ion-color-artemis-primary);
-        
+        color: #1976d2; /* Azul para productos sin descuento */
         &.has-offer {
           text-decoration: line-through;
-          color: #999;
+          color: #888;
           font-size: 14px;
           margin-right: 8px;
         }
       }
       
       .offer-price {
-        font-weight: 600;
-        font-size: 16px;
-        color: var(--ion-color-artemis-accent);
+        font-weight: 700;
+        font-size: 18px;
+        color: #e53935; /* Rojo para el precio con descuento */
+        margin-left: 2px;
       }
     }
     
@@ -392,4 +392,74 @@ ion-fab {
       transform: translateY(-3px) scale(1.05);
     }
   }
+}
+
+.discount-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(255,59,48,0.13);
+  z-index: 2;
+  letter-spacing: 0.01em;
+  transition: background 0.18s;
+}
+
+@media (max-width: 600px) {
+  .discount-badge {
+    font-size: 0.85rem;
+    padding: 3px 8px;
+    top: 7px;
+    right: 7px;
+  }
+}
+
+.store-discount-summary {
+  margin: 8px 0 0 0;
+  ion-badge {
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 16px;
+    letter-spacing: 0.01em;
+    box-shadow: 0 2px 8px rgba(255,59,48,0.10);
+  }
+}
+
+.cart-header-btn {
+  position: relative;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+.cart-icon-badge-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.cart-icon-badge-wrapper ion-icon[name="cart"] {
+  font-size: 26px;
+  color: var(--ion-color-primary, #1976d2);
+}
+.cart-badge-header {
+  position: absolute;
+  top: -7px;
+  right: -10px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--ion-color-danger);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.18);
+  z-index: 2;
 } 

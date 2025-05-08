@@ -36,6 +36,7 @@ export class StorePage implements OnInit {
   isLoading = true;
   loadedStoreData = false;
   loadedProductsData = false;
+  maxDiscount: number = 0;
 
   constructor(
     private route: ActivatedRoute,
@@ -119,6 +120,17 @@ export class StorePage implements OnInit {
 
       // Procesar datos de productos
       if (productsData && productsData.length > 0) {
+        // Calcular el mayor descuento
+        let maxDiscount = 0;
+        for (const product of productsData) {
+          if (product.offerPrice && product.price) {
+            const discount = Math.round(100 - (product.offerPrice / product.price) * 100);
+            if (discount > maxDiscount) {
+              maxDiscount = discount;
+            }
+          }
+        }
+        this.maxDiscount = maxDiscount;
         // Procesar los productos en lotes para mejorar el rendimiento
         setTimeout(() => {
           this.products = productsData || [];
@@ -130,6 +142,7 @@ export class StorePage implements OnInit {
         this.filteredProducts = [];
         this.loadedProductsData = true;
         setTimeout(() => this.showNoProductsMessage(), 1000);
+        this.maxDiscount = 0;
       }
     } catch (error) {
       console.error('Error al cargar datos:', error);

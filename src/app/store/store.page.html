@@ -7,9 +7,11 @@
     </ion-buttons>
     <ion-title>{{ store?.name || 'Detalles de la tienda' }}</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="goToCart()">
-        <ion-icon slot="icon-only" name="cart"></ion-icon>
-        <ion-badge *ngIf="cartItemsCount > 0">{{ cartItemsCount }}</ion-badge>
+      <ion-button (click)="goToCart()" class="cart-header-btn">
+        <span class="cart-icon-badge-wrapper">
+          <ion-icon slot="icon-only" name="cart"></ion-icon>
+          <ion-badge *ngIf="cartItemsCount > 0" class="cart-badge-header">{{ cartItemsCount }}</ion-badge>
+        </span>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -26,6 +28,9 @@
       <img [src]="store.imageUrl" (error)="handleImageError($event)" alt="Imagen de la tienda" loading="lazy" width="100%" height="auto">
       <div class="store-info">
         <h2>{{ store.name }}</h2>
+        <div *ngIf="maxDiscount > 0" class="store-discount-summary">
+          <ion-badge color="danger">Hasta {{ maxDiscount }}% de descuento</ion-badge>
+        </div>
         <p>{{ store.description }}</p>
       </div>
     </div>
@@ -71,6 +76,9 @@
                      loading="lazy" 
                      width="100%" 
                      height="140">
+                <div *ngIf="product.offerPrice && product.price" class="discount-badge">
+                  -{{ ((100 - (product.offerPrice / product.price) * 100) | number:'1.0-0') }}%
+                </div>
               </ion-card-header>
 
               <ion-card-content>

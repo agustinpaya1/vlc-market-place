@@ -7,6 +7,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   imageUrl: string;
+  offerPrice?: number;
 }
 
 @Injectable({
@@ -35,9 +36,10 @@ export class CartService {
       const newItem: CartItem = {
         id: product.id,
         name: product.name,
-        price: this.roundToTwoDecimals(product.price),
+        price: product.price,
         quantity: 1,
-        imageUrl: product.imageUrl
+        imageUrl: product.imageUrl,
+        offerPrice: product.offerPrice !== undefined ? product.offerPrice : undefined
       };
       this.updateCart([...currentItems, newItem]);
     }
