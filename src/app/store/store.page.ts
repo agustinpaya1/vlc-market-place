@@ -97,6 +97,8 @@ export class StorePage implements OnInit {
 
       // Procesar datos de la tienda
       if (storeData) {
+        console.log('DEBUG storeData:', storeData);
+        console.log('DEBUG imageUrl:', storeData.imageUrl);
         this.store = {
           id: storeData.id,
           name: storeData.name,

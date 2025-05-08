@@ -86,6 +86,11 @@ export class SupabaseService {
       return this.getDefaultImageUrl();
     }
 
+    // Si ya es una URL completa, la devolvemos tal cual
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+
     try {
       // Construir la URL usando el endpoint público de Supabase Storage
       const { data } = this.supabase
@@ -255,6 +260,34 @@ export class SupabaseService {
     } catch (error) {
       console.error('Error al subir imagen base64:', error);
       throw error;
+    }
+  }
+
+  // Método para obtener todos los productos con su stock y tienda asociada
+  async getAllProductsWithStockAndStore() {
+    try {
+      const { data: products, error } = await this.supabase
+        .from('products')
+        .select('id, name, stock, store_id, price, category')
+        .gt('stock', 0);
+      if (error) throw error;
+      // Obtener tiendas para asociar nombre
+      const { data: stores, error: storeError } = await this.supabase
+        .from('stores')
+        .select('id, name');
+      if (storeError) throw storeError;
+      const storeMap = Object.fromEntries((stores || []).map(s => [s.id, s.name]));
+      return (products || []).map(p => ({
+        id: p.id,
+        name: p.name,
+        stock: p.stock,
+        price: p.price,
+        store: storeMap[p.store_id] || p.store_id,
+        category: p.category || ''
+      }));
+    } catch (error) {
+      console.error('Error al obtener productos con stock y tienda:', error);
+      return [];
     }
   }
 }

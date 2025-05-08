@@ -54,11 +54,14 @@
 // Mensaje de usuario
 .user-message {
   background-color: var(--user-message-bg);
-  color: var(--user-message-text);
+  color: #fff;
   border-bottom-right-radius: 4px;
   margin-left: auto;
   text-align: right;
   
+  .message-content {
+    color: #fff !important;
+  }
   .message-time {
     right: 8px;
     color: #888;
@@ -68,10 +71,13 @@
 // Mensaje del asistente IA
 .ai-message {
   background-color: var(--ai-message-bg);
-  color: var(--ai-message-text);
+  color: #111;
   border-bottom-left-radius: 4px;
   margin-right: auto;
   
+  .message-content {
+    color: #111 !important;
+  }
   .message-time {
     left: 8px;
     color: #888;
@@ -110,6 +116,12 @@
     --padding-end: 0;
     --background: transparent;
     font-size: 14px;
+    color: #111 !important;
+    caret-color: #111;
+    &::placeholder {
+      color: #333 !important;
+      opacity: 1;
+    }
   }
 }
 
@@ -121,12 +133,40 @@
     margin: 0;
     --padding-start: 8px;
     --padding-end: 8px;
-    --color: var(--ai-primary-color);
-    height: 36px;
-    width: 36px;
+    --background: #02C39A;
+    --color: #fff;
+    background: #02C39A !important;
+    color: #fff !important;
+    border-radius: 50%;
+    height: 40px;
+    width: 40px;
+    box-shadow: 0 2px 8px rgba(2, 195, 154, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    transition: background 0.2s, box-shadow 0.2s;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    
+    &:hover, &:focus {
+      background: #028090 !important;
+      --background: #028090;
+      box-shadow: 0 4px 12px rgba(2, 128, 144, 0.15);
+    }
     
     &[disabled] {
       --color: #ccc;
+      background: #e0e0e0 !important;
+      color: #aaa !important;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    
+    ion-icon {
+      color: #fff !important;
+      font-size: 22px;
     }
   }
 }

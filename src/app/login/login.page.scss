@@ -8,6 +8,9 @@ $color-text-dark: #05668D; // Para texto oscuro
 $color-text-light: #F0F3BD; // Para texto claro
 $font-family: 'Roboto', sans-serif;
 
+// Importando el módulo color de sass
+@use "sass:color";
+
 .login-container {
   padding: 20px;
   max-width: 500px;
@@ -83,7 +86,7 @@ $font-family: 'Roboto', sans-serif;
   font-family: $font-family;
   
   &:hover {
-    --background: darken($color-accent, 5%);
+    --background: color.adjust($color-accent, $lightness: -5%);
     box-shadow: 0 6px 12px rgba(2, 195, 154, 0.4);
   }
 }
@@ -172,7 +175,7 @@ $font-family: 'Roboto', sans-serif;
     transition: color 0.2s ease;
     
     &:hover {
-      color: darken($color-accent, 10%);
+      color: color.adjust($color-accent, $lightness: -10%);
     }
   }
 }
