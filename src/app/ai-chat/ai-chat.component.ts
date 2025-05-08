@@ -23,6 +23,7 @@ import {
   micOutline,
   imageOutline
 } from 'ionicons/icons';
+import { SupabaseService } from '../services/supabase.service';
 
 @Component({
   selector: 'app-ai-chat',
@@ -56,7 +57,8 @@ export class AiChatComponent implements OnInit {
 
   constructor(
     private aiChatService: AiChatService,
-    private modalController: ModalController
+    private modalController: ModalController,
+    private supabaseService: SupabaseService
   ) {
     addIcons({
       sendOutline,
@@ -81,47 +83,120 @@ export class AiChatComponent implements OnInit {
     }
   }
 
+  // Función para normalizar texto (sin tildes, minúsculas)
+  normalizeText(text: string): string {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9áéíóúñü\s]/gi, '')
+      .trim();
+  }
+
+  // Función de distancia de Levenshtein
+  levenshtein(a: string, b: string): number {
+    const an = a ? a.length : 0;
+    const bn = b ? b.length : 0;
+    if (an === 0) return bn;
+    if (bn === 0) return an;
+    const matrix = [];
+    for (let i = 0; i <= bn; ++i) matrix[i] = [i];
+    for (let j = 0; j <= an; ++j) matrix[0][j] = j;
+    for (let i = 1; i <= bn; ++i) {
+      for (let j = 1; j <= an; ++j) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1, // sustitución
+            matrix[i][j - 1] + 1,     // inserción
+            matrix[i - 1][j] + 1      // borrado
+          );
+        }
+      }
+    }
+    return matrix[bn][an];
+  }
+
   // Método para enviar un mensaje
   async sendMessage() {
     if (!this.userMessage.trim()) return;
-    
     const message = this.userMessage.trim();
-    this.userMessage = ''; // Limpiar el input
-    
-    // No añadimos el mensaje de usuario aquí, ya lo hace el servicio
-    
+    this.userMessage = '';
     this.isLoading = true;
-    
-    // Enviar mensaje y recibir respuesta
+
+    // Detectar si la pregunta es sobre stock/disponibilidad de producto
+    const stockRegex = /(hay|disponible|stock|d[oó]nde|puedo comprar|queda|quedan|tienen|tiene|venden|vende|encontrar|buscar).*([a-zA-ZáéíóúñüÁÉÍÓÚÑÜ0-9 ]+)/i;
+    const match = message.match(stockRegex);
+    if (match) {
+      const productos = await this.supabaseService.getAllProductsWithStockAndStore();
+      const consulta = this.normalizeText(message);
+      const consultaPalabras = consulta.split(/\s+/).filter(Boolean);
+      // Buscar coincidencias fuzzy o palabra contenida
+      const encontrados = productos.filter(p => {
+        const nombre = this.normalizeText(p.name);
+        // Coincidencia fuzzy global
+        if (
+          consulta.includes(nombre) ||
+          nombre.includes(consulta) ||
+          this.levenshtein(consulta, nombre) <= 2 ||
+          this.levenshtein(nombre, consulta) <= 2
+        ) {
+          return true;
+        }
+        // Coincidencia por palabra: ¿alguna palabra de la consulta está en el nombre del producto?
+        return consultaPalabras.some(pal => nombre.includes(pal));
+      });
+      if (encontrados.length > 0) {
+        const respuesta = encontrados.map(p => `"${p.name}" está disponible en ${p.store} (${p.stock} unidades)`).join('\n');
+        this.chatMessages.push({
+          role: 'user',
+          content: message,
+          timestamp: new Date()
+        });
+        this.chatMessages.push({
+          role: 'assistant',
+          content: respuesta,
+          timestamp: new Date()
+        });
+        this.isLoading = false;
+        this.scrollToBottom();
+        return;
+      } else {
+        this.chatMessages.push({
+          role: 'user',
+          content: message,
+          timestamp: new Date()
+        });
+        this.chatMessages.push({
+          role: 'assistant',
+          content: 'No hay stock de ese producto en nuestra app.',
+          timestamp: new Date()
+        });
+        this.isLoading = false;
+        this.scrollToBottom();
+        return;
+      }
+    }
+    // Si no es pregunta de stock, enviar a la IA
     this.aiChatService.sendMessage(message).subscribe({
       next: (response) => {
-        console.log('Response received:', response);
         this.isLoading = false;
-        
-        // Actualizar el chat local con la respuesta
         this.chatMessages = this.aiChatService.getChatHistory();
         this.scrollToBottom();
       },
       error: (error) => {
-        console.error('Error al enviar mensaje:', error);
         this.isLoading = false;
-        
-        // Mostrar mensaje de error en el chat
         this.chatMessages.push({
           role: 'assistant',
           content: 'Ha ocurrido un error al comunicarse con la IA. Por favor intenta nuevamente.',
           timestamp: new Date()
         });
-        
         this.scrollToBottom();
       }
     });
-    
-    // Actualizar de inmediato para mostrar el mensaje del usuario
     this.chatMessages = this.aiChatService.getChatHistory();
     this.scrollToBottom();
-    
-    // Enfoque en el input después de enviar
     setTimeout(() => {
       this.messageInput?.setFocus();
     }, 100);
