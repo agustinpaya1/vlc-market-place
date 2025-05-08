@@ -7,6 +7,9 @@ $color-background: #F0F3BD; // Amarillo pálido
 $color-text-dark: #05668D; // Para texto oscuro
 $color-text-light: #F0F3BD; // Para texto claro
 
+// Importando el módulo color de sass
+@use "sass:color";
+
 .register-container {
     padding: 20px;
     max-width: 500px;
@@ -88,7 +91,7 @@ $color-text-light: #F0F3BD; // Para texto claro
       transition: color 0.2s ease;
       
       &:hover {
-        color: darken($color-accent, 10%);
+        color: color.adjust($color-accent, $lightness: -10%);
       }
     }
   }
@@ -129,7 +132,7 @@ $color-text-light: #F0F3BD; // Para texto claro
   // Restauramos el efecto hover para el botón de registro
   .register-btn {
     &:hover {
-      --background: darken($color-accent, 5%);
+      --background: color.adjust($color-accent, $lightness: -5%);
       box-shadow: 0 6px 12px rgba(2, 195, 154, 0.4);
     }
   }

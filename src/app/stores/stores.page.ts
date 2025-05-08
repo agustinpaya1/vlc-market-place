@@ -2,7 +2,6 @@ import { Component, OnInit, ViewChild, NgZone, ChangeDetectorRef } from '@angula
 import { 
   IonBadge,
   IonButton,
-  IonButtons,
   IonCard,
   IonCardContent,
   IonCardHeader,
@@ -22,7 +21,6 @@ import {
   IonSegment,
   IonSegmentButton,
   IonSpinner,
-  IonToolbar,
   ModalController,
   LoadingController,
   AlertController
@@ -114,7 +112,6 @@ interface Store {
     CommonModule,
     FormsModule,
     IonHeader,
-    IonToolbar,
     IonContent,
     IonCard,
     IonCardHeader,
@@ -127,7 +124,6 @@ interface Store {
     IonRow,
     IonCol,
     IonChip,
-    IonButtons,
     IonSpinner,
     IonFab,
     IonFabButton,
@@ -683,39 +679,34 @@ export class StoresPage implements OnInit {
    * Devuelve la URL de imagen SVG para cada categoría con implementación optimizada
    */
   getCategoryImage(category: string): string {
-    // Mapa de colores de la paleta Artemis (predefinido para evitar cálculos repetidos)
-    const colorMap: {[key: string]: string} = {
-      'Todos': '02C39A',
-      'Fruterías': '00A896',
-      'Carnicerías': '05668D',
-      'Pescaderías': '028090',
-      'Panaderías': '02C39A',
-      'Lácteos': '05668D',
-      'Orgánicos': '00A896',
-      'Vinos': '028090',
-      'Gourmet': '05668D',
-      'Delicatessen': '02C39A'
-    };
+    // Mapa de colores de la paleta con el color principal #02A396
+    const mainColor = '02A396';
     
-    // Obtener el color de fondo
-    const bgColor = colorMap[category] || '02C39A';
-    
-    // Mapa de SVGs precalculados
+    // Mapa de SVGs mejorados con diseños más modernos y detallados
     const svgMap: {[key: string]: string} = {
-      'Todos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23${bgColor}' /%3E%3Cpath d='M32 42 L32 68 L68 68 L68 42 L32 42 Z M40 42 L40 32 L60 32 L60 42 L40 42 Z' fill='white' stroke='white' stroke-width='1' /%3E%3C/svg%3E`,
-      'Fruterías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23${bgColor}' /%3E%3Ccircle cx='50' cy='55' r='18' fill='white' /%3E%3Cpath d='M50 37 Q60 27 70 37' stroke='white' stroke-width='2' fill='none' /%3E%3C/svg%3E`,
-      'Carnicerías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23${bgColor}' /%3E%3Cpath d='M35 40 L65 40 L65 65 L35 65 Z' fill='white' /%3E%3C/svg%3E`,
-      'Pescaderías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23${bgColor}' /%3E%3Cpath d='M30 50 C40 40 60 40 70 50 C60 60 40 60 30 50 Z' fill='white' /%3E%3Ccircle cx='40' cy='50' r='3' fill='%23${bgColor}' /%3E%3Cpath d='M70 50 L75 45 L75 55 Z' fill='white' /%3E%3C/svg%3E`,
-      'Vinos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23${bgColor}' /%3E%3Cpath d='M40 30 L60 30 L55 55 L45 55 Z' fill='white' /%3E%3Cpath d='M50 55 L50 70 M40 70 L60 70' stroke='white' stroke-width='2' /%3E%3C/svg%3E`,
-      'Panaderías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23${bgColor}' /%3E%3Cpath d='M30 50 C30 35 70 35 70 50 C70 65 30 65 30 50 Z' fill='white' /%3E%3C/svg%3E`,
-      'Lácteos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23${bgColor}' /%3E%3Cpath d='M40 30 L60 30 L60 70 L40 70 Z' fill='white' /%3E%3Ccircle cx='50' cy='40' r='5' fill='%23${bgColor}' /%3E%3C/svg%3E`,
-      'Orgánicos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23${bgColor}' /%3E%3Cpath d='M30 70 C30 30 70 30 70 70' fill='none' stroke='white' stroke-width='5' /%3E%3Cpath d='M30 70 L70 70' stroke='white' stroke-width='5' /%3E%3C/svg%3E`,
-      'Gourmet': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23${bgColor}' /%3E%3Cpath d='M40 30 L40 70 M60 30 L60 70 M40 50 L60 50' stroke='white' stroke-width='3' fill='none' /%3E%3C/svg%3E`,
-      'Delicatessen': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23${bgColor}' /%3E%3Ccircle cx='50' cy='50' r='15' fill='white' /%3E%3Cpath d='M35 35 L65 65 M35 65 L65 35' stroke='white' stroke-width='3' /%3E%3C/svg%3E`
+      'Todos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M32 38c0-1.1.9-2 2-2h32c1.1 0 2 .9 2 2v28c0 1.1-.9 2-2 2H34c-1.1 0-2-.9-2-2V38zm8-6c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2v6H40v-6z' fill='white'/%3E%3C/svg%3E`,
+      
+      'Fruterías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M50 68c9.4 0 17-7.6 17-17s-7.6-17-17-17-17 7.6-17 17 7.6 17 17 17zm0-6c-6.1 0-11-4.9-11-11s4.9-11 11-11 11 4.9 11 11-4.9 11-11 11z' fill='white'/%3E%3Cpath d='M55 27c0 5.5 10 8 10 2s-2-10-10-2zM45 27c0 5.5-10 8-10 2s2-10 10 2z' fill='white'/%3E%3C/svg%3E`,
+      
+      'Carnicerías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M32 35c0-2.2 1.8-4 4-4h28c2.2 0 4 1.8 4 4v30c0 2.2-1.8 4-4 4H36c-2.2 0-4-1.8-4-4V35zm5 0c0-.6.4-1 1-1h24c.6 0 1 .4 1 1v5H37v-5zm0 10h26v15c0 .6-.4 1-1 1H38c-.6 0-1-.4-1-1V45z' fill='white'/%3E%3C/svg%3E`,
+      
+      'Pescaderías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M30 50c0-5.5 10-10 20-10s20 4.5 20 10-10 10-20 10-20-4.5-20-10zm35 0c3 0 5 7 10 0l5 5-5 5c-5-7-7 0-10 0-3-2.5-8-5-15-5s-12 2.5-15 5c-3 0-5-7-10 0l-5-5 5-5c5 7 7 0 10 0 3-2.5 8-5 15-5s12 2.5 15 5z' fill='white'/%3E%3Ccircle cx='40' cy='47' r='3' fill='white'/%3E%3C/svg%3E`,
+      
+      'Vinos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M50 65v8h-8v4h24v-4h-8v-8c7.7-1.5 13-4.2 13-12V35c0-1.1-.9-2-2-2H39c-1.1 0-2 .9-2 2v18c0 7.8 5.3 10.5 13 12zm-9-28h26v10H41V37zm13 24c-6 0-9-3-9-6V51h18v4c0 3-3 6-9 6z' fill='white'/%3E%3C/svg%3E`,
+      
+      'Panaderías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M25 45c0-8 6-15 15-15 4 0 7.5 1.5 10 4 2.5-2.5 6-4 10-4 9 0 15 7 15 15 0 10-10 15-25 25-15-10-25-15-25-25zm5 0c0 6 8 10 20 18 12-8 20-12 20-18 0-5-3-10-10-10-3 0-6 1.5-8 4l-2 2-2-2c-2-2.5-5-4-8-4-7 0-10 5-10 10z' fill='white'/%3E%3C/svg%3E`,
+      
+      'Lácteos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M37 28c-1.1 0-1.7 1.2-1 2l4 4v36c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V34l4-4c.7-.8.1-2-1-2H37zm5 6h16v6H42v-6zm0 10h16v22H42V44z' fill='white'/%3E%3Ccircle cx='50' cy='34' r='3' fill='white'/%3E%3C/svg%3E`,
+      
+      'Orgánicos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M35 70c-2 0-5-2-5-5 0-15 10-28 20-35 8 5 15 15 17 25 1-5 4-10 8-13 0 10-3 20-10 28H35zm25-26c-2-5-6-10-10-13-7 5-15 15-15 27v2h28c-1-5-2-11-3-16z' fill='white'/%3E%3C/svg%3E`,
+      
+      'Gourmet': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M38 30c-1.1 0-2 .9-2 2v36c0 1.1.9 2 2 2s2-.9 2-2V51h20v17c0 1.1.9 2 2 2s2-.9 2-2V32c0-1.1-.9-2-2-2s-2 .9-2 2v15H40V32c0-1.1-.9-2-2-2zm12 24c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4z' fill='white'/%3E%3C/svg%3E`,
+      
+      'Delicatessen': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M50 25c-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25-11.2-25-25-25zm0 44c-10.5 0-19-8.5-19-19s8.5-19 19-19 19 8.5 19 19-8.5 19-19 19zm8-19c0 4.4-3.6 8-8 8s-8-3.6-8-8 3.6-8 8-8 8 3.6 8 8z' fill='white'/%3E%3Cpath d='M36 36l28 28M36 64l28-28' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E`
     };
     
-    // Retornar el SVG precalculado o un SVG genérico si no existe
-    return svgMap[category] || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23${bgColor}' /%3E%3Ctext x='50' y='55' font-family='Arial, sans-serif' font-size='30' text-anchor='middle' fill='white' dominant-baseline='middle'%3E${category.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E`;
+    // Retornar el SVG mejorado o un SVG genérico si no existe
+    return svgMap[category] || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Ctext x='50' y='55' font-family='Arial, sans-serif' font-size='30' text-anchor='middle' fill='white' dominant-baseline='middle'%3E${category.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E`;
   }
 
   /**

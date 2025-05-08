@@ -18,24 +18,22 @@
 </ion-header>
 
 <ion-content>
-  <!-- Categorías flotantes -->
-  <div class="categories-wrapper">
-    <ion-segment scrollable mode="ios" class="category-segment" value="{{selectedCategory}}">
-      <ion-segment-button 
-        *ngFor="let category of categories" 
-        [value]="category"
-        [attr.aria-selected]="selectedCategory === category"
-        (click)="selectCategory(category)"
-        mode="ios">
-        <div class="segment-button-content">
-          <div class="category-icon" [class.active]="selectedCategory === category">
-            <img [src]="getCategoryImage(category)" [alt]="category" class="category-img" loading="lazy">
-          </div>
-          <ion-label class="category-name">{{ category }}</ion-label>
+  <!-- Categorías flotantes - Elimino el div wrapper innecesario -->
+  <ion-segment scrollable mode="ios" class="category-segment" value="{{selectedCategory}}">
+    <ion-segment-button 
+      *ngFor="let category of categories" 
+      [value]="category"
+      [attr.aria-selected]="selectedCategory === category"
+      (click)="selectCategory(category)"
+      mode="ios">
+      <div class="segment-button-content">
+        <div class="category-icon" [class.active]="selectedCategory === category">
+          <img [src]="getCategoryImage(category)" [alt]="category" class="category-img" loading="lazy">
         </div>
-      </ion-segment-button>
-    </ion-segment>
-  </div>
+        <ion-label class="category-name">{{ category }}</ion-label>
+      </div>
+    </ion-segment-button>
+  </ion-segment>
 
   <!-- Filter popover -->
   <ion-popover #filterPopover [isOpen]="isFilterPopoverOpen" (didDismiss)="isFilterPopoverOpen = false" [arrow]="true" side="bottom" alignment="end" class="filter-popover">

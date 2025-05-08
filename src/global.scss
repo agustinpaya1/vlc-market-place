@@ -1,61 +1,379 @@
 /*
  * App Global CSS
  * ----------------------------------------------------------------------------
- * Put style rules here that you want to apply globally. These styles are for
- * the entire app and not just one component. Additionally, this file can be
- * used as an entry point to import other CSS/Sass files to be included in the
- * output CSS.
- * For more information on global stylesheets, visit the documentation:
- * https://ionicframework.com/docs/layout/global-stylesheets
+ * Estilos globales para toda la aplicación VLC Market Place.
+ * Este archivo es el punto central de estilos, los componentes específicos 
+ * pueden tener sus propios archivos scss pero deben ser mínimos.
  */
 
-/* Core CSS required for Ionic components to work properly */
+/* Importación de archivos base de Ionic */
 @import "@ionic/angular/css/core.css";
-
-/* Basic CSS for apps built with Ionic */
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";
 @import "@ionic/angular/css/typography.css";
 @import "@ionic/angular/css/display.css";
-
-/* Optional CSS utils that can be commented out */
 @import "@ionic/angular/css/padding.css";
 @import "@ionic/angular/css/float-elements.css";
 @import "@ionic/angular/css/text-alignment.css";
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
-/* Third party CSS */
+/* Importaciones de terceros */
 @import "leaflet/dist/leaflet.css";
 
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
-
+/* Importación de la paleta de colores para modo oscuro */
 @import '@ionic/angular/css/palettes/dark.system.css';
 
-/**
- * Custom Global Styles
- * -----------------------------------------------------
- */
+/*====================================
+  TEMA CLARO - VARIABLES Y COMPONENTES BÁSICOS
+====================================*/
+
 :root {
+  /* Tipografía */
   --ion-font-family: 'Roboto', sans-serif;
   
-  /* Variables de la paleta tema claro */
-  --ion-color-artemis-primary: #05668D;
-  --ion-color-artemis-secondary: #028090;
-  --ion-color-artemis-tertiary: #02A396;
-  --ion-color-artemis-light: #F0F3BD;
+  /* Esquema de colores principal */
+  --color-brand-primary: var(--ion-color-artemis-primary, #05668D);
+  --color-brand-secondary: var(--ion-color-artemis-secondary, #028090);
+  --color-brand-tertiary: var(--ion-color-artemis-tertiary, #02A396);
+  --color-brand-light: var(--ion-color-artemis-light, #F0F3BD);
+  
+  /* Fondos y contenedores */
+  --color-background: #f5f9f5;
+  --color-card: #ffffff;
+  --color-surface: #ffffff;
+  
+  /* Texto */
+  --color-text-primary: #2c4a3e;
+  --color-text-secondary: #6b8a7c;
+  --color-text-tertiary: #8fa89d;
+  
+  /* Sombras y elevación */
+  --shadow-small: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-large: 0 6px 16px rgba(0, 0, 0, 0.15);
+  
+  /* Bordes */
+  --border-light: rgba(0, 0, 0, 0.1);
+  --border-radius-small: 8px;
+  --border-radius-medium: 12px;
+  --border-radius-large: 16px;
+  
+  /* Transiciones */
+  --transition-fast: all 0.2s ease;
+  --transition-normal: all 0.3s ease;
+  
+  /* Espaciados */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
 }
 
+/*====================================
+  MODO OSCURO - VARIABLES
+====================================*/
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Esquema de colores principal */
+    --color-brand-primary: var(--ion-color-artemis-dark-primary, #023E58);
+    --color-brand-secondary: var(--ion-color-artemis-dark-secondary, #015A5F);
+    --color-brand-tertiary: var(--ion-color-artemis-dark-tertiary, #00736B);
+    --color-brand-accent: var(--ion-color-artemis-dark-accent, #11916E);
+    
+    /* Fondos y contenedores */
+    --color-background: #121212;
+    --color-card: #1e1e1e;
+    --color-surface: #2d2d2d;
+    
+    /* Texto */
+    --color-text-primary: #ffffff;
+    --color-text-secondary: rgba(255, 255, 255, 0.8);
+    --color-text-tertiary: rgba(255, 255, 255, 0.6);
+    
+    /* Sombras */
+    --shadow-small: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.2);
+    --shadow-large: 0 6px 16px rgba(0, 0, 0, 0.3);
+    
+    /* Bordes */
+    --border-light: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/*====================================
+  ESTILOS BASE PARA COMPONENTES COMUNES
+====================================*/
+
+/* Tipografía base */
 body, ion-content, ion-item, ion-label, ion-button, ion-input, ion-textarea, ion-select {
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--ion-font-family);
+  color: var(--color-text-primary);
 }
 
-/* Utilidades para rendimiento*/
+/* Contenedores principales */
+ion-content {
+  --background: linear-gradient(to bottom, #f7f9fc, #e9f2f9);
+  --padding-start: var(--spacing-md);
+  --padding-end: var(--spacing-md);
+  --padding-bottom: var(--spacing-md);
+}
+
+ion-header, ion-toolbar {
+  --background: var(--color-brand-primary);
+  --color: white;
+}
+
+/* Tarjetas */
+ion-card {
+  border-radius: var(--border-radius-medium);
+  box-shadow: var(--shadow-medium);
+  overflow: hidden;
+  background: var(--color-card);
+  margin: var(--spacing-sm);
+}
+
+/* Botones */
+ion-button {
+  --border-radius: var(--border-radius-small);
+  --box-shadow: 0 4px 8px rgba(2, 163, 150, 0.2);
+  font-weight: 500;
+}
+
+ion-button.button-solid {
+  --background: var(--color-brand-tertiary);
+  --color: white;
+}
+
+ion-button.button-outline {
+  --border-color: var(--color-brand-secondary);
+  --color: var(--color-brand-secondary);
+}
+
+/* Navegación inferior */
+ion-tab-bar {
+  --background: var(--color-card);
+  --border: 1px solid var(--border-light);
+}
+
+ion-tab-button {
+  --color: var(--color-brand-secondary);
+  --color-selected: var(--color-brand-tertiary);
+}
+
+/* Barra de búsqueda */
+ion-searchbar {
+  --background: white;
+  --color: var(--color-brand-primary);
+  --icon-color: var(--color-brand-secondary);
+  --placeholder-color: rgba(5, 102, 141, 0.5);
+  --border-radius: var(--border-radius-small);
+  --box-shadow: var(--shadow-small);
+}
+
+/* Componentes formulario */
+ion-item {
+  --padding-start: var(--spacing-md);
+  --inner-padding-end: var(--spacing-md);
+  --background: var(--color-card);
+  --border-color: var(--border-light);
+}
+
+ion-chip {
+  margin: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+ion-badge {
+  --padding-end: var(--spacing-sm);
+  --padding-start: var(--spacing-sm);
+}
+
+/*====================================
+  COMPONENTES PERSONALIZADOS COMUNES
+====================================*/
+
+/* Contenedor de búsqueda (reusable en múltiples páginas) */
+.search-container {
+  padding: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background-color: #02A396;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  
+  .search-bar {
+    flex: 1;
+    height: 48px;
+    background-color: white;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--spacing-md);
+    box-shadow: var(--shadow-medium);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    
+    &:focus-within {
+      box-shadow: 0 4px 15px rgba(2, 163, 150, 0.2);
+      transform: translateY(-1px);
+    }
+    
+    input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      height: 100%;
+      font-size: 16px;
+      color: var(--color-text-primary);
+      outline: none;
+      padding: 0 5px;
+      
+      &::placeholder {
+        color: #aaa;
+        font-weight: 400;
+      }
+    }
+    
+    .search-icon, .scan-icon {
+      color: var(--color-brand-tertiary);
+      font-size: 22px;
+      transition: transform 0.2s ease;
+      
+      &:active {
+        transform: scale(0.9);
+      }
+    }
+    
+    .scan-icon {
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      
+      &:hover {
+        background-color: rgba(2, 163, 150, 0.08);
+      }
+    }
+  }
+  
+  .action-buttons {
+    display: flex;
+    
+    ion-button {
+      --padding-start: 0;
+      --padding-end: 0;
+      --color: white;
+      --background: transparent;
+      margin: 0;
+      height: 46px;
+      width: 46px;
+      position: relative;
+      overflow: visible;
+      transition: transform 0.2s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+      }
+      
+      &:active {
+        transform: translateY(0);
+      }
+      
+      ion-icon {
+        font-size: 24px;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+      }
+    }
+    
+    .notification-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      font-size: 10px;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      --background: #ff3b30;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(255, 59, 48, 0.4);
+      animation: pulse 2s infinite;
+      
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.4);
+        }
+        70% {
+          box-shadow: 0 0 0 6px rgba(255, 59, 48, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
+        }
+      }
+    }
+  }
+}
+
+/* Soporte para modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .search-container {
+    .search-bar {
+      background-color: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      
+      input {
+        color: white;
+        
+        &::placeholder {
+          color: rgba(255, 255, 255, 0.5);
+        }
+      }
+      
+      .search-icon, .scan-icon {
+        color: var(--color-brand-tertiary);
+      }
+    }
+  }
+}
+
+/* Botón flotante IA */
+.ai-fab {
+  --background: var(--color-card);
+  height: 56px;
+  width: 56px;
+  
+  .ai-logo-img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+  }
+}
+
+/* Modal de chat IA */
+.ai-chat-modal {
+  --width: 90%;
+  --height: 80%;
+  --border-radius: var(--border-radius-large);
+  --backdrop-opacity: 0.4;
+}
+
+@media (min-width: 768px) {
+  .ai-chat-modal {
+    --width: 400px;
+    --height: 600px;
+  }
+}
+
+/*====================================
+  UTILIDADES CSS DE RENDIMIENTO
+====================================*/
+
 .will-change-transform {
   will-change: transform;
 }
@@ -69,7 +387,7 @@ body, ion-content, ion-item, ion-label, ion-button, ion-input, ion-textarea, ion
   content-visibility: auto;
 }
 
-/* Optimizaciones para carga de imágenes */
+/* Optimización para carga de imágenes */
 img.lazy-load {
   opacity: 0;
   transition: opacity 0.3s;
@@ -79,168 +397,23 @@ img.lazy-loaded {
   opacity: 1;
 }
 
-/* Simplificar los estilos globales para mejorar rendimiento */
-ion-content {
-  --background: linear-gradient(135deg, white 60%, var(--ion-color-artemis-light) 100%);
+/* Personalización del área de scroll */
+.inner-scroll {
+  padding-top: 10px;
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(2, 163, 150, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(5, 102, 141, 0.03) 0%, transparent 40%);
 }
 
-ion-header, ion-toolbar {
-  --background: var(--ion-color-artemis-primary);
-  --color: white;
-}
-
-ion-tab-bar {
-  --background: white;
-  --border: 1px solid rgba(5, 102, 141, 0.1);
-}
-
-ion-tab-button {
-  --color: var(--ion-color-artemis-secondary);
-  --color-selected: var(--ion-color-artemis-tertiary);
-}
-
-ion-searchbar {
-  --background: white;
-  --color: var(--ion-color-artemis-primary);
-  --icon-color: var(--ion-color-artemis-secondary);
-  --placeholder-color: rgba(5, 102, 141, 0.5);
-  --border-radius: 8px;
-  --box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-ion-card {
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-}
-
-ion-button {
-  --border-radius: 8px;
-  --box-shadow: 0 4px 8px rgba(2, 163, 150, 0.2);
-  font-weight: 500;
-}
-
-ion-button.button-solid {
-  --background: var(--ion-color-artemis-tertiary);
-  --color: white;
-}
-
-ion-button.button-outline {
-  --border-color: var(--ion-color-artemis-secondary);
-  --color: var(--ion-color-artemis-secondary);
-}
-
-/* Estilos para modo oscuro usando la paleta específica */
+/* Soporte para modo oscuro */
 @media (prefers-color-scheme: dark) {
-  :root {
-    /* Variables de la paleta tema oscuro */
-    --ion-color-artemis-primary: #023E58;
-    --ion-color-artemis-secondary: #015A5F;
-    --ion-color-artemis-tertiary: #00736B;
-    --ion-color-artemis-accent: #11916E;
-  }
-  
   ion-content {
-    --background: #121212;
+    --background: linear-gradient(to bottom, #121212, #1a1a1a);
   }
   
-  ion-header, ion-toolbar {
-    --background: var(--ion-color-artemis-primary);
-    --color: white;
-  }
-  
-  ion-card {
-    --background: #1e1e1e;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-  }
-  
-  ion-item {
-    --background: #1e1e1e;
-    --border-color: rgba(255, 255, 255, 0.1);
-    --color: white;
-  }
-  
-  ion-searchbar {
-    --background: #1e1e1e;
-    --color: white;
-    --placeholder-color: rgba(255, 255, 255, 0.5);
-    --icon-color: var(--ion-color-artemis-tertiary);
-    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  ion-tab-bar {
-    --background: #1e1e1e;
-    --border: 1px solid rgba(0, 115, 107, 0.1);
-  }
-  
-  ion-tab-button {
-    --color: rgba(255, 255, 255, 0.7);
-    --color-selected: var(--ion-color-artemis-dark-tertiary);
-  }
-  
-  ion-button.button-solid {
-    --background: var(--ion-color-artemis-tertiary);
-    --color: white;
-  }
-  
-  ion-button.button-outline {
-    --border-color: var(--ion-color-artemis-secondary);
-    --color: var(--ion-color-artemis-secondary);
-  }
-  
-  /* Estilos adicionales para componentes en modo oscuro */
-  .card-category {
-    background-color: #2d2d2d;
-    color: var(--ion-color-artemis-tertiary);
-  }
-  
-  ion-badge {
-    --background: var(--ion-color-artemis-tertiary);
-    --color: white;
-  }
-  
-  ion-chip {
-    --background: #2d2d2d;
-    --color: white;
-  }
-  
-  .input-outline {
-    --background: transparent;
-    --border-color: rgba(255, 255, 255, 0.2);
-    --color: white;
-    --placeholder-color: rgba(255, 255, 255, 0.5);
-  }
-  
-  /* Mejorar contraste de textos en modo oscuro */
-  h1, h2, h3, h4, h5, h6 {
-    color: white;
-  }
-  
-  p, span, label {
-    color: rgba(255, 255, 255, 0.8);
-  }
-  
-  /* Botones flotantes en modo oscuro */
-  ion-fab-button {
-    --background: var(--ion-color-artemis-tertiary);
-    --background-activated: var(--ion-color-artemis-accent);
-    --color: white;
-    --box-shadow: 0 4px 16px rgba(0, 115, 107, 0.3);
-  }
-}
-
-/* Estilos para el modal del chat IA */
-.ai-chat-modal {
-  --width: 90%;
-  --height: 80%;
-  --border-radius: 16px;
-  --backdrop-opacity: 0.4;
-}
-
-@media (min-width: 768px) {
-  .ai-chat-modal {
-    --width: 400px;
-    --height: 600px;
+  .inner-scroll {
+    background-image: 
+      radial-gradient(circle at 20% 20%, rgba(0, 115, 107, 0.07) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(2, 62, 88, 0.07) 0%, transparent 40%);
   }
 }
