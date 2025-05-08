@@ -85,7 +85,7 @@ export class AiChatComponent implements OnInit {
     if (this.chatMessages.length === 0) {
       this.chatMessages.push({
         role: 'assistant',
-        content: '¡Hola! Soy tu asistente de IA. ¿En qué puedo ayudarte hoy?',
+        content: '¡Hola! Soy Pipa, tu asistente de IA. ¿En qué puedo ayudarte hoy?',
         timestamp: new Date()
       });
     }
@@ -310,7 +310,7 @@ export class AiChatComponent implements OnInit {
     this.aiChatService.clearChatHistory();
     this.chatMessages = [{
       role: 'assistant',
-      content: '¡Hola! Soy tu asistente de IA. ¿En qué puedo ayudarte hoy?',
+      content: '¡Hola! Soy Pipa, tu asistente de IA. ¿En qué puedo ayudarte hoy?',
       timestamp: new Date()
     }];
   }
