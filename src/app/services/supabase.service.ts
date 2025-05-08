@@ -268,8 +268,8 @@ export class SupabaseService {
     try {
       const { data: products, error } = await this.supabase
         .from('products')
-        .select('id, name, stock, store_id, price')
-        .gt('stock', 0); // Solo productos con stock > 0
+        .select('id, name, stock, store_id, price, category')
+        .gt('stock', 0);
       if (error) throw error;
       // Obtener tiendas para asociar nombre
       const { data: stores, error: storeError } = await this.supabase
@@ -282,7 +282,8 @@ export class SupabaseService {
         name: p.name,
         stock: p.stock,
         price: p.price,
-        store: storeMap[p.store_id] || p.store_id
+        store: storeMap[p.store_id] || p.store_id,
+        category: p.category || ''
       }));
     } catch (error) {
       console.error('Error al obtener productos con stock y tienda:', error);

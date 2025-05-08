@@ -6,12 +6,16 @@
  * pueden tener sus propios archivos scss pero deben ser mínimos.
  */
 
-/* Importación de archivos base de Ionic */
+/* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
+
+/* Basic CSS for apps built with Ionic */
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";
 @import "@ionic/angular/css/typography.css";
-@import "@ionic/angular/css/display.css";
+@import '@ionic/angular/css/display.css';
+
+/* Optional CSS utils that can be commented out */
 @import "@ionic/angular/css/padding.css";
 @import "@ionic/angular/css/float-elements.css";
 @import "@ionic/angular/css/text-alignment.css";
@@ -378,19 +382,14 @@ ion-badge {
   will-change: transform;
 }
 
-.backdrop-filter {
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+.backface-visibility-hidden {
+  backface-visibility: hidden;
 }
 
-.content-visibility-auto {
-  content-visibility: auto;
-}
-
-/* Optimización para carga de imágenes */
-img.lazy-load {
+/* Lazy loading de imágenes */
+img.lazy {
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity 0.4s;
 }
 
 img.lazy-loaded {
