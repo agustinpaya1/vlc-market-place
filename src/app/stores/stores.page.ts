@@ -310,24 +310,34 @@ export class StoresPage implements OnInit {
     // Aplicar filtro por términos de búsqueda
     if (this.searchTerm && this.searchTerm.trim().length >= 2) {
       const term = this.searchTerm.toLowerCase().trim();
-      
-      // Score-based search algorithm
       result = result
         .map(store => {
           let score = 0;
-          const nameMatch = store.name.toLowerCase().includes(term);
-          const descMatch = store.description?.toLowerCase()?.includes(term);
-          const categoryMatch = store.categories?.some(cat => cat.toLowerCase().includes(term));
-          const locationMatch = store.location?.toLowerCase()?.includes(term);
-          
-          // Score different types of matches
-          if (store.name.toLowerCase() === term) score += 10;
-          else if (nameMatch) score += 5;
-          
-          if (descMatch) score += 3;
-          if (categoryMatch) score += 4;
-          if (locationMatch) score += 2;
-          
+          const name = store.name.toLowerCase();
+          const desc = store.description?.toLowerCase() || '';
+          const categories = store.categories?.map(cat => cat.toLowerCase()) || [];
+          const location = store.location?.toLowerCase() || '';
+
+          // Fuzzy matching: calcular distancia de Levenshtein
+          const levName = levenshtein(name, term);
+          const levDesc = desc ? levenshtein(desc, term) : 99;
+          const levCategory = categories.length > 0 ? Math.min(...categories.map(cat => levenshtein(cat, term))) : 99;
+          const levLocation = location ? levenshtein(location, term) : 99;
+
+          // Score: cuanto menor la distancia, mayor el score
+          if (levName <= 2) score += 10 - levName * 2; // nombre muy parecido
+          else if (name.includes(term)) score += 5;
+
+          if (levDesc <= 2) score += 4 - levDesc;
+          else if (desc.includes(term)) score += 2;
+
+          if (levCategory <= 2) score += 4 - levCategory;
+          else if (categories.some(cat => cat.includes(term))) score += 2;
+
+          if (levLocation <= 2) score += 2 - levLocation;
+          else if (location.includes(term)) score += 1;
+
+          // Si hay algún match, marcarlo
           return {
             store,
             score,
@@ -988,4 +998,29 @@ export class StoresPage implements OnInit {
     
     await alert.present();
   }
+}
+
+// Añadir función de distancia de Levenshtein para fuzzy search FUERA de la clase
+function levenshtein(a: string, b: string): number {
+  const an = a ? a.length : 0;
+  const bn = b ? b.length : 0;
+  if (an === 0) return bn;
+  if (bn === 0) return an;
+  const matrix = [];
+  for (let i = 0; i <= bn; ++i) matrix[i] = [i];
+  for (let j = 0; j <= an; ++j) matrix[0][j] = j;
+  for (let i = 1; i <= bn; ++i) {
+    for (let j = 1; j <= an; ++j) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+  return matrix[bn][an];
 }
