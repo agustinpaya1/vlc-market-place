@@ -54,6 +54,8 @@ export class AiChatComponent implements OnInit {
   userMessage: string = '';
   isLoading: boolean = false;
   chatMessages: ChatMessage[] = [];
+  private lastProductQuery: string | null = null;
+  private lastShownProductIds: Set<string> = new Set();
 
   constructor(
     private aiChatService: AiChatService,
@@ -125,17 +127,15 @@ export class AiChatComponent implements OnInit {
     this.userMessage = '';
     this.isLoading = true;
 
-    // Detectar si la pregunta es sobre stock/disponibilidad de producto
-    const stockRegex = /(hay|disponible|stock|d[oó]nde|puedo comprar|queda|quedan|tienen|tiene|venden|vende|encontrar|buscar).*([a-zA-ZáéíóúñüÁÉÍÓÚÑÜ0-9 ]+)/i;
-    const match = message.match(stockRegex);
-    if (match) {
+    // Detectar si la pregunta es de seguimiento
+    const followUpRegex = /(no hay m[aá]s|alguno m[aá]s|otro|y otro|y alguno m[aá]s|y m[aá]s|alg[úu]n otro|más opciones|otra opción|otra alternativa|otra marca|otra variedad)/i;
+    if (followUpRegex.test(message) && this.lastProductQuery) {
       const productos = await this.supabaseService.getAllProductsWithStockAndStore();
-      const consulta = this.normalizeText(message);
+      const consulta = this.normalizeText(this.lastProductQuery);
       const consultaPalabras = consulta.split(/\s+/).filter(Boolean);
-      // Buscar coincidencias fuzzy o palabra contenida
+      // Buscar productos relacionados
       const encontrados = productos.filter(p => {
         const nombre = this.normalizeText(p.name);
-        // Coincidencia fuzzy global
         if (
           consulta.includes(nombre) ||
           nombre.includes(consulta) ||
@@ -144,9 +144,67 @@ export class AiChatComponent implements OnInit {
         ) {
           return true;
         }
-        // Coincidencia por palabra: ¿alguna palabra de la consulta está en el nombre del producto?
         return consultaPalabras.some(pal => nombre.includes(pal));
       });
+      // Filtrar los que ya se han mostrado
+      const nuevos = encontrados.filter(p => !this.lastShownProductIds.has(p.id));
+      if (nuevos.length > 0) {
+        nuevos.forEach(p => this.lastShownProductIds.add(p.id));
+        const respuesta = nuevos.map(p => `"${p.name}" está disponible en ${p.store} (${p.stock} unidades)`).join('\n');
+        this.chatMessages.push({
+          role: 'user',
+          content: message,
+          timestamp: new Date()
+        });
+        this.chatMessages.push({
+          role: 'assistant',
+          content: respuesta,
+          timestamp: new Date()
+        });
+        this.isLoading = false;
+        this.scrollToBottom();
+        return;
+      } else {
+        this.chatMessages.push({
+          role: 'user',
+          content: message,
+          timestamp: new Date()
+        });
+        this.chatMessages.push({
+          role: 'assistant',
+          content: 'No hay más productos disponibles relacionados con tu búsqueda.',
+          timestamp: new Date()
+        });
+        this.isLoading = false;
+        this.scrollToBottom();
+        return;
+      }
+    }
+
+    // Detectar si la pregunta es sobre stock/disponibilidad de producto
+    const stockRegex = /(hay|disponible|stock|d[oó]nde|puedo comprar|queda|quedan|tienen|tiene|venden|vende|encontrar|buscar).*([a-zA-ZáéíóúñüÁÉÍÓÚÑÜ0-9 ]+)/i;
+    const match = message.match(stockRegex);
+    if (match) {
+      // Guardar el término de búsqueda para contexto
+      this.lastProductQuery = message;
+      const productos = await this.supabaseService.getAllProductsWithStockAndStore();
+      const consulta = this.normalizeText(message);
+      const consultaPalabras = consulta.split(/\s+/).filter(Boolean);
+      // Buscar coincidencias fuzzy o palabra contenida
+      const encontrados = productos.filter(p => {
+        const nombre = this.normalizeText(p.name);
+        if (
+          consulta.includes(nombre) ||
+          nombre.includes(consulta) ||
+          this.levenshtein(consulta, nombre) <= 2 ||
+          this.levenshtein(nombre, consulta) <= 2
+        ) {
+          return true;
+        }
+        return consultaPalabras.some(pal => nombre.includes(pal));
+      });
+      // Guardar los productos mostrados
+      this.lastShownProductIds = new Set(encontrados.map(p => p.id));
       if (encontrados.length > 0) {
         const respuesta = encontrados.map(p => `"${p.name}" está disponible en ${p.store} (${p.stock} unidades)`).join('\n');
         this.chatMessages.push({
@@ -177,6 +235,10 @@ export class AiChatComponent implements OnInit {
         this.scrollToBottom();
         return;
       }
+    } else {
+      // Si no es búsqueda de producto, limpiar contexto
+      this.lastProductQuery = null;
+      this.lastShownProductIds = new Set();
     }
     // Si no es pregunta de stock, enviar a la IA
     this.aiChatService.sendMessage(message).subscribe({
