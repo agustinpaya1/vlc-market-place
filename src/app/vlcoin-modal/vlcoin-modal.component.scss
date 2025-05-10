@@ -80,6 +80,9 @@ ion-header ion-toolbar {
 
 ion-segment {
   --background: #fff;
+  min-width: 100%;
+  display: flex;
+  justify-content: space-between;
 }
 
 ion-segment-button {
@@ -87,6 +90,27 @@ ion-segment-button {
   --color-checked: #026e93;
   --indicator-color: #026e93;
   font-weight: 500;
+  --min-width: auto;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  font-size: 0.9em;
+  text-wrap: nowrap;
+  text-overflow: unset;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+ion-segment-button.full-width-segment {
+  min-width: fit-content;
+  max-width: none;
+  width: auto;
+  overflow: visible;
+  
+  ion-label {
+    text-overflow: unset;
+    white-space: nowrap;
+    overflow: visible;
+  }
 }
 
 /* Estilos para secciones */
