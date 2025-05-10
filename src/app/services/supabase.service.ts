@@ -164,10 +164,22 @@ export class SupabaseService {
       
       if (error) throw error;
       
-      return data.map(product => ({
-        ...product,
-        imageUrl: this.getPublicUrl(product.image_url)
-      }));
+      return data.map(product => {
+        const imageUrl = this.getPublicUrl(product.image_url);
+        // Si tiene discount y price, calcular offerPrice
+        let offerPrice = product.offerPrice;
+        let isOffer = product.isOffer;
+        if (product.discount && product.price) {
+          offerPrice = +(product.price * (1 - product.discount / 100)).toFixed(2);
+          isOffer = true;
+        }
+        return {
+          ...product,
+          imageUrl,
+          offerPrice,
+          isOffer
+        };
+      });
     } catch (error) {
       console.error('Error al obtener productos:', error);
       throw error;
@@ -288,6 +300,28 @@ export class SupabaseService {
     } catch (error) {
       console.error('Error al obtener productos con stock y tienda:', error);
       return [];
+    }
+  }
+
+  // Obtiene todas las categorías de todas las tiendas agrupadas por store_id
+  async getAllStoreCategories() {
+    try {
+      const { data, error } = await this.supabase
+        .from('store_categorie')
+        .select('store_id, category');
+      if (error) throw error;
+      // Agrupar por store_id
+      const categoriesByStore: { [key: string]: string[] } = {};
+      (data || []).forEach(row => {
+        if (!categoriesByStore[row.store_id]) {
+          categoriesByStore[row.store_id] = [];
+        }
+        categoriesByStore[row.store_id].push(row.category);
+      });
+      return categoriesByStore;
+    } catch (error) {
+      console.error('Error al obtener categorías de tiendas:', error);
+      return {};
     }
   }
 }

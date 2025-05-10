@@ -9,7 +9,7 @@
       <ion-button fill="clear" class="wallet-button" (click)="showVLCoinsInfo()">
         <img src="assets/icons/vl-coin.svg" alt="VL Coins" class="vl-coin-icon">
       </ion-button>
-      <ion-button fill="clear" class="notification-button" (click)="showNotifications()">
+      <ion-button fill="clear" class="notification-button" (click)="openNotificationPopover($event)">
         <ion-icon name="notifications-outline"></ion-icon>
         <ion-badge *ngIf="notificationCount > 0" class="notification-badge">{{ notificationCount }}</ion-badge>
       </ion-button>
@@ -112,4 +112,29 @@
       <ion-spinner name="crescent" color="primary"></ion-spinner>
     </div>
   </ng-template>
+
+  <ion-popover #notificationPopover [isOpen]="notificationPopoverOpen" [event]="notificationPopoverEvent" (didDismiss)="closeNotificationPopover()" side="bottom" alignment="end" class="notification-popover">
+    <ng-template>
+      <div class="notification-list">
+        <ng-container *ngIf="notifications.length > 0; else noNotifications">
+          <div *ngFor="let n of notifications" class="notification-card" [ngClass]="n.type">
+            <div class="notification-img" (click)="onNotificationClick(n)">
+              <img *ngIf="n.storeId && getStoreById(n.storeId)?.imageUrl" [src]="getStoreById(n.storeId)?.imageUrl" [alt]="getStoreById(n.storeId)?.name" />
+              <ion-icon *ngIf="!n.storeId || !getStoreById(n.storeId)?.imageUrl" [name]="n.type === 'oferta' ? 'pricetag' : n.type === 'nuevo' ? 'cube' : 'notifications'" [color]="n.type === 'oferta' ? 'success' : n.type === 'nuevo' ? 'primary' : 'medium'"></ion-icon>
+            </div>
+            <div class="notification-info" (click)="onNotificationClick(n)">
+              <div class="notification-title">{{ n.title }}</div>
+              <div class="notification-message">{{ n.message }}</div>
+            </div>
+            <button class="notification-delete" (click)="removeNotification(n.id)">
+              <ion-icon name="trash"></ion-icon>
+            </button>
+          </div>
+        </ng-container>
+        <ng-template #noNotifications>
+          <div class="no-notifications">No tienes notificaciones nuevas</div>
+        </ng-template>
+      </div>
+    </ng-template>
+  </ion-popover>
 </ion-content> 
