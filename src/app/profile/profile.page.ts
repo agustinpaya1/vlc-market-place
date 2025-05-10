@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { AuthService, User } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
 import { addIcons } from 'ionicons';
 import { 
@@ -65,8 +65,17 @@ export class ProfilePage implements OnInit {
     });
   }
 
+  ionViewWillEnter() {
+    // Verificar la autenticación cada vez que se entra en la página
+    this.checkAuthStatus();
+  }
+
   ngOnInit() {
     console.log('ProfilePage - ngOnInit');
+    this.checkAuthStatus();
+  }
+
+  checkAuthStatus() {
     // Comprobar si el usuario está autenticado
     this.authService.user$.subscribe(user => {
       console.log('ProfilePage - Usuario recibido:', user);
@@ -77,18 +86,24 @@ export class ProfilePage implements OnInit {
     });
   }
 
-  loadUserData(user: any) {
-    console.log('ProfilePage - Cargando datos de usuario:', user);
-    // En un caso real, cargaríamos los datos del usuario desde el servicio
-    if (user.displayName) {
-      this.user.name = user.displayName;
-    } else if (user.email) {
-      // Usar el email como nombre si no hay displayName
-      this.user.name = user.email.split('@')[0];
+  loadUserData(userData: User) {
+    console.log('ProfilePage - Cargando datos de usuario:', userData);
+    
+    // Actualizar el nombre con la mejor información disponible
+    if (userData.fullName) {
+      this.user.name = userData.fullName;
+    } else if (userData.email) {
+      // Usar el email como nombre si no hay fullName
+      this.user.name = userData.email.split('@')[0];
     }
-    if (user.email) {
-      this.user.email = user.email;
+    
+    // Actualizar el correo electrónico
+    if (userData.email) {
+      this.user.email = userData.email;
     }
+    
+    // Los datos de teléfono y dirección podrían actualizarse si estuvieran disponibles en el perfil
+    // Por ahora mantenemos los valores por defecto
   }
 
   editProfile() {

@@ -11,7 +11,7 @@ import {
   IonLabel
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { arrowBackOutline, eyeOffOutline, eyeOutline, logoFacebook, logoGoogle } from 'ionicons/icons';
+import { arrowBackOutline, eyeOffOutline, eyeOutline, logoGoogle } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
 
@@ -41,7 +41,7 @@ export class LoginPage {
     private authService: AuthService,
     private supabaseService: SupabaseService
   ) {
-    addIcons({logoGoogle,logoFacebook,eyeOutline,eyeOffOutline,arrowBackOutline});
+    addIcons({logoGoogle,eyeOutline,eyeOffOutline,arrowBackOutline});
   }
 
 
@@ -86,20 +86,6 @@ export class LoginPage {
       }
     } catch (error) {
       this.showAlert('Error', 'Google login failed. Please try again.');
-    }
-  }
-
-  async loginWithFacebook() {
-    try {
-      // Usando un método temporal mientras implementas el login con Facebook real
-      const success = await this.authService.loginWithGoogle(); // Reutilizamos el de Google temporalmente
-      if (success) {
-        this.router.navigate(['/tabs/stores']);
-      } else {
-        this.showAlert('Error', 'Facebook login failed');
-      }
-    } catch (error) {
-      this.showAlert('Error', 'Facebook login failed. Please try again.');
     }
   }
 

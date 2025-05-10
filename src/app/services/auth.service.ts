@@ -30,40 +30,110 @@ export class AuthService {
   }
 
   private async initializeUser() {
-    const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
-    if (session) {
-      const user = session.user;
-      const { data: profile } = await this.supabaseService.getClient()
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+    try {
+      console.log('AuthService - Inicializando usuario');
+      const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
+      
+      if (session) {
+        console.log('AuthService - Sesión existente encontrada:', session);
+        const user = session.user;
+        
+        // Intentar obtener el perfil del usuario desde la base de datos
+        const { data: profile } = await this.supabaseService.getClient()
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
 
-      this.user.next({
-        id: user.id,
-        email: user.email!,
-        fullName: profile?.full_name,
-        type: profile?.type,
-        vlcoinBalance: profile?.vlcoin_balance
-      });
+        // Si el perfil no existe y el usuario existe en auth, crearlo
+        if (!profile && user) {
+          console.log('AuthService - Perfil no encontrado, creando uno nuevo');
+          
+          // Obtener los datos del usuario desde los metadatos de auth
+          const userData = {
+            id: user.id,
+            email: user.email!,
+            full_name: user.user_metadata?.['full_name'] || user.user_metadata?.['name'] || '',
+            type: user.user_metadata?.['user_type'] || 'user',
+            vlcoin_balance: 0
+          };
+          
+          // Intentar crear el perfil
+          try {
+            await this.supabaseService.getClient()
+              .from('profiles')
+              .upsert(userData);
+              
+            console.log('AuthService - Perfil creado para el usuario:', userData);
+          } catch (error) {
+            console.error('AuthService - Error al crear perfil:', error);
+          }
+        }
+
+        // Actualizar el BehaviorSubject con los datos del usuario
+        this.user.next({
+          id: user.id,
+          email: user.email!,
+          fullName: profile?.full_name || user.user_metadata?.['name'] || user.user_metadata?.['full_name'] || '',
+          type: profile?.type || 'user',
+          vlcoinBalance: profile?.vlcoin_balance || 0
+        });
+      } else {
+        console.log('AuthService - No hay sesión activa');
+        this.user.next(null);
+      }
+    } catch (error) {
+      console.error('AuthService - Error al inicializar usuario:', error);
+      this.user.next(null);
     }
 
+    // Configurar el listener para cambios en el estado de autenticación
     this.supabaseService.getClient().auth.onAuthStateChange(async (_event, session) => {
+      console.log('AuthService - Cambio en el estado de autenticación:', _event);
+      
       if (session?.user) {
+        console.log('AuthService - Usuario autenticado:', session.user);
+        
+        // Buscar el perfil del usuario
         const { data: profile } = await this.supabaseService.getClient()
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single();
+          
+        if (!profile) {
+          console.log('AuthService - Perfil no encontrado después de autenticación, creando uno nuevo');
+          
+          // Crear un perfil para el usuario
+          try {
+            const userData = {
+              id: session.user.id,
+              email: session.user.email!,
+              full_name: session.user.user_metadata?.['full_name'] || session.user.user_metadata?.['name'] || '',
+              type: session.user.user_metadata?.['user_type'] || 'user',
+              vlcoin_balance: 0
+            };
+            
+            await this.supabaseService.getClient()
+              .from('profiles')
+              .upsert(userData);
+              
+            console.log('AuthService - Perfil creado después de autenticación');
+          } catch (error) {
+            console.error('AuthService - Error al crear perfil después de autenticación:', error);
+          }
+        }
 
+        // Actualizar el usuario en el BehaviorSubject
         this.user.next({
           id: session.user.id,
           email: session.user.email!,
-          fullName: profile?.full_name,
-          type: profile?.type,
-          vlcoinBalance: profile?.vlcoin_balance
+          fullName: profile?.full_name || session.user.user_metadata?.['name'] || session.user.user_metadata?.['full_name'] || '',
+          type: profile?.type || 'user',
+          vlcoinBalance: profile?.vlcoin_balance || 0
         });
       } else {
+        console.log('AuthService - Usuario desconectado');
         this.user.next(null);
       }
     });
@@ -159,17 +229,32 @@ export class AuthService {
 
   async loginWithGoogle(): Promise<boolean> {
     try {
+      console.log('AuthService - Iniciando login con Google');
+      
+      // Obtener la URL completa para la redirección
+      const redirectTo = `${window.location.origin}/tabs/profile`;
+      console.log('AuthService - URL de redirección:', redirectTo);
+      
       const { data, error } = await this.supabaseService.getClient().auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('AuthService - Error en login con Google:', error);
+        throw error;
+      }
+      
+      console.log('AuthService - Login con Google iniciado correctamente');
       return true;
     } catch (error) {
-      console.error('Google login error:', error);
+      console.error('AuthService - Error en login con Google:', error);
       return false;
     }
   }
