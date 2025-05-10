@@ -62,9 +62,7 @@ import {
   waterOutline,
   scanOutline,
   walletOutline,
-  cash
-} from 'ionicons/icons';
->>>>>>>>> Temporary merge branch 2
+  cash, trash } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -196,45 +194,7 @@ export class StoresPage implements OnInit {
     private authService: AuthService,
     private vlcoinService: VlcoinService
   ) {
-<<<<<<<<< Temporary merge branch 1
-    addIcons({searchOutline,scanOutline,notificationsOutline,optionsOutline,location,time,star,storefront,trash,locationOutline,chevronDownOutline,timeOutline,arrowForwardOutline,notifications,search,trendingUp,arrowForward,map,starHalf,sunny,moon,camera,shirtOutline,pizzaOutline,fishOutline,basketOutline,wineOutline,leafOutline,restaurantOutline,fastFoodOutline,waterOutline,chatbubbleEllipses});
-=========
-    addIcons({
-      locationOutline,
-      chevronDownOutline,
-      notificationsOutline,
-      searchOutline,
-      optionsOutline,
-      star,
-      timeOutline,
-      arrowForwardOutline,
-      notifications,
-      search,
-      trendingUp,
-      location,
-      time,
-      storefront,
-      arrowForward,
-      map,
-      starHalf,
-      sunny,
-      moon,
-      camera,
-      shirtOutline,
-      pizzaOutline,
-      fishOutline,
-      basketOutline,
-      wineOutline,
-      leafOutline,
-      restaurantOutline,
-      fastFoodOutline,
-      waterOutline,
-      chatbubbleEllipses,
-      scanOutline,
-      walletOutline,
-      cash
-    });
->>>>>>>>> Temporary merge branch 2
+    addIcons({searchOutline,scanOutline,notificationsOutline,optionsOutline,walletOutline,location,time,star,storefront,trash,locationOutline,chevronDownOutline,timeOutline,arrowForwardOutline,notifications,search,trendingUp,arrowForward,map,starHalf,sunny,moon,camera,shirtOutline,pizzaOutline,fishOutline,basketOutline,wineOutline,leafOutline,restaurantOutline,fastFoodOutline,waterOutline,chatbubbleEllipses,cash});
 
     // Check if dark mode was previously selected
     const savedDarkMode = localStorage.getItem('darkMode');
