@@ -1,0 +1,158 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-title>Mis VLCoins</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleDarkMode()">
+        <ion-icon [name]="isDarkMode ? 'sunny' : 'moon'"></ion-icon>
+      </ion-button>
+      <ion-button (click)="dismissModal()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- VLCoins Balance -->
+  <ion-card class="balance-card">
+    <ion-card-content>
+      <div class="text-center">
+        <p class="text-medium">Saldo Total</p>
+        <div class="balance-amount">
+          <div class="v-coin-circle">V</div>
+          <span class="balance-text">{{ vlcoinBalance }}</span>
+        </div>
+      </div>
+      <div class="stats-container">
+        <div class="stat-item">
+          <p class="stat-label">Este mes</p>
+          <p class="stat-value">+{{ monthlyEarned }}</p>
+        </div>
+        <div class="stat-item">
+          <p class="stat-label">Gastados</p>
+          <p class="stat-value">-{{ spent }}</p>
+        </div>
+        <div class="stat-item">
+          <p class="stat-label">Por vencer</p>
+          <p class="stat-value expiring">{{ expiring }}</p>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Segmentos de navegación -->
+  <ion-card class="tabs-card">
+    <ion-segment value="{{ selectedSegment }}" (ionChange)="segmentChanged($event)">
+      <ion-segment-button value="achievements">
+        <ion-label>Logros</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="challenges">
+        <ion-label>Retos Activos</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="rewards">
+        <ion-label>Recompensas</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-card>
+
+  <!-- Contenido del segmento Logros -->
+  <div *ngIf="selectedSegment === 'achievements'">
+    <h3 class="section-title">Logros Conseguidos</h3>
+    
+    <!-- Lista de logros -->
+    <ion-card *ngFor="let achievement of achievements" class="achievement-card">
+      <ion-card-content class="achievement-content">
+        <div class="achievement-icon" [ngClass]="{'completed': achievement.completed, 'in-progress': !achievement.completed}">
+          <ion-icon [name]="achievement.icon"></ion-icon>
+        </div>
+        <div class="achievement-details">
+          <div class="achievement-header">
+            <div>
+              <h4 class="achievement-title">{{ achievement.title }}</h4>
+              <p *ngIf="achievement.date" class="achievement-date">{{ achievement.date }}</p>
+              <p *ngIf="!achievement.date" class="achievement-date">En progreso</p>
+            </div>
+            <div class="achievement-coins">
+              <div class="v-coin-circle small">V</div>
+              <span>{{ achievement.coins }}</span>
+            </div>
+          </div>
+          
+          <!-- Barra de progreso para logros incompletos -->
+          <div *ngIf="!achievement.completed && achievement.progress" class="progress-container">
+            <ion-progress-bar [value]="achievement.progress.current / achievement.progress.total"></ion-progress-bar>
+            <p class="progress-text">{{ achievement.progress.current }} de {{ achievement.progress.total }} {{ achievement.title.includes('reseña') ? 'reseñas' : 'completados' }}</p>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Contenido del segmento Retos -->
+  <div *ngIf="selectedSegment === 'challenges'">
+    <h3 class="section-title">Retos Activos</h3>
+    
+    <!-- Lista de retos -->
+    <ion-card *ngFor="let challenge of challenges" class="challenge-card">
+      <div class="challenge-image-container">
+        <img [src]="challenge.image" alt="{{ challenge.title }}" class="challenge-image">
+        <div class="challenge-coin-badge">
+          <div class="v-coin-circle">V</div>
+          <span>{{ challenge.coins }}</span>
+        </div>
+      </div>
+      <ion-card-content>
+        <h4 class="challenge-title">{{ challenge.title }}</h4>
+        
+        <p class="challenge-description">{{ challenge.description }}</p>
+        
+        <div class="challenge-progress-info">
+          <div class="time-remaining">
+            <span>{{ challenge.daysLeft }} días restantes</span>
+          </div>
+          <div class="challenge-progress-text">
+            {{ challenge.progress.current }} de {{ challenge.progress.total }} completados
+          </div>
+        </div>
+        
+        <ion-progress-bar [value]="challenge.progress.current / challenge.progress.total"></ion-progress-bar>
+        
+        <ion-button expand="block" color="primary" class="continue-button" (click)="participateInChallenge(challenge.id)">
+          {{ challenge.progress.current > 0 ? 'CONTINUAR RETO' : 'PARTICIPAR' }}
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Contenido del segmento Recompensas -->
+  <div *ngIf="selectedSegment === 'rewards'">
+    <h3 class="section-title">Recompensas Disponibles</h3>
+    
+    <!-- Grid de recompensas -->
+    <ion-grid class="rewards-grid">
+      <ion-row>
+        <ion-col size="6" *ngFor="let reward of filteredRewards">
+          <div class="reward-card">
+            <div class="reward-image-container">
+              <!-- Solo mostramos la imagen y el badge de monedas -->
+              <img [src]="reward.image" alt="" class="reward-image">
+              <div class="reward-coin-badge">
+                <div class="v-coin-circle">V</div>
+                <span>{{ reward.coins }}</span>
+              </div>
+            </div>
+            <div class="reward-content">
+              <h5 class="reward-title">{{ reward.title }}</h5>
+              <p class="reward-location">{{ reward.location }}</p>
+              <button class="reward-button" [ngClass]="{'insufficient': vlcoinBalance < reward.coins}" 
+                      [disabled]="vlcoinBalance < reward.coins"
+                      (click)="redeemReward(reward.id)">
+                {{ vlcoinBalance >= reward.coins ? 'CANJEAR' : 'INSUFICIENTES VL' }}
+              </button>
+            </div>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+</ion-content> 

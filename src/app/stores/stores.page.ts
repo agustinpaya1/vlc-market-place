@@ -60,15 +60,20 @@ import {
   restaurantOutline,
   fastFoodOutline,
   waterOutline,
-  scanOutline
+  scanOutline,
+  walletOutline,
+  cash
 } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
+import { AuthService } from '../services/auth.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { ToastController } from '@ionic/angular/standalone';
 import { AiChatComponent } from '../ai-chat/ai-chat.component';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { createWorker } from 'tesseract.js';
+import { VlcoinModalComponent } from '../vlcoin-modal/vlcoin-modal.component';
+import { VlcoinService } from '../services/vlcoin.service';
 
 interface Product {
   id: string;
@@ -146,6 +151,7 @@ export class StoresPage implements OnInit {
   searchTerm: string = '';
   showSearchBar: boolean = false;
   notificationCount: number = 0; // Contador de notificaciones
+  vlcoinBalance: number = 2450; // Balance de VLCoins
   allStores: Store[] = []; // Original unfiltered stores
   categories: string[] = [
     'Todos',
@@ -179,7 +185,9 @@ export class StoresPage implements OnInit {
     private toastController: ToastController,
     private modalController: ModalController,
     private loadingController: LoadingController,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private authService: AuthService,
+    private vlcoinService: VlcoinService
   ) {
     addIcons({
       locationOutline,
@@ -212,7 +220,9 @@ export class StoresPage implements OnInit {
       fastFoodOutline,
       waterOutline,
       chatbubbleEllipses,
-      scanOutline
+      scanOutline,
+      walletOutline,
+      cash
     });
 
     // Check if dark mode was previously selected
@@ -236,6 +246,22 @@ export class StoresPage implements OnInit {
 
   async ngOnInit() {
     this.isLoading = true;
+    
+    // Cargar notificaciones de prueba
+    this.simulateNotifications();
+    
+    // Get VLCoin balance from VLCoin service
+    this.vlcoinService.vlcoinBalance$.subscribe(balance => {
+      this.vlcoinBalance = balance;
+    });
+    
+    // Initialize VLCoin data for the current user
+    this.authService.user$.subscribe(async user => {
+      if (user && user.id) {
+        await this.vlcoinService.getVlcoinBalance(user.id);
+      }
+    });
+    
     try {
       // Aplicar filtros inmediatamente para evitar recálculos innecesarios
       this.applyFilters();
@@ -580,6 +606,53 @@ export class StoresPage implements OnInit {
     
     // Aquí podría implementarse la navegación a una página de notificaciones
     // o mostrar un modal con la lista de notificaciones
+  }
+
+  /**
+   * Muestra información sobre los VLCoins
+   */
+  async showVLCoinsInfo() {
+    console.log('Mostrando información de VLCoins');
+    
+    try {
+      const modal = await this.modalController.create({
+        component: VlcoinModalComponent,
+        cssClass: 'vlcoin-modal'
+      });
+      
+      await modal.present();
+      
+      // Añadir efecto visual al icono
+      const vlCoinIcon = document.querySelector('.wallet-button .vl-coin-icon');
+      if (vlCoinIcon) {
+        vlCoinIcon.classList.add('wallet-pulse');
+        setTimeout(() => {
+          vlCoinIcon.classList.remove('wallet-pulse');
+        }, 800);
+      }
+      
+      // Get result from modal to check if balance was updated
+      const { data } = await modal.onWillDismiss();
+      if (data && data.balanceUpdated) {
+        // Refresh the balance from the database
+        const user = await this.authService.user$.toPromise();
+        if (user && user.id) {
+          await this.vlcoinService.getVlcoinBalance(user.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error al abrir el modal de VLCoins:', error);
+      
+      // Mostrar fallback toast si hay error
+      const toast = await this.toastController.create({
+        message: `Tienes ${this.vlcoinBalance} VLCoins disponibles`,
+        duration: 2000,
+        position: 'top',
+        color: 'warning'
+      });
+      
+      await toast.present();
+    }
   }
 
   /**

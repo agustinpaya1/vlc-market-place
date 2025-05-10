@@ -374,6 +374,21 @@ ion-badge {
   }
 }
 
+/* VLCoins Modal */
+.vlcoin-modal {
+  --width: 100%;
+  --height: 100%;
+  --border-radius: 0;
+}
+
+@media (min-width: 768px) {
+  .vlcoin-modal {
+    --width: 400px;
+    --height: 90%;
+    --border-radius: 16px;
+  }
+}
+
 /*====================================
   UTILIDADES CSS DE RENDIMIENTO
 ====================================*/

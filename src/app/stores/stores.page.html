@@ -6,6 +6,9 @@
       <ion-icon name="scan-outline" class="scan-icon" (click)="openScanner()"></ion-icon>
     </div>
     <div class="action-buttons">
+      <ion-button fill="clear" class="wallet-button" (click)="showVLCoinsInfo()">
+        <img src="assets/icons/vl-coin.svg" alt="VL Coins" class="vl-coin-icon">
+      </ion-button>
       <ion-button fill="clear" class="notification-button" (click)="showNotifications()">
         <ion-icon name="notifications-outline"></ion-icon>
         <ion-badge *ngIf="notificationCount > 0" class="notification-badge">{{ notificationCount }}</ion-badge>
