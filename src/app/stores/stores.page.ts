@@ -181,6 +181,8 @@ export class StoresPage implements OnInit {
   // Converted from getter to property
   filteredStores: Store[] = [];
 
+  notifications: any[] = [];
+
   constructor(
     private router: Router,
     private supabaseService: SupabaseService,
