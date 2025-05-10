@@ -1,12 +1,15 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>Mapa de Tiendas</ion-title>
-  </ion-toolbar>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""></script>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-no-padding">
+<ion-content [fullscreen]="true" class="ion-no-padding" [ngClass]="isDarkTheme ? 'dark-theme' : 'light-theme'">
   <!-- Mapa a pantalla completa -->
-  <div id="mapbox-map" class="fullscreen-map" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;"></div>
+  <div id="map" class="fullscreen-map"></div>
 
   <!-- Loading indicator -->
   <div class="loading-overlay" *ngIf="isLoading">
@@ -17,7 +20,7 @@
   </div>
 
   <!-- Bottom Sheet de tiendas deslizable -->
-  <div class="bottom-sheet dark-theme" [class.active]="isBottomSheetActive" [class.reduced]="isProductSheetActive">
+  <div class="bottom-sheet" [ngClass]="isDarkTheme ? 'dark-theme' : 'light-theme'" [class.active]="isBottomSheetActive" [class.reduced]="isProductSheetActive">
     <div class="bottom-sheet-handle" (click)="toggleBottomSheet()">
       <div class="handle-bar"></div>
     </div>
@@ -76,7 +79,7 @@
   </div>
 
   <!-- Bottom Sheet de productos -->
-  <div class="product-sheet dark-theme" [class.active]="isProductSheetActive" #productBottomSheet>
+  <div class="product-sheet" [ngClass]="isDarkTheme ? 'dark-theme' : 'light-theme'" [class.active]="isProductSheetActive" #productBottomSheet>
     <div class="product-sheet-handle">
       <div class="handle-bar"></div>
       <ion-button fill="clear" class="close-button" (click)="hideProductSheet()">
