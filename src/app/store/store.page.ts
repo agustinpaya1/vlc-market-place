@@ -36,6 +36,7 @@ export class StorePage implements OnInit {
   isLoading = true;
   loadedStoreData = false;
   loadedProductsData = false;
+  maxDiscount: number = 0;
 
   constructor(
     private route: ActivatedRoute,
@@ -83,8 +84,8 @@ export class StorePage implements OnInit {
     await loadingIndicator.present();
 
     try {
-      // Cargar datos en paralelo
-      const [storeData, productsData] = await Promise.all([
+      // Cargar datos en paralelo: tienda, productos y categorías
+      const [storeData, productsData, categoriesByStore] = await Promise.all([
         this.supabaseService.getStoreById(storeId).catch(err => {
           console.error('Error al cargar datos de la tienda:', err);
           return null;
@@ -92,6 +93,10 @@ export class StorePage implements OnInit {
         this.supabaseService.getStoreProducts(storeId).catch(err => {
           console.error('Error al cargar productos:', err);
           return [];
+        }),
+        this.supabaseService.getAllStoreCategories().catch(err => {
+          console.error('Error al cargar categorías:', err);
+          return {};
         })
       ]);
 
@@ -107,7 +112,7 @@ export class StorePage implements OnInit {
           location: storeData.location,
           openTime: storeData.open_time || '9:00 - 20:00',
           rating: storeData.rating || 4.5,
-          categories: storeData.category ? [storeData.category] : ['Especialidad'],
+          categories: categoriesByStore && (categoriesByStore as { [key: string]: string[] })[String(storeData.id)] ? (categoriesByStore as { [key: string]: string[] })[String(storeData.id)] : [],
           hasOffers: storeData.has_offers || false,
           distance: storeData.distance || '1.2 km'
         };
@@ -119,6 +124,17 @@ export class StorePage implements OnInit {
 
       // Procesar datos de productos
       if (productsData && productsData.length > 0) {
+        // Calcular el mayor descuento
+        let maxDiscount = 0;
+        for (const product of productsData) {
+          if (product.offerPrice && product.price) {
+            const discount = Math.round(100 - (product.offerPrice / product.price) * 100);
+            if (discount > maxDiscount) {
+              maxDiscount = discount;
+            }
+          }
+        }
+        this.maxDiscount = maxDiscount;
         // Procesar los productos en lotes para mejorar el rendimiento
         setTimeout(() => {
           this.products = productsData || [];
@@ -130,6 +146,7 @@ export class StorePage implements OnInit {
         this.filteredProducts = [];
         this.loadedProductsData = true;
         setTimeout(() => this.showNoProductsMessage(), 1000);
+        this.maxDiscount = 0;
       }
     } catch (error) {
       console.error('Error al cargar datos:', error);
