@@ -116,15 +116,59 @@
   <ion-popover #notificationPopover [isOpen]="notificationPopoverOpen" [event]="notificationPopoverEvent" (didDismiss)="closeNotificationPopover()" side="bottom" alignment="end" class="notification-popover">
     <ng-template>
       <div class="notification-list">
+        <h3 class="section-title">Notificaciones</h3>
         <ng-container *ngIf="notifications.length > 0; else noNotifications">
           <div *ngFor="let n of notifications" class="notification-card" [ngClass]="n.type">
             <div class="notification-img" (click)="onNotificationClick(n)">
-              <img *ngIf="n.storeId && getStoreById(n.storeId)?.imageUrl" [src]="getStoreById(n.storeId)?.imageUrl" [alt]="getStoreById(n.storeId)?.name" />
-              <ion-icon *ngIf="!n.storeId || !getStoreById(n.storeId)?.imageUrl" [name]="n.type === 'oferta' ? 'pricetag' : n.type === 'nuevo' ? 'cube' : 'notifications'" [color]="n.type === 'oferta' ? 'success' : n.type === 'nuevo' ? 'primary' : 'medium'"></ion-icon>
+              <!-- Para ofertas de tiendas con imagen -->
+              <img *ngIf="n.storeId && getStoreById(n.storeId)?.imageUrl && n.type !== 'recordatorio'" 
+                   [src]="getStoreById(n.storeId)?.imageUrl" 
+                   [alt]="getStoreById(n.storeId)?.name"
+                   (error)="handleNotificationImageError($event, n.type)" />
+              
+              <!-- Para retos y recompensas con imagen -->
+              <img *ngIf="(n.type === 'reto' || n.type === 'recompensa') && n.image" 
+                   [src]="n.image" 
+                   [alt]="n.title" 
+                   class="notification-type-image"
+                   (error)="handleNotificationImageError($event, n.type)" />
+              
+              <!-- Icono fijo para recordatorios - siempre visible -->
+              <div *ngIf="n.type === 'recordatorio'" 
+                   class="notification-fallback-icon notification-fallback-recordatorio">
+                <ion-icon name="calendar" color="primary"></ion-icon>
+              </div>
+              
+              <!-- Para notificaciones sin imagen o cuando las imágenes no cargaron -->
+              <div *ngIf="(!n.storeId || !getStoreById(n.storeId)?.imageUrl) && (!n.image) && n.type !== 'recordatorio'" 
+                  class="notification-fallback-icon"
+                  [ngClass]="'notification-fallback-' + n.type">
+                <ion-icon 
+                  [name]="n.type === 'oferta' ? 'pricetag' : 
+                          n.type === 'reto' ? 'trophy' : 
+                          n.type === 'recompensa' ? 'gift' : 
+                          n.type === 'nuevo' ? 'cube' : 'notifications'" 
+                  [color]="n.type === 'oferta' ? 'success' : 
+                          n.type === 'reto' ? 'warning' : 
+                          n.type === 'recompensa' ? 'tertiary' : 
+                          n.type === 'nuevo' ? 'primary' : 'medium'">
+                </ion-icon>
+              </div>
             </div>
             <div class="notification-info" (click)="onNotificationClick(n)">
-              <div class="notification-title">{{ n.title }}</div>
+              <div class="notification-title">
+                <ion-icon *ngIf="n.type === 'reto'" name="ribbon" class="notification-title-icon" color="warning"></ion-icon>
+                <ion-icon *ngIf="n.type === 'recompensa'" name="gift" class="notification-title-icon" color="tertiary"></ion-icon>
+                <ion-icon *ngIf="n.type === 'oferta'" name="pricetag" class="notification-title-icon" color="success"></ion-icon>
+                <ion-icon *ngIf="n.type === 'recordatorio'" name="calendar" class="notification-title-icon" color="primary"></ion-icon>
+                {{ n.title }}
+              </div>
               <div class="notification-message">{{ n.message }}</div>
+              <!-- Mostrar coins para retos y recompensas -->
+              <div *ngIf="n.type === 'reto' || n.type === 'recompensa'" class="notification-coins">
+                <div class="v-coin-circle small">V</div>
+                <span>{{ n.type === 'reto' ? n.challenge.coins : n.reward.coins }}</span>
+              </div>
             </div>
             <button class="notification-delete" (click)="removeNotification(n.id)">
               <ion-icon name="trash"></ion-icon>

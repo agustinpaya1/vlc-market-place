@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { 
@@ -39,9 +39,30 @@ import {
   medalOutline,
   checkmarkCircleOutline,
   checkmarkDoneCircleOutline,
+  checkmarkCircle,
+  shieldCheckmark,
   giftOutline,
   arrowForwardOutline,
   shareOutline,
+  cart,
+  cartOutline,
+  basket,
+  basketOutline,
+  storefrontOutline,
+  star,
+  person,
+  personCircle,
+  globe,
+  globeOutline,
+  share,
+  chatbubbleOutline,
+  thumbsUp,
+  mapOutline,
+  locationOutline,
+  pin,
+  pinOutline,
+  compass,
+  compassOutline,
   sunny,
   moon
 } from 'ionicons/icons';
@@ -79,21 +100,21 @@ import { VlcoinService } from '../services/vlcoin.service';
   ]
 })
 export class VlcoinModalComponent implements OnInit {
+  @Input() selectedSegment = 'achievements';
+  
   // Propiedades para el estado del modal
-  selectedSegment = 'achievements';
   vlcoinBalance = 2450;
   monthlyEarned = 350;
   spent = 120;
   expiring = 200;
-  isDarkMode = false;
-  
+
   // Datos de logros
   achievements = [
     {
       id: 1,
       title: 'Primera Compra',
       date: '12 mayo 2025',
-      icon: 'bagOutline',
+      icon: 'cart',
       coins: 100,
       completed: true
     },
@@ -109,7 +130,7 @@ export class VlcoinModalComponent implements OnInit {
       id: 3,
       title: 'Reseñas Verificadas',
       progress: { current: 0, total: 5 },
-      icon: 'starOutline',
+      icon: 'star',
       coins: 200,
       completed: false
     },
@@ -117,15 +138,17 @@ export class VlcoinModalComponent implements OnInit {
       id: 4,
       title: 'Perfil Completo',
       date: '28 abril 2025',
-      icon: 'personOutline',
+      icon: 'person-circle',
+      description: '',
       coins: 50,
-      completed: true
+      completed: true,
+      extraIcons: ['checkmark-circle', 'shield-checkmark']
     },
     {
       id: 5,
       title: 'Compartir en Redes',
       date: '25 abril 2025',
-      icon: 'shareOutline',
+      icon: 'share',
       coins: 75,
       completed: true
     }
@@ -137,7 +160,8 @@ export class VlcoinModalComponent implements OnInit {
       id: 1,
       title: 'Reto del Mercado Central',
       description: 'Visita 3 puestos diferentes en el Mercado Central y realiza una compra mínima de 5€ en cada uno.',
-      image: 'assets/images/market-challenge.jpg',
+      image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/retos//retomercadocentral.png',
+      icon: 'basket-outline',
       progress: { current: 0, total: 3 },
       daysLeft: 5,
       coins: 300
@@ -146,7 +170,8 @@ export class VlcoinModalComponent implements OnInit {
       id: 2,
       title: 'Reseñador Experto',
       description: 'Escribe 5 reseñas detalladas con fotos en comercios locales que hayas visitado este mes.',
-      image: 'assets/images/review-challenge.jpg',
+      image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/retos//Screenshot%202025-05-10%20at%2022.52.33.png',
+      icon: 'chatbubble-outline',
       progress: { current: 0, total: 5 },
       daysLeft: 12,
       coins: 250
@@ -155,7 +180,8 @@ export class VlcoinModalComponent implements OnInit {
       id: 3,
       title: 'Explorador de Barrios',
       description: 'Visita y compra en 4 tiendas diferentes en el barrio de Ruzafa durante este mes.',
-      image: 'assets/images/neighborhood-challenge.jpg',
+      image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/retos//explorador.png',
+      icon: 'compass-outline',
       progress: { current: 0, total: 4 },
       daysLeft: 20,
       coins: 400
@@ -168,7 +194,7 @@ export class VlcoinModalComponent implements OnInit {
       id: 1,
       title: '5€ Frutas/Verduras',
       location: 'Mercado Central',
-      image: 'assets/images/fruits-reward.jpg',
+      image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/recompensas//Screenshot%202025-05-10%20at%2022.31.50.png',
       coins: 200,
       category: 'Mercado Central',
       displayTitle: false
@@ -177,7 +203,7 @@ export class VlcoinModalComponent implements OnInit {
       id: 2,
       title: 'Degustación Jamón',
       location: 'Mercado Ruzafa',
-      image: 'assets/images/ham-reward.jpg',
+      image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/recompensas//Screenshot%202025-05-10%20at%2022.32.07.png',
       coins: 350,
       category: 'Mercado Ruzafa',
       displayTitle: false
@@ -186,7 +212,7 @@ export class VlcoinModalComponent implements OnInit {
       id: 3,
       title: 'Pack Snacks Asiáticos',
       location: 'Asia Market',
-      image: 'assets/images/snacks-reward.jpg',
+      image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/recompensas//Screenshot%202025-05-10%20at%2022.32.40.png',
       coins: 150,
       category: 'Tiendas Chinas',
       displayTitle: false
@@ -195,7 +221,7 @@ export class VlcoinModalComponent implements OnInit {
       id: 4,
       title: '10€ Pescado Fresco',
       location: 'Mercado Central',
-      image: 'assets/images/fish-reward.jpg',
+      image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/recompensas//Screenshot%202025-05-10%20at%2022.32.20.png',
       coins: 400,
       category: 'Mercado Central',
       displayTitle: false
@@ -204,7 +230,7 @@ export class VlcoinModalComponent implements OnInit {
       id: 5,
       title: 'Wok + Utensilios',
       location: 'Chen\'s Bazar',
-      image: 'assets/images/wok-reward.jpg',
+      image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/recompensas//Screenshot%202025-05-10%20at%2022.32.51.png',
       coins: 300,
       category: 'Tiendas Chinas',
       displayTitle: false
@@ -213,7 +239,7 @@ export class VlcoinModalComponent implements OnInit {
       id: 6,
       title: 'Pack Especias',
       location: 'Mercado Ruzafa',
-      image: 'assets/images/spices-reward.jpg',
+      image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/recompensas//Screenshot%202025-05-10%20at%2022.33.02.png',
       coins: 250,
       category: 'Mercado Ruzafa',
       displayTitle: false
@@ -236,21 +262,39 @@ export class VlcoinModalComponent implements OnInit {
       walletOutline,
       bagOutline,
       storefront,
+      storefrontOutline,
       personOutline,
       ribbonOutline,
       trophyOutline,
       medalOutline,
       checkmarkCircleOutline,
       checkmarkDoneCircleOutline,
+      checkmarkCircle,
+      shieldCheckmark,
       giftOutline,
       arrowForwardOutline,
       shareOutline,
+      cart,
+      cartOutline,
+      'basket-outline': basketOutline,
+      basket,
+      star,
+      person,
+      personCircle: personCircle,
+      globe,
+      globeOutline,
+      share,
+      'chatbubble-outline': chatbubbleOutline,
+      thumbsUp,
+      mapOutline,
+      locationOutline,
+      pin,
+      pinOutline,
+      'compass-outline': compassOutline,
+      compass,
       sunny,
       moon
     });
-    
-    // Detectar el modo oscuro del sistema
-    this.checkDarkMode();
   }
 
   ngOnInit() {
@@ -268,30 +312,6 @@ export class VlcoinModalComponent implements OnInit {
     });
   }
   
-  // Comprobar si el modo oscuro está activado en el sistema
-  private checkDarkMode() {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-    this.isDarkMode = prefersDark.matches;
-    this.applyDarkMode();
-    
-    // Escuchar cambios en la preferencia del sistema
-    prefersDark.addEventListener('change', (mediaQuery) => {
-      this.isDarkMode = mediaQuery.matches;
-      this.applyDarkMode();
-    });
-  }
-  
-  // Alternar entre modo claro y oscuro
-  toggleDarkMode() {
-    this.isDarkMode = !this.isDarkMode;
-    this.applyDarkMode();
-  }
-  
-  // Aplicar el modo oscuro al cuerpo del documento
-  private applyDarkMode() {
-    document.body.classList.toggle('dark', this.isDarkMode);
-  }
-
   // Método para cambiar de segmento
   segmentChanged(event: any) {
     this.selectedSegment = event.detail.value;
