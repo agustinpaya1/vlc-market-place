@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { AuthService } from './auth.service';
+import { ToastController } from '@ionic/angular';
 
 export interface CartItem {
   id: string;
@@ -16,16 +18,59 @@ export interface CartItem {
 export class CartService {
   private cartItems = new BehaviorSubject<CartItem[]>([]);
   public cartItems$ = this.cartItems.asObservable();
+  private isAuthenticated = false;
+  private userId: string | null = null;
 
-  constructor() {
-    // Initialize cart from localStorage if available
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      this.cartItems.next(JSON.parse(savedCart));
+  constructor(
+    private authService: AuthService,
+    private toastController: ToastController
+  ) {
+    // Listen for auth state changes
+    this.authService.user$.subscribe(user => {
+      if (user) {
+        this.isAuthenticated = true;
+        this.userId = user.id;
+        // Load user-specific cart from localStorage
+        this.loadUserCart();
+      } else {
+        this.isAuthenticated = false;
+        this.userId = null;
+        // Clear cart when user logs out
+        this.clearCart();
+      }
+    });
+  }
+
+  private loadUserCart(): void {
+    if (this.userId) {
+      const savedCart = localStorage.getItem(`cart_${this.userId}`);
+      if (savedCart) {
+        this.cartItems.next(JSON.parse(savedCart));
+      } else {
+        this.cartItems.next([]);
+      }
     }
   }
 
-  addToCart(product: any): void {
+  async addToCart(product: any): Promise<boolean> {
+    if (!this.isAuthenticated) {
+      const toast = await this.toastController.create({
+        message: 'Inicia sesión o regístrate para añadir productos al carrito',
+        duration: 3000,
+        position: 'bottom',
+        buttons: [
+          {
+            text: 'Iniciar sesión',
+            handler: () => {
+              window.location.href = '/login';
+            }
+          }
+        ]
+      });
+      await toast.present();
+      return false;
+    }
+
     const currentItems = this.cartItems.value;
     const existingItem = currentItems.find(item => item.id === product.id);
     
@@ -43,6 +88,7 @@ export class CartService {
       };
       this.updateCart([...currentItems, newItem]);
     }
+    return true;
   }
 
   removeFromCart(productId: string): void {
@@ -78,20 +124,28 @@ export class CartService {
   }
 
   getTotalPrice(): number {
-    const total = this.cartItems.value.reduce((total, item) => {
-      const itemTotal = item.price * item.quantity;
-      return total + itemTotal;
-    }, 0);
-    return this.roundToTwoDecimals(total);
+    return this.roundToTwoDecimals(
+      this.cartItems.value.reduce((total, item) => {
+        const itemPrice = item.offerPrice !== undefined ? item.offerPrice : item.price;
+        return total + (itemPrice * item.quantity);
+      }, 0)
+    );
   }
 
   clearCart(): void {
-    this.updateCart([]);
+    this.cartItems.next([]);
+    if (this.userId) {
+      localStorage.removeItem(`cart_${this.userId}`);
+    } else {
+      localStorage.removeItem('cart');
+    }
   }
 
   private updateCart(items: CartItem[]): void {
     this.cartItems.next(items);
-    localStorage.setItem('cart', JSON.stringify(items));
+    if (this.userId) {
+      localStorage.setItem(`cart_${this.userId}`, JSON.stringify(items));
+    }
   }
 
   private roundToTwoDecimals(num: number): number {

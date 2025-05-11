@@ -216,7 +216,7 @@ export class StorePage implements OnInit {
   }
 
   async addToCart(product: Product) {
-    this.cartService.addToCart({
+    const added = await this.cartService.addToCart({
       id: product.id,
       name: product.name,
       price: product.offerPrice || product.price,
@@ -224,13 +224,15 @@ export class StorePage implements OnInit {
       imageUrl: product.imageUrl
     });
 
-    const toast = await this.toastController.create({
-      message: `${product.name} añadido al carrito`,
-      duration: 2000,
-      position: 'bottom',
-      color: 'success'
-    });
-    await toast.present();
+    if (added) {
+      const toast = await this.toastController.create({
+        message: `${product.name} añadido al carrito`,
+        duration: 2000,
+        position: 'bottom',
+        color: 'success'
+      });
+      await toast.present();
+    }
   }
 
   goToCart() {

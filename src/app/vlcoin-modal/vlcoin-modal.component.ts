@@ -10,18 +10,14 @@ import {
   IonButton, 
   IonIcon, 
   IonCard, 
-  IonCardHeader, 
   IonCardContent,
   IonLabel,
   IonSegment,
   IonSegmentButton,
-  IonBadge,
   IonProgressBar,
-  IonChip,
   IonRow,
   IonCol,
   IonGrid,
-  IonItem,
   ModalController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -85,18 +81,14 @@ import { VlcoinService } from '../services/vlcoin.service';
     IonButton, 
     IonIcon, 
     IonCard, 
-    IonCardHeader, 
     IonCardContent,
     IonLabel,
     IonSegment,
     IonSegmentButton,
-    IonBadge,
     IonProgressBar,
-    IonChip,
     IonRow,
     IonCol,
-    IonGrid,
-    IonItem
+    IonGrid
   ]
 })
 export class VlcoinModalComponent implements OnInit {

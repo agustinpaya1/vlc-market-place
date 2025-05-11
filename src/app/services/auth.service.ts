@@ -6,6 +6,7 @@ export interface User {
   id: string;
   email: string;
   fullName?: string;
+  photoUrl?: string;
   type?: 'user' | 'business';
   vlcoinBalance?: number;
 }
@@ -74,9 +75,10 @@ export class AuthService {
         this.user.next({
           id: user.id,
           email: user.email!,
-          fullName: profile?.full_name || user.user_metadata?.['name'] || user.user_metadata?.['full_name'] || '',
-          type: profile?.type || 'user',
-          vlcoinBalance: profile?.vlcoin_balance || 0
+          fullName: profile?.['full_name'] || user.user_metadata?.['name'] || user.user_metadata?.['full_name'] || '',
+          type: profile?.['type'] || 'user',
+          vlcoinBalance: profile?.['vlcoin_balance'] || 0,
+          photoUrl: profile?.['photo_url']
         });
       } else {
         console.log('AuthService - No hay sesión activa');
@@ -128,9 +130,10 @@ export class AuthService {
         this.user.next({
           id: session.user.id,
           email: session.user.email!,
-          fullName: profile?.full_name || session.user.user_metadata?.['name'] || session.user.user_metadata?.['full_name'] || '',
-          type: profile?.type || 'user',
-          vlcoinBalance: profile?.vlcoin_balance || 0
+          fullName: profile?.['full_name'] || session.user.user_metadata?.['name'] || session.user.user_metadata?.['full_name'] || '',
+          type: profile?.['type'] || 'user',
+          vlcoinBalance: profile?.['vlcoin_balance'] || 0,
+          photoUrl: profile?.['photo_url']
         });
       } else {
         console.log('AuthService - Usuario desconectado');
@@ -278,5 +281,68 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     return this.user.value !== null;
+  }
+
+  async getCurrentUser(): Promise<User | null> {
+    const { data: { user } } = await this.supabaseService.getClient().auth.getUser();
+    
+    if (!user) {
+      return null;
+    }
+
+    // Fetch additional user details from the profiles table
+    const { data: userData, error } = await this.supabaseService.getClient()
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user details:', error);
+      return {
+        id: user.id,
+        email: user.email || '',
+        fullName: user.user_metadata?.['full_name']
+      };
+    }
+
+    return {
+      id: user.id,
+      email: user.email || '',
+      fullName: userData?.['full_name'] || user.user_metadata?.['full_name'],
+      photoUrl: userData?.['photo_url'],
+      type: userData?.['type'] || 'user',
+      vlcoinBalance: userData?.['vlcoin_balance'] || 0
+    };
+  }
+
+  async updateUserPhotoUrl(userId: string, photoUrl: string): Promise<void> {
+    try {
+      // Actualizar la URL de la foto en el perfil
+      const { error } = await this.supabaseService.getClient()
+        .from('profiles')
+        .update({ 
+          photo_url: photoUrl,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error updating photo URL:', error);
+        throw error;
+      }
+
+      // Actualizar el BehaviorSubject para reflejar el cambio
+      const currentUser = this.user.getValue();
+      if (currentUser && currentUser.id === userId) {
+        this.user.next({
+          ...currentUser,
+          photoUrl: photoUrl
+        });
+      }
+    } catch (error) {
+      console.error('Comprehensive error in updateUserPhotoUrl:', error);
+      throw error;
+    }
   }
 }

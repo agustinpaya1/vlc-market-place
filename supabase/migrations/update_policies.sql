@@ -35,4 +35,14 @@ create policy "Enable profile creation during registration"
 
 create policy "Enable business profile creation during registration"
   on business_profiles for insert
-  with check (true); 
+  with check (true);
+
+-- Add comprehensive RLS policy for profile-photos storage bucket
+CREATE OR REPLACE POLICY "Users can manage their own profile photos"
+  ON storage.objects FOR ALL
+  USING (
+    auth.uid() IS NOT NULL AND 
+    bucket_id = 'profile-photos' AND 
+    -- Ensure the file name starts with the user's ID
+    split_part(name, '/', 2) LIKE concat(auth.uid()::text, '-%')
+  ); 

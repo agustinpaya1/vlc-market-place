@@ -9,8 +9,50 @@
   <div *ngIf="isAuthenticated">
     <div class="user-profile-header">
       <div class="user-avatar-container">
-        <ion-icon name="personCircle" class="user-avatar-icon"></ion-icon>
-        <ion-button fill="clear" class="user-edit-button" (click)="editProfile()">
+        <!-- User avatar with comprehensive error handling -->
+        <ng-container *ngIf="user.photoUrl; else defaultAvatar">
+          <img 
+            [src]="user.photoUrl" 
+            class="user-avatar-image" 
+            (error)="onImageError($event)"
+            alt="Foto de perfil del usuario"
+            loading="lazy"
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+          >
+        </ng-container>
+        <ng-template #defaultAvatar>
+          <img 
+            src="assets/default-profile.svg" 
+            class="user-avatar-image" 
+            alt="Avatar por defecto"
+          >
+        </ng-template>
+        
+        <!-- Botón de carga de foto -->
+        <ion-button 
+          fill="clear" 
+          class="user-photo-upload-button" 
+          (click)="fileInput.click()"
+        >
+          <ion-icon name="camera" slot="icon-only"></ion-icon>
+        </ion-button>
+        
+        <!-- Input de archivo oculto -->
+        <input 
+          #fileInput 
+          type="file" 
+          accept="image/*" 
+          (change)="onPhotoUpload($event)" 
+          style="display: none"
+        >
+        
+        <!-- Botón de edición de perfil -->
+        <ion-button 
+          fill="clear" 
+          class="user-edit-button" 
+          (click)="editProfile()"
+        >
           <ion-icon name="pencil" slot="icon-only"></ion-icon>
         </ion-button>
       </div>

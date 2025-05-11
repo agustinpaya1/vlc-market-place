@@ -1,30 +1,41 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { from, Observable, throwError } from 'rxjs';
+import { from, Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SupabaseService {
-  private supabase!: SupabaseClient;
-  private bucketName = 'fotostiendas';
-  private initAttempted = false;
+  private supabaseInstance: SupabaseClient | null = null;
+  private initSubject = new BehaviorSubject<boolean>(false);
+  private initObservable$ = this.initSubject.asObservable();
+  private bucketName = 'profile-photos';
 
   constructor() {
-    this.initClient();
+    this.initializeSupabase();
   }
 
-  private initClient() {
+  private initializeSupabase() {
+    // Prevent multiple initializations
+    if (this.supabaseInstance) {
+      this.initSubject.next(true);
+      return;
+    }
+
     try {
-      this.supabase = createClient(
-        environment.supabase.url,
-        environment.supabase.key,
+      // Use a single client creation method
+      this.supabaseInstance = createClient(
+        environment.supabase.url, 
+        environment.supabase.key, 
         {
           auth: {
             persistSession: true,
-            autoRefreshToken: true
+            autoRefreshToken: true,
+            // Prevent multiple client instances
+            storageKey: 'supabase-auth-token'
           },
           global: {
             headers: {
@@ -33,19 +44,48 @@ export class SupabaseService {
           }
         }
       );
-      this.initAttempted = true;
+
+      // Ensure client is ready
+      this.initSubject.next(true);
       console.log('Supabase client initialized successfully');
     } catch (error) {
       console.error('Error initializing Supabase client:', error);
+      this.initSubject.error(error);
     }
   }
 
-  // Método para obtener el cliente de Supabase con reintentos
-  getClient(): SupabaseClient {
-    if (!this.initAttempted) {
-      this.initClient();
+  // Ensure client is initialized before use
+  private async ensureClient(): Promise<SupabaseClient> {
+    if (!this.supabaseInstance) {
+      await new Promise<void>((resolve, reject) => {
+        const subscription = this.initObservable$.subscribe({
+          next: (initialized) => {
+            if (initialized) {
+              subscription.unsubscribe();
+              resolve();
+            }
+          },
+          error: (error) => {
+            subscription.unsubscribe();
+            reject(error);
+          }
+        });
+      });
     }
-    return this.supabase;
+
+    if (!this.supabaseInstance) {
+      throw new Error('Supabase client failed to initialize');
+    }
+
+    return this.supabaseInstance;
+  }
+
+  // Get client with initialization check
+  getClient(): SupabaseClient {
+    if (!this.supabaseInstance) {
+      this.initializeSupabase();
+    }
+    return this.supabaseInstance!;
   }
 
   // Envolver operaciones Supabase en Observables para mejor manejo de errores
@@ -61,7 +101,7 @@ export class SupabaseService {
 
   // Ejemplo de método para obtener datos de una tabla
   async getData(table: string) {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.getClient()
       .from(table)
       .select('*');
     
@@ -71,7 +111,7 @@ export class SupabaseService {
 
   // Ejemplo de método para insertar datos
   async insertData(table: string, data: any) {
-    const { data: result, error } = await this.supabase
+    const { data: result, error } = await this.getClient()
       .from(table)
       .insert(data)
       .select();
@@ -83,48 +123,37 @@ export class SupabaseService {
   // Método para obtener la URL pública de una imagen del bucket
   private getPublicUrl(path: string | null): string {
     if (!path) {
-      return this.getDefaultImageUrl();
+      return this.getDefaultProfileImageUrl();
     }
 
-    // Si ya es una URL completa, la devolvemos tal cual
+    // If already a full URL, return as-is
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
 
     try {
-      // Construir la URL usando el endpoint público de Supabase Storage
-      const { data } = this.supabase
+      const { data } = this.getClient()
         .storage
         .from(this.bucketName)
         .getPublicUrl(path);
 
-      console.log('URL generada para', path, ':', data.publicUrl);
+      console.log('Generated URL for', path, ':', data.publicUrl);
       return data.publicUrl;
     } catch (error) {
-      console.error('Error al obtener URL pública:', error);
-      return this.getDefaultImageUrl();
+      console.error('Error getting public URL:', error);
+      return this.getDefaultProfileImageUrl();
     }
   }
 
-  // Método para obtener la URL de la imagen por defecto
-  private getDefaultImageUrl(): string {
-    try {
-      const { data } = this.supabase
-        .storage
-        .from(this.bucketName)
-        .getPublicUrl('default-store.jpg');
-
-      return data.publicUrl;
-    } catch (error) {
-      console.error('Error al obtener URL de imagen por defecto:', error);
-      return ''; // Retornar string vacío si todo falla
-    }
+  // Add a method for default profile image
+  private getDefaultProfileImageUrl(): string {
+    return 'assets/default-profile.svg'; // Use a default SVG profile placeholder
   }
 
   // Método específico para obtener tiendas
   async getStores() {
     try {
-      const { data: stores, error } = await this.supabase
+      const { data: stores, error } = await this.getClient()
         .from('stores')
         .select('*');
       
@@ -157,7 +186,7 @@ export class SupabaseService {
   // Método para obtener productos de una tienda específica
   async getStoreProducts(storeId: string) {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.getClient()
         .from('products')
         .select('*')
         .eq('store_id', storeId);
@@ -189,7 +218,7 @@ export class SupabaseService {
   // Método para obtener detalles de una tienda específica
   async getStoreById(storeId: string) {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.getClient()
         .from('stores')
         .select('*')
         .eq('id', storeId)
@@ -223,7 +252,7 @@ export class SupabaseService {
   public getPublicImageUrl(path: string): string {
     if (!path) return '';
     try {
-      return this.supabase
+      return this.getClient()
         .storage
         .from(this.bucketName)
         .getPublicUrl(path).data.publicUrl;
@@ -236,7 +265,7 @@ export class SupabaseService {
   // Método para subir un archivo al bucket
   async uploadFile(file: File, path: string): Promise<string> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.getClient()
         .storage
         .from(this.bucketName)
         .upload(path, file, {
@@ -278,13 +307,13 @@ export class SupabaseService {
   // Método para obtener todos los productos con su stock y tienda asociada
   async getAllProductsWithStockAndStore() {
     try {
-      const { data: products, error } = await this.supabase
+      const { data: products, error } = await this.getClient()
         .from('products')
         .select('id, name, stock, store_id, price, category')
         .gt('stock', 0);
       if (error) throw error;
       // Obtener tiendas para asociar nombre
-      const { data: stores, error: storeError } = await this.supabase
+      const { data: stores, error: storeError } = await this.getClient()
         .from('stores')
         .select('id, name');
       if (storeError) throw storeError;
@@ -306,7 +335,7 @@ export class SupabaseService {
   // Obtiene todas las categorías de todas las tiendas agrupadas por store_id
   async getAllStoreCategories() {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.getClient()
         .from('store_categorie')
         .select('store_id, category');
       if (error) throw error;
@@ -322,6 +351,97 @@ export class SupabaseService {
     } catch (error) {
       console.error('Error al obtener categorías de tiendas:', error);
       return {};
+    }
+  }
+
+  async uploadProfilePhoto(file: File, userId: string): Promise<string> {
+    if (!file) {
+      throw new Error('No file provided');
+    }
+
+    console.log('Uploading profile photo:', {
+      userId,
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type
+    });
+
+    const fileExt = file.name.split('.').pop() || 'png';
+    const fileName = `${userId}-${this.uuidv4()}.${fileExt}`;
+    const filePath = `profile-photos/${fileName}`;
+
+    try {
+      // Validate file size and type
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        throw new Error('El archivo es demasiado grande. Máximo 5MB.');
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('Tipo de archivo no permitido. Solo se aceptan JPEG, PNG y GIF.');
+      }
+
+      const supabase = this.getClient();
+
+      // Attempt to upload directly
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('profile-photos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        console.error('Error uploading profile photo:', uploadError);
+        throw uploadError;
+      }
+
+      // Construct public URL manually to ensure consistency
+      const publicUrl = `${environment.supabase.url}/storage/v1/object/public/profile-photos/${filePath}`;
+
+      console.log('Constructed Public URL:', publicUrl);
+
+      // Validate public URL
+      const response = await fetch(publicUrl, { method: 'HEAD' });
+      if (!response.ok) {
+        console.error('Failed to access uploaded image:', response.status);
+        throw new Error('No se pudo acceder a la imagen subida');
+      }
+
+      // Update user profile with new photo URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          photo_url: publicUrl,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('Error updating profile with photo URL:', updateError);
+      }
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Comprehensive error in uploadProfilePhoto:', error);
+      throw error;
+    }
+  }
+
+  // Utility method to generate UUID if not already available
+  private uuidv4(): string {
+    return uuidv4();
+  }
+
+  async updateUserProfile(userId: string, updates: { photo_url?: string, name?: string }): Promise<void> {
+    const { error } = await this.getClient()
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error updating user profile:', error);
+      throw error;
     }
   }
 }
