@@ -39,14 +39,14 @@
 
   <!-- Segmentos de navegación -->
   <ion-card class="tabs-card">
-    <ion-segment value="{{ selectedSegment }}" (ionChange)="segmentChanged($event)">
-      <ion-segment-button value="achievements">
+    <ion-segment value="{{ selectedSegment }}" (ionChange)="segmentChanged($event)" class="segment-fixed-width">
+      <ion-segment-button value="achievements" class="segment-button-fixed">
         <ion-label>Logros</ion-label>
       </ion-segment-button>
-      <ion-segment-button value="challenges" class="full-width-segment">
+      <ion-segment-button value="challenges" class="segment-button-fixed">
         <ion-label>Retos Activos</ion-label>
       </ion-segment-button>
-      <ion-segment-button value="rewards" class="full-width-segment">
+      <ion-segment-button value="rewards" class="segment-button-fixed">
         <ion-label>Recompensas</ion-label>
       </ion-segment-button>
     </ion-segment>
@@ -65,9 +65,22 @@
         <div class="achievement-details">
           <div class="achievement-header">
             <div>
-              <h4 class="achievement-title">{{ achievement.title }}</h4>
+              <h4 class="achievement-title">
+                {{ achievement.title }}
+              </h4>
+              <div *ngIf="achievement.title === 'Perfil Completo'" class="achievement-profile-badges">
+                <span class="profile-badge">
+                  <ion-icon name="checkmark-circle"></ion-icon>
+                  <span>Datos Personales</span>
+                </span>
+                <span class="profile-badge">
+                  <ion-icon name="shield-checkmark"></ion-icon>
+                  <span>Verificado</span>
+                </span>
+              </div>
               <p *ngIf="achievement.date" class="achievement-date">{{ achievement.date }}</p>
               <p *ngIf="!achievement.date" class="achievement-date">En progreso</p>
+              <p *ngIf="achievement.description" class="achievement-description">{{ achievement.description }}</p>
             </div>
             <div class="achievement-coins">
               <div class="v-coin-circle small">V</div>
@@ -99,7 +112,10 @@
         </div>
       </div>
       <ion-card-content>
-        <h4 class="challenge-title">{{ challenge.title }}</h4>
+        <h4 class="challenge-title">
+          <ion-icon [name]="challenge.icon" class="challenge-title-icon"></ion-icon>
+          {{ challenge.title }}
+        </h4>
         
         <p class="challenge-description">{{ challenge.description }}</p>
         

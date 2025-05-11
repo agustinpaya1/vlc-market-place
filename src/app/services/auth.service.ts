@@ -1,13 +1,17 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
+import { NotificationService } from './notification.service';
 
 export interface User {
   id: string;
   email: string;
   fullName?: string;
-  type?: 'user' | 'business';
+  photoUrl?: string;
+  type?: string;
   vlcoinBalance?: number;
+  phone?: string;
+  address?: string;
 }
 
 export interface BusinessProfile {
@@ -25,45 +29,121 @@ export class AuthService {
   private user = new BehaviorSubject<User | null>(null);
   public user$ = this.user.asObservable();
 
-  constructor(private supabaseService: SupabaseService) {
+  constructor(private supabaseService: SupabaseService, private notificationService: NotificationService) {
     this.initializeUser();
   }
 
   private async initializeUser() {
-    const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
-    if (session) {
-      const user = session.user;
-      const { data: profile } = await this.supabaseService.getClient()
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+    try {
+      console.log('AuthService - Inicializando usuario');
+      const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
+      
+      if (session) {
+        console.log('AuthService - Sesión existente encontrada:', session);
+        const user = session.user;
+        
+        // Intentar obtener el perfil del usuario desde la base de datos
+        const { data: profile } = await this.supabaseService.getClient()
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
 
-      this.user.next({
-        id: user.id,
-        email: user.email!,
-        fullName: profile?.full_name,
-        type: profile?.type,
-        vlcoinBalance: profile?.vlcoin_balance
-      });
+        // Si el perfil no existe y el usuario existe en auth, crearlo
+        if (!profile && user) {
+          console.log('AuthService - Perfil no encontrado, creando uno nuevo');
+          
+          // Obtener los datos del usuario desde los metadatos de auth
+          const userData = {
+            id: user.id,
+            email: user.email!,
+            full_name: user.user_metadata?.['full_name'] || user.user_metadata?.['name'] || '',
+            type: user.user_metadata?.['user_type'] || 'user',
+            vlcoin_balance: 0
+          };
+          
+          // Intentar crear el perfil
+          try {
+            await this.supabaseService.getClient()
+              .from('profiles')
+              .upsert(userData);
+              
+            console.log('AuthService - Perfil creado para el usuario:', userData);
+          } catch (error) {
+            console.error('AuthService - Error al crear perfil:', error);
+          }
+        }
+
+        // Actualizar el BehaviorSubject con los datos del usuario
+        this.user.next({
+          id: user.id,
+          email: user.email!,
+          fullName: profile?.['full_name'] || user.user_metadata?.['name'] || user.user_metadata?.['full_name'] || '',
+          type: profile?.['type'] || 'user',
+          vlcoinBalance: profile?.['vlcoin_balance'] || 0,
+          photoUrl: profile?.['photo_url'],
+          phone: profile?.['phone'],
+          address: profile?.['address']
+        });
+      } else {
+        console.log('AuthService - No hay sesión activa');
+        this.user.next(null);
+      }
+    } catch (error) {
+      console.error('AuthService - Error al inicializar usuario:', error);
+      this.user.next(null);
     }
 
+    // Configurar el listener para cambios en el estado de autenticación
     this.supabaseService.getClient().auth.onAuthStateChange(async (_event, session) => {
+      console.log('AuthService - Cambio en el estado de autenticación:', _event);
+      
       if (session?.user) {
+        console.log('AuthService - Usuario autenticado:', session.user);
+        
+        // Buscar el perfil del usuario
         const { data: profile } = await this.supabaseService.getClient()
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single();
+          
+        if (!profile) {
+          console.log('AuthService - Perfil no encontrado después de autenticación, creando uno nuevo');
+          
+          // Crear un perfil para el usuario
+          try {
+            const userData = {
+              id: session.user.id,
+              email: session.user.email!,
+              full_name: session.user.user_metadata?.['full_name'] || session.user.user_metadata?.['name'] || '',
+              type: session.user.user_metadata?.['user_type'] || 'user',
+              vlcoin_balance: 0
+            };
+            
+            await this.supabaseService.getClient()
+              .from('profiles')
+              .upsert(userData);
+              
+            console.log('AuthService - Perfil creado después de autenticación');
+          } catch (error) {
+            console.error('AuthService - Error al crear perfil después de autenticación:', error);
+          }
+        }
 
+        // Actualizar el usuario en el BehaviorSubject
         this.user.next({
           id: session.user.id,
           email: session.user.email!,
-          fullName: profile?.full_name,
-          type: profile?.type,
-          vlcoinBalance: profile?.vlcoin_balance
+          fullName: profile?.['full_name'] || session.user.user_metadata?.['name'] || session.user.user_metadata?.['full_name'] || '',
+          type: profile?.['type'] || 'user',
+          vlcoinBalance: profile?.['vlcoin_balance'] || 0,
+          photoUrl: profile?.['photo_url'],
+          phone: profile?.['phone'],
+          address: profile?.['address']
         });
       } else {
+        console.log('AuthService - Usuario desconectado');
         this.user.next(null);
       }
     });
@@ -155,21 +235,37 @@ export class AuthService {
   async logout(): Promise<void> {
     await this.supabaseService.getClient().auth.signOut();
     this.user.next(null);
+    await this.notificationService.showSuccess('Sesión cerrada correctamente');
   }
 
   async loginWithGoogle(): Promise<boolean> {
     try {
+      console.log('AuthService - Iniciando login con Google');
+      
+      // Obtener la URL completa para la redirección
+      const redirectTo = `${window.location.origin}/tabs/profile`;
+      console.log('AuthService - URL de redirección:', redirectTo);
+      
       const { data, error } = await this.supabaseService.getClient().auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('AuthService - Error en login con Google:', error);
+        throw error;
+      }
+      
+      console.log('AuthService - Login con Google iniciado correctamente');
       return true;
     } catch (error) {
-      console.error('Google login error:', error);
+      console.error('AuthService - Error en login con Google:', error);
       return false;
     }
   }
@@ -193,5 +289,101 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     return this.user.value !== null;
+  }
+
+  async getCurrentUser(): Promise<User | null> {
+    const { data: { user } } = await this.supabaseService.getClient().auth.getUser();
+    
+    if (!user) {
+      return null;
+    }
+
+    // Fetch additional user details from the profiles table
+    const { data: userData, error } = await this.supabaseService.getClient()
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user details:', error);
+      return {
+        id: user.id,
+        email: user.email || '',
+        fullName: user.user_metadata?.['full_name']
+      };
+    }
+
+    return {
+      id: user.id,
+      email: user.email || '',
+      fullName: userData?.['full_name'] || user.user_metadata?.['full_name'],
+      photoUrl: userData?.['photo_url'],
+      type: userData?.['type'] || 'user',
+      vlcoinBalance: userData?.['vlcoin_balance'] || 0,
+      phone: userData?.['phone'],
+      address: userData?.['address']
+    };
+  }
+
+  async updateUserPhotoUrl(userId: string, photoUrl: string): Promise<void> {
+    try {
+      // Actualizar la URL de la foto en el perfil
+      const { error } = await this.supabaseService.getClient()
+        .from('profiles')
+        .update({ 
+          photo_url: photoUrl,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error updating photo URL:', error);
+        throw error;
+      }
+
+      // Actualizar el BehaviorSubject para reflejar el cambio
+      const currentUser = this.user.getValue();
+      if (currentUser && currentUser.id === userId) {
+        this.user.next({
+          ...currentUser,
+          photoUrl: photoUrl
+        });
+      }
+    } catch (error) {
+      console.error('Comprehensive error in updateUserPhotoUrl:', error);
+      throw error;
+    }
+  }
+
+  async updateUserProfile(updates: Partial<User>): Promise<void> {
+    try {
+      const currentUser = await this.getCurrentUser();
+      if (!currentUser) throw new Error('No hay usuario autenticado');
+
+      const profileData: any = {
+        full_name: updates.fullName,
+        phone: updates.phone,
+        address: updates.address
+      };
+
+      // Eliminar campos undefined
+      Object.keys(profileData).forEach(key => 
+        profileData[key] === undefined && delete profileData[key]
+      );
+
+      await this.supabaseService.getClient()
+        .from('profiles')
+        .update(profileData)
+        .eq('id', currentUser.id);
+
+      // Actualizar el estado local
+      const updatedUser = { ...currentUser, ...updates };
+      this.user.next(updatedUser);
+
+    } catch (error) {
+      console.error('Error actualizando perfil:', error);
+      throw error;
+    }
   }
 }

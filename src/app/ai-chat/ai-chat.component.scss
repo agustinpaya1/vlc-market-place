@@ -8,6 +8,36 @@
   --user-message-text: #fff;
   --ai-message-bg: #e9ecef;
   --ai-message-text: #333;
+  --ai-header-bg: white;
+  --ai-footer-bg: white;
+  --ai-footer-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  --ai-input-bg: #f8f9fa;
+  --ai-input-text: #111;
+  --ai-input-placeholder: #555;
+  --ai-content-bg: white;
+  --ai-message-time: #888;
+}
+
+// Modo oscuro
+@media (prefers-color-scheme: dark) {
+  :host {
+    --ai-primary-color: #02C39A;
+    --ai-secondary-color: #028090;
+    --ai-background: #1e1e1e;
+    --ai-text-color: #e0e0e0;
+    --user-message-bg: #05668D;
+    --user-message-text: #fff;
+    --ai-message-bg: #2d2d2d;
+    --ai-message-text: #e0e0e0;
+    --ai-header-bg: #1e1e1e;
+    --ai-footer-bg: #1e1e1e;
+    --ai-footer-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+    --ai-input-bg: #2d2d2d;
+    --ai-input-text: #e0e0e0;
+    --ai-input-placeholder: #aaa;
+    --ai-content-bg: #1e1e1e;
+    --ai-message-time: #aaa;
+  }
 }
 
 // Contenedor del chat
@@ -18,6 +48,14 @@
   padding-bottom: 16px;
   max-width: 100%;
   height: 100%;
+  --background: var(--ion-color-light);
+  --padding: 16px;
+  --message-spacing: 8px;
+  --message-radius: 12px;
+  --user-message-bg: #02A396;
+  --bot-message-bg: var(--ion-color-light-shade);
+  --message-text: white;
+  --timestamp-color: var(--ion-color-medium);
 }
 
 // Contenedor de mensajes
@@ -48,39 +86,38 @@
     position: absolute;
     bottom: -16px;
     right: 8px;
+    color: var(--ai-message-time);
   }
 }
 
 // Mensaje de usuario
 .user-message {
   background-color: var(--user-message-bg);
-  color: #fff;
+  color: var(--user-message-text);
   border-bottom-right-radius: 4px;
   margin-left: auto;
   text-align: right;
   
   .message-content {
-    color: #fff !important;
+    color: var(--user-message-text) !important;
   }
   .message-time {
     right: 8px;
-    color: #888;
   }
 }
 
 // Mensaje del asistente IA
 .ai-message {
   background-color: var(--ai-message-bg);
-  color: #111;
+  color: var(--ai-message-text);
   border-bottom-left-radius: 4px;
   margin-right: auto;
   
   .message-content {
-    color: #111 !important;
+    color: var(--ai-message-text) !important;
   }
   .message-time {
     left: 8px;
-    color: #888;
   }
 }
 
@@ -100,14 +137,14 @@
 // Footer con input
 .footer-container {
   padding: 8px 16px;
-  background-color: white;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  background-color: var(--ai-footer-bg);
+  box-shadow: var(--ai-footer-shadow);
 }
 
 .input-container {
   display: flex;
   align-items: center;
-  background-color: var(--ai-background);
+  background-color: var(--ai-input-bg);
   border-radius: 24px;
   padding: 4px 8px 4px 16px;
   
@@ -116,10 +153,10 @@
     --padding-end: 0;
     --background: transparent;
     font-size: 14px;
-    color: #111 !important;
-    caret-color: #111;
+    color: var(--ai-input-text) !important;
+    caret-color: var(--ai-input-text);
     &::placeholder {
-      color: #333 !important;
+      color: var(--ai-input-placeholder) !important;
       opacity: 1;
     }
   }
@@ -165,6 +202,11 @@
       cursor: not-allowed;
       box-shadow: none;
       border: none;
+      
+      @media (prefers-color-scheme: dark) {
+        background: #444 !important;
+        color: #777 !important;
+      }
     }
     
     ion-icon {
@@ -184,18 +226,37 @@
 // Estilos para el header
 ion-header {
   ion-toolbar {
-    --background: white;
+    --background: var(--ai-header-bg);
   }
   
   ion-title {
     font-size: 16px;
     font-weight: 600;
     color: var(--ai-text-color);
+    
+    .title-with-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      
+      .ai-icon {
+        font-size: 22px;
+        color: var(--ai-primary-color);
+        animation: pulse-subtle 3s infinite;
+      }
+    }
   }
   
   ion-button {
     --color: var(--ai-text-color);
   }
+}
+
+@keyframes pulse-subtle {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0.8; }
 }
 
 // Estilos para el logo en el encabezado
@@ -214,7 +275,7 @@ ion-header {
 
 // Contenido
 ion-content {
-  --background: white;
+  --background: var(--ai-content-bg);
 }
 
 // Estilos específicos para el modal
@@ -226,6 +287,10 @@ ion-content {
   
   ion-header {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    
+    @media (prefers-color-scheme: dark) {
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
   }
   
   .chat-container {

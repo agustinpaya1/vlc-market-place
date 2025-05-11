@@ -13,81 +13,100 @@ $spacing-xl: 30px;
 $card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 $transition-speed: 0.3s;
 
+:host {
+  ion-content {
+    --background: var(--color-background);
+    --color: var(--color-text-primary);
+    font-family: var(--ion-font-family);
+  }
+}
+
 // User profile section
 .user-profile-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: $spacing-lg 0;
-  margin-bottom: $spacing-lg;
   text-align: center;
+  margin-bottom: 20px;
 }
 
 .user-avatar-container {
   position: relative;
-  margin-bottom: $spacing-md;
-  transition: transform $transition-speed ease;
-  
-  &:hover {
-    transform: scale(1.05);
-  }
+  width: 150px;
+  height: 150px;
+  margin-bottom: 15px;
 }
 
 .user-avatar-icon {
-  font-size: 80px;
-  color: $primary-color;
+  font-size: 150px;
+  color: var(--ion-color-medium);
+}
+
+.user-avatar-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--ion-color-primary);
+}
+
+.user-photo-upload-button {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  z-index: 10;
+  --background: var(--ion-color-primary);
+  --background-activated: var(--ion-color-primary-shade);
+  --border-radius: 50%;
+  width: 40px;
+  height: 40px;
 }
 
 .user-edit-button {
   position: absolute;
   bottom: 0;
-  right: -10px;
-  --padding-start: 5px;
-  --padding-end: 5px;
-  --padding-top: 5px;
-  --padding-bottom: 5px;
+  left: 0;
+  z-index: 10;
+  --background: var(--ion-color-secondary);
+  --background-activated: var(--ion-color-secondary-shade);
   --border-radius: 50%;
-  --background: var(--ion-color-light);
-  --color: $primary-color;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  transition: all $transition-speed ease;
-  
-  &:hover {
-    --background: $light-color;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-  }
+  width: 40px;
+  height: 40px;
 }
 
 .user-fullname {
-  margin: 0;
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: var(--ion-color-dark);
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 5px;
 }
 
 .user-email-text {
-  margin: 5px 0 0;
-  font-size: 0.9rem;
   color: var(--ion-color-medium);
+  margin-bottom: 15px;
 }
 
 // User info lists
 .user-info-list {
-  margin-bottom: $spacing-lg;
+  margin-bottom: 20px;
   border-radius: $border-radius-medium;
   overflow: hidden;
   box-shadow: $card-shadow;
   
   ion-item {
-    --padding-start: $spacing-md;
+    --padding-start: 24px;
     --padding-end: $spacing-md;
     --padding-top: $spacing-sm;
     --padding-bottom: $spacing-sm;
     --border-color: rgba(0, 0, 0, 0.05);
     
+    &:last-child {
+      --border-width: 0;
+    }
+    
     ion-icon {
       color: $secondary-color;
-      margin-right: $spacing-sm;
+      margin-right: 16px;
+      font-size: 22px;
     }
     
     ion-label {
@@ -104,23 +123,27 @@ $transition-speed: 0.3s;
 }
 
 .user-menu-list {
-  margin-bottom: $spacing-xl;
+  margin-bottom: 20px;
   border-radius: $border-radius-medium;
   overflow: hidden;
   box-shadow: $card-shadow;
   
   ion-item {
-    --padding-start: $spacing-md;
+    --padding-start: 24px;
     --padding-end: $spacing-md;
     --padding-top: $spacing-md;
     --padding-bottom: $spacing-md;
     --border-color: rgba(0, 0, 0, 0.05);
     transition: background-color $transition-speed ease;
     
+    &:last-child {
+      --border-width: 0;
+    }
+    
     ion-icon {
       color: $tertiary-color;
-      margin-right: $spacing-md;
-      font-size: 20px;
+      margin-right: 16px;
+      font-size: 22px;
       transition: transform $transition-speed ease;
     }
     
@@ -136,7 +159,7 @@ $transition-speed: 0.3s;
 
 // Footer actions
 .user-actions-container {
-  padding: 0 $spacing-md;
+  padding: 0 15px;
   margin-top: $spacing-xl;
   
   ion-button {
@@ -209,85 +232,63 @@ $transition-speed: 0.3s;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  height: 90vh;
+  justify-content: center;
+  height: 100%;
   text-align: center;
-  padding-top: 2vh;
 }
 
-.app-logo {
+.app-logo img {
+  max-width: 200px;
   margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  
-  img {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 10px;
-    object-fit: contain;
-  }
-  
-  h1 {
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--ion-color-primary);
-    margin: 0;
-  }
 }
 
 .login-prompt-card {
-  background-color: var(--ion-card-background, #ffffff);
-  border-radius: 16px;
-  padding: $spacing-lg;
-  width: 90%;
-  max-width: 400px;
-  box-shadow: $card-shadow;
-  margin-top: 20px;
+  background-color: var(--color-card);
+  border-radius: var(--border-radius-large);
+  padding: var(--spacing-md);
+  text-align: center;
+  max-width: 320px;
+  width: 100%;
+  box-shadow: var(--shadow-medium);
+  margin: var(--spacing-md);
   
   h2 {
-    margin-top: 10px;
-    color: var(--ion-text-color);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+    font-family: var(--ion-font-family);
+    font-size: 1.5rem;
   }
   
   p {
-    color: var(--ion-color-medium);
-    margin-bottom: 25px;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-sm);
+    font-family: var(--ion-font-family);
+    font-size: 0.95rem;
   }
-  
+
   ion-button {
-    --border-radius: 10px;
-    margin-top: 10px;
-    margin-bottom: 5px;
-    height: 48px;
-    
-    &:hover {
-      opacity: 0.9;
-    }
+    margin: var(--spacing-sm) 0;
+    --border-radius: var(--border-radius-medium);
+    font-family: var(--ion-font-family);
+    height: 42px;
   }
 }
 
 .large-profile-icon {
-  font-size: 70px;
-  color: var(--ion-color-primary);
-  margin-bottom: 5px;
+  font-size: 64px;
+  color: var(--ion-color-medium);
+  margin-bottom: var(--spacing-sm);
 }
 
 .register-prompt {
-  margin-top: 20px;
-  font-size: 14px;
+  margin-top: 15px;
   color: var(--ion-color-medium);
 }
 
 .register-prompt a {
   color: var(--ion-color-primary);
-  font-weight: 500;
-  cursor: pointer;
   text-decoration: none;
-  
-  &:hover {
-    text-decoration: underline;
-  }
+  cursor: pointer;
 }
 
 // Dark mode adjustments

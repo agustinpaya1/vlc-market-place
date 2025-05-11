@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { ToastController } from '@ionic/angular/standalone';
+import { AuthService } from './auth.service';
+import { NotificationService } from './notification.service';
 
 export interface CartItem {
   id: string;
   name: string;
   price: number;
   quantity: number;
-  imageUrl: string;
+  imageUrl?: string;
   offerPrice?: number;
 }
 
@@ -15,58 +18,19 @@ export interface CartItem {
 })
 export class CartService {
   private cartItems = new BehaviorSubject<CartItem[]>([]);
-  public cartItems$ = this.cartItems.asObservable();
+  private isAuthenticated = false;
 
-  constructor() {
-    // Initialize cart from localStorage if available
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      this.cartItems.next(JSON.parse(savedCart));
-    }
-  }
-
-  addToCart(product: any): void {
-    const currentItems = this.cartItems.value;
-    const existingItem = currentItems.find(item => item.id === product.id);
-    
-    if (existingItem) {
-      existingItem.quantity += 1;
-      this.updateCart([...currentItems]);
-    } else {
-      const newItem: CartItem = {
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        quantity: 1,
-        imageUrl: product.imageUrl,
-        offerPrice: product.offerPrice !== undefined ? product.offerPrice : undefined
-      };
-      this.updateCart([...currentItems, newItem]);
-    }
-  }
-
-  removeFromCart(productId: string): void {
-    const currentItems = this.cartItems.value;
-    const updatedItems = currentItems.filter(item => item.id !== productId);
-    this.updateCart(updatedItems);
-  }
-
-  updateQuantity(productId: string, quantity: number): void {
-    const currentItems = this.cartItems.value;
-    const item = currentItems.find(item => item.id === productId);
-    
-    if (item) {
-      if (quantity <= 0) {
-        this.removeFromCart(productId);
-      } else {
-        item.quantity = quantity;
-        this.updateCart([...currentItems]);
-      }
-    }
+  constructor(
+    private authService: AuthService,
+    private notificationService: NotificationService
+  ) {
+    this.authService.user$.subscribe(user => {
+      this.isAuthenticated = !!user;
+    });
   }
 
   getCartItems(): Observable<CartItem[]> {
-    return this.cartItems$;
+    return this.cartItems.asObservable();
   }
 
   getCurrentCartItems(): CartItem[] {
@@ -78,23 +42,65 @@ export class CartService {
   }
 
   getTotalPrice(): number {
-    const total = this.cartItems.value.reduce((total, item) => {
-      const itemTotal = item.price * item.quantity;
-      return total + itemTotal;
+    return this.cartItems.value.reduce((total, item) => {
+      const price = item.offerPrice !== undefined ? item.offerPrice : item.price;
+      return total + (price * item.quantity);
     }, 0);
-    return this.roundToTwoDecimals(total);
   }
 
-  clearCart(): void {
-    this.updateCart([]);
+  async addToCart(item: CartItem): Promise<boolean> {
+    if (!this.isAuthenticated) {
+      await this.notificationService.show({
+        message: 'Inicia sesión o regístrate para añadir productos al carrito',
+        type: 'warning',
+        duration: 3000,
+        action: {
+          text: 'Iniciar sesión',
+          handler: () => {
+            window.location.href = '/login';
+          }
+        }
+      });
+      return false;
+    }
+
+    const currentItems = this.cartItems.value;
+    const existingItem = currentItems.find(i => i.id === item.id);
+    
+    if (existingItem) {
+      existingItem.quantity += item.quantity;
+      this.cartItems.next([...currentItems]);
+      await this.notificationService.showSuccess(`Cantidad actualizada: ${item.name} (${existingItem.quantity})`);
+    } else {
+      this.cartItems.next([...currentItems, item]);
+      await this.notificationService.showSuccess(`${item.name} añadido al carrito`);
+    }
+    return true;
   }
 
-  private updateCart(items: CartItem[]): void {
-    this.cartItems.next(items);
-    localStorage.setItem('cart', JSON.stringify(items));
+  async removeFromCart(productId: string) {
+    const currentItems = this.cartItems.value;
+    const updatedItems = currentItems.filter(item => item.id !== productId);
+    this.cartItems.next(updatedItems);
+    await this.notificationService.showInfo('Producto eliminado del carrito');
   }
 
-  private roundToTwoDecimals(num: number): number {
-    return Math.round((num + Number.EPSILON) * 100) / 100;
+  async updateQuantity(productId: string, quantity: number) {
+    const currentItems = this.cartItems.value;
+    const item = currentItems.find(item => item.id === productId);
+    
+    if (item) {
+      if (quantity <= 0) {
+        await this.removeFromCart(productId);
+      } else {
+        item.quantity = quantity;
+        this.cartItems.next([...currentItems]);
+        await this.notificationService.showSuccess(`Cantidad actualizada: ${item.name} (${quantity})`);
+      }
+    }
+  }
+
+  clearCart() {
+    this.cartItems.next([]);
   }
 } 

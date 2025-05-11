@@ -1,0 +1,64 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ product.name }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="product-image-container">
+    <ion-img [src]="product.imageUrl" [alt]="product.name"></ion-img>
+  </div>
+
+  <div class="product-details">
+    <h2>{{ product.name }}</h2>
+    
+    <div class="price-container">
+      <ng-container *ngIf="product.offerPrice !== undefined; else normalPrice">
+        <div class="offer-price">
+          <span class="original-price">{{ product.price | currency:'EUR' }}</span>
+          <span class="final-price">{{ product.offerPrice | currency:'EUR' }}</span>
+        </div>
+      </ng-container>
+      <ng-template #normalPrice>
+        <span class="price">{{ product.price | currency:'EUR' }}</span>
+      </ng-template>
+    </div>
+
+    <p class="description">{{ product.description }}</p>
+
+    <div class="quantity-selector">
+      <ion-button 
+        fill="outline" 
+        color="primary" 
+        (click)="decrementQuantity()" 
+        [disabled]="quantity === 0">
+        -
+      </ion-button>
+      <span class="quantity">{{ quantity }}</span>
+      <ion-button 
+        fill="outline" 
+        color="primary" 
+        (click)="incrementQuantity()">
+        +
+      </ion-button>
+    </div>
+
+    <ion-button expand="block" (click)="addToCart()">
+      <ion-icon name="cart" slot="start"></ion-icon>
+      {{ isInCart ? 'Actualizar carrito' : 'Añadir al carrito' }}
+    </ion-button>
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-button *ngIf="isInCart" expand="block" (click)="dismiss()" color="medium">
+      Cerrar
+    </ion-button>
+  </ion-toolbar>
+</ion-footer> 

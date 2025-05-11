@@ -21,11 +21,11 @@
             {{ item.name }}
             <p>Cantidad: {{ item.quantity }}</p>
           </ion-label>
-          <ion-note slot="end">${{ (item.price * item.quantity).toFixed(2) }}</ion-note>
+          <ion-note slot="end">{{ (item.price * item.quantity) | currency:'EUR' }}</ion-note>
         </ion-item>
         <ion-item>
           <ion-label><strong>Total</strong></ion-label>
-          <ion-note slot="end" color="primary"><strong>${{ totalAmount.toFixed(2) }}</strong></ion-note>
+          <ion-note slot="end" color="primary"><strong>{{ totalAmount | currency:'EUR' }}</strong></ion-note>
         </ion-item>
       </ion-list>
     </ion-card-content>

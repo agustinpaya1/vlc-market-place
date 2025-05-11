@@ -124,6 +124,20 @@ ion-item {
   margin-bottom: 8px;
   border-radius: 8px;
   --border-radius: 8px;
+
+  ::ng-deep {
+    .item-inner {
+      padding-right: 24px !important;
+      
+      .input-wrapper {
+        margin-right: 16px;
+      }
+    }
+  }
+  
+  ion-button[slot="end"] {
+    margin-right: 16px;
+  }
 }
 
 ion-img {
@@ -275,4 +289,10 @@ ion-label {
   .cart-price-old, .cart-price-new {
     font-size: 0.95rem;
   }
+}
+
+ion-content {
+  --background: var(--color-background);
+  --color: var(--color-text-primary);
+  font-family: var(--ion-font-family);
 } 

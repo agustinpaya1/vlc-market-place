@@ -80,8 +80,8 @@ ion-header ion-toolbar {
 
 ion-segment {
   --background: #fff;
-  min-width: 100%;
   display: flex;
+  flex-wrap: nowrap;
   justify-content: space-between;
 }
 
@@ -90,26 +90,19 @@ ion-segment-button {
   --color-checked: #026e93;
   --indicator-color: #026e93;
   font-weight: 500;
-  --min-width: auto;
-  --padding-start: 8px;
-  --padding-end: 8px;
-  font-size: 0.9em;
-  text-wrap: nowrap;
-  text-overflow: unset;
-  white-space: nowrap;
-  overflow: visible;
-}
-
-ion-segment-button.full-width-segment {
-  min-width: fit-content;
-  max-width: none;
+  min-width: 0;
   width: auto;
-  overflow: visible;
+  --padding-start: 10px;
+  --padding-end: 10px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   
   ion-label {
-    text-overflow: unset;
     white-space: nowrap;
+    width: 100%;
     overflow: visible;
+    text-overflow: initial;
   }
 }
 
@@ -127,6 +120,20 @@ ion-segment-button.full-width-segment {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   background-color: white;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    
+    .achievement-icon {
+      transform: scale(1.05);
+      
+      ion-icon {
+        transform: scale(1.1);
+      }
+    }
+  }
 }
 
 .achievement-content {
@@ -139,25 +146,55 @@ ion-segment-button.full-width-segment {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background-color: rgba(255, 140, 0, 0.1);
+  background-color: rgba(2, 110, 147, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-right: 16px;
   flex-shrink: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Colores específicos para los diferentes tipos de iconos */
+.achievement-icon ion-icon[name="cart"] {
+  color: #e67e22;
+}
+
+.achievement-icon ion-icon[name="storefront"] {
+  color: #3498db;
+}
+
+.achievement-icon ion-icon[name="star"] {
+  color: #f39c12;
+}
+
+.achievement-icon ion-icon[name="personCircle"] {
+  color: #9b59b6;
+  font-size: 26px; /* Ligeramente más grande para mejor visibilidad */
+  filter: drop-shadow(0 1px 2px rgba(155, 89, 182, 0.5));
+}
+
+.achievement-icon ion-icon[name="share"] {
+  color: #2ecc71;
 }
 
 .achievement-icon.completed {
-  background-color: rgba(255, 140, 0, 0.1);
+  background-color: rgba(46, 204, 113, 0.15);
 }
 
 .achievement-icon.in-progress {
-  background-color: rgba(52, 152, 219, 0.1);
+  background-color: rgba(52, 152, 219, 0.15);
 }
 
 .achievement-icon ion-icon {
-  font-size: 22px;
+  font-size: 24px;
   color: #026e93;
+  transition: all 0.3s ease;
+}
+
+.achievement-icon.completed ion-icon {
+  color: #2ecc71;
 }
 
 .achievement-details {
@@ -176,6 +213,58 @@ ion-segment-button.full-width-segment {
   font-weight: 500;
   margin: 0 0 4px 0;
   color: #333;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.achievement-profile-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: rgba(155, 89, 182, 0.1);
+  padding: 3px 6px;
+  border-radius: 12px;
+  font-size: 11px;
+  color: #9b59b6;
+  
+  ion-icon {
+    margin-right: 4px;
+    font-size: 14px;
+  }
+  
+  &:nth-child(2) {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+  }
+}
+
+.achievement-description {
+  font-size: 12px;
+  color: #666;
+  margin: 4px 0 0;
+  font-style: italic;
+}
+
+.achievement-subtitle {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  font-weight: normal;
+  margin-top: 3px;
+  
+  ion-icon {
+    color: #2ecc71;
+    margin-right: 4px;
+    font-size: 14px;
+    vertical-align: middle;
+  }
 }
 
 .achievement-date {
@@ -206,6 +295,16 @@ ion-segment-button.full-width-segment {
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   background-color: white;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    
+    .challenge-title-icon {
+      transform: scale(1.1);
+    }
+  }
 }
 
 .challenge-image-container {
@@ -238,6 +337,28 @@ ion-segment-button.full-width-segment {
   font-weight: 600;
   margin: 0 0 10px 0;
   color: #333;
+  display: flex;
+  align-items: center;
+}
+
+.challenge-title-icon {
+  margin-right: 10px;
+  font-size: 22px;
+  color: #026e93;
+  transition: transform 0.3s ease;
+}
+
+/* Colores específicos para los iconos de retos */
+ion-icon[name="basket"] {
+  color: #e74c3c;
+}
+
+ion-icon[name="chatbubbleOutline"] {
+  color: #3498db;
+}
+
+ion-icon[name="compass"] {
+  color: #2ecc71;
 }
 
 .challenge-description {
@@ -572,5 +693,28 @@ body.dark app-vlcoin-modal {
   .reward-button.insufficient {
     background-color: #334955;
     color: rgba(255, 255, 255, 0.7);
+  }
+}
+
+.segment-fixed-width {
+  display: flex;
+  width: 100%;
+}
+
+.segment-button-fixed {
+  flex: 1;
+  min-width: fit-content;
+  text-align: center;
+  font-size: 12px;
+  
+  ion-label {
+    font-size: 12px;
+    margin: 0;
+    padding: 0;
+    text-transform: uppercase;
+    font-weight: 600;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
   }
 } 

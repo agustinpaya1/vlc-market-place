@@ -22,7 +22,7 @@
             <img [src]="product.imageUrl" [alt]="product.name">
             <ion-card-header>
               <ion-card-title>{{product.name}}</ion-card-title>
-              <ion-card-subtitle>${{product.price}}</ion-card-subtitle>
+              <ion-card-subtitle>{{product.price | currency:'EUR'}}</ion-card-subtitle>
             </ion-card-header>
             <ion-card-content>
               <p>{{product.description}}</p>
@@ -49,7 +49,7 @@
             <ion-item *ngFor="let item of cartItems">
               <ion-label>
                 <h3>{{item.name}}</h3>
-                <p>${{item.price}} x {{item.quantity}}</p>
+                <p>{{item.price | currency:'EUR'}} x {{item.quantity}}</p>
               </ion-label>
               <ion-button fill="clear" (click)="updateQuantity(item, -1)" *ngIf="item.quantity > 1">
                 <ion-icon name="remove"></ion-icon>
@@ -64,7 +64,7 @@
             </ion-item>
           </ion-list>
           <div class="cart-totals">
-            <h3>Total: ${{totalPrice | number:'1.2-2'}}</h3>
+            <h3>Total: {{totalPrice | currency:'EUR'}}</h3>
             <ion-button expand="block" (click)="goToCart()" *ngIf="totalItems > 0">
               Checkout
             </ion-button>

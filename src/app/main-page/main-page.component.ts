@@ -117,13 +117,13 @@ export class MainPageComponent implements OnInit {
   ) {
     addIcons({
       cart: cartOutline,
-      'ellipsis-vertical': ellipsisVerticalOutline,
+      ellipsisVertical: ellipsisVerticalOutline,
       remove: removeOutline,
       add: addOutline,
       trash: trashOutline,
-      'log-in': logInOutline,
-      'person-add': personAddOutline,
-      'log-out': logOutOutline
+      logIn: logInOutline,
+      personAdd: personAddOutline,
+      logOut: logOutOutline
     });
   }
 
@@ -156,19 +156,22 @@ export class MainPageComponent implements OnInit {
   }
 
   async addToCart(product: Product): Promise<void> {
-    this.cartService.addToCart({
+    const added = await this.cartService.addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
       quantity: 1,
       imageUrl: product.imageUrl
     });
-    const toast = await this.toastController.create({
-      message: `${product.name} ha sido añadido al carrito.`,
-      duration: 2000,
-      position: 'bottom'
-    });
-    await toast.present();
+    
+    if (added) {
+      const toast = await this.toastController.create({
+        message: `${product.name} ha sido añadido al carrito.`,
+        duration: 2000,
+        position: 'bottom'
+      });
+      await toast.present();
+    }
   }
 
   toggleCart() {
@@ -180,9 +183,10 @@ export class MainPageComponent implements OnInit {
     this.router.navigate(['/cart']);
   }
 
-  async logout() {
+  async onLogout() {
+    this.isMenuOpen = false;
     await this.authService.logout();
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
   }
 
   onLogin() {
@@ -193,11 +197,6 @@ export class MainPageComponent implements OnInit {
   onRegister() {
     this.isMenuOpen = false;
     this.router.navigate(['/register']);
-  }
-
-  onLogout() {
-    this.isMenuOpen = false;
-    this.logout();
   }
 
   updateCartTotals() {

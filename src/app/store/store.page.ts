@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ModalController } from '@ionic/angular';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '../interfaces/store.interface';
 import { Product } from './product.interface';
@@ -16,9 +16,10 @@ import {
   searchOutline,
   arrowBack
 } from 'ionicons/icons';
-import { CartService } from '../services/cart.service';
+import { CartService, CartItem } from '../services/cart.service';
 import { ToastController, LoadingController } from '@ionic/angular';
 import { SupabaseService } from '../services/supabase.service';
+import { ProductModalComponent } from './product-modal/product-modal.component';
 
 @Component({
   selector: 'app-store',
@@ -37,6 +38,7 @@ export class StorePage implements OnInit {
   loadedStoreData = false;
   loadedProductsData = false;
   maxDiscount: number = 0;
+  cartItems: CartItem[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -44,7 +46,8 @@ export class StorePage implements OnInit {
     private router: Router,
     private loadingController: LoadingController,
     private toastController: ToastController,
-    private cartService: CartService
+    private cartService: CartService,
+    private modalCtrl: ModalController
   ) {
     // Cargar solo los iconos necesarios
     addIcons({ 
@@ -59,7 +62,7 @@ export class StorePage implements OnInit {
     });
     
     // Subscribe to cart changes
-    this.cartService.cartItems$.subscribe(items => {
+    this.cartService.getCartItems().subscribe((items: CartItem[]) => {
       this.cartItemsCount = this.cartService.getTotalItems();
     });
   }
@@ -70,6 +73,11 @@ export class StorePage implements OnInit {
       // Cargar los datos de la tienda y los productos de forma paralela
       this.loadStoreAndProductsParallel(storeId);
     }
+
+    this.cartService.getCartItems().subscribe((items: CartItem[]) => {
+      this.cartItems = items;
+      this.updateCartStatus();
+    });
   }
 
   private async loadStoreAndProductsParallel(storeId: string) {
@@ -216,7 +224,7 @@ export class StorePage implements OnInit {
   }
 
   async addToCart(product: Product) {
-    this.cartService.addToCart({
+    const added = await this.cartService.addToCart({
       id: product.id,
       name: product.name,
       price: product.offerPrice || product.price,
@@ -224,13 +232,15 @@ export class StorePage implements OnInit {
       imageUrl: product.imageUrl
     });
 
-    const toast = await this.toastController.create({
-      message: `${product.name} añadido al carrito`,
-      duration: 2000,
-      position: 'bottom',
-      color: 'success'
-    });
-    await toast.present();
+    if (added) {
+      const toast = await this.toastController.create({
+        message: `${product.name} añadido al carrito`,
+        duration: 2000,
+        position: 'bottom',
+        color: 'success'
+      });
+      await toast.present();
+    }
   }
 
   goToCart() {
@@ -239,5 +249,33 @@ export class StorePage implements OnInit {
 
   goBack() {
     this.router.navigate(['/tabs/stores']);
+  }
+
+  async openProductModal(product: Product) {
+    const modal = await this.modalCtrl.create({
+      component: ProductModalComponent,
+      componentProps: {
+        product: product
+      },
+      breakpoints: [0, 0.5, 0.8, 1],
+      initialBreakpoint: 0.8
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    if (data?.added) {
+      const toast = await this.toastController.create({
+        message: 'Producto añadido al carrito',
+        duration: 2000,
+        position: 'bottom',
+        color: 'success'
+      });
+      await toast.present();
+    }
+  }
+
+  updateCartStatus() {
+    // Implementa la lógica para actualizar el estado del carrito aquí
   }
 } 

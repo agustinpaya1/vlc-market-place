@@ -32,6 +32,26 @@ export const routes: Routes = [
           import('../profile/profile.page').then((m) => m.ProfilePage),
       },
       {
+        path: 'edit-profile',
+        loadComponent: () =>
+          import('../profile/edit-profile/edit-profile.component').then((m) => m.EditProfileComponent),
+      },
+      {
+        path: 'orders',
+        loadComponent: () =>
+          import('../orders/orders.page').then((m) => m.OrdersPage),
+      },
+      {
+        path: 'favorites',
+        loadComponent: () =>
+          import('../favorites/favorites.page').then((m) => m.FavoritesPage),
+      },
+      {
+        path: 'invoices',
+        loadComponent: () =>
+          import('../invoices/invoices.page').then((m) => m.InvoicesPage),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('../settings/settings.page').then((m) => m.SettingsPage),

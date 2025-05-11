@@ -2,13 +2,13 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { RouterModule, Routes } from '@angular/router';
-import { Tab1Page } from './tab1.page';
+import { LoginPage } from './login.page';
 
 // Definición de rutas
 const routes: Routes = [
   {
     path: '',
-    component: Tab1Page
+    component: LoginPage
   }
 ];
 
@@ -18,6 +18,6 @@ const routes: Routes = [
     IonicModule,
     RouterModule.forChild(routes)  // Configuración de rutas integrada
   ],
-  declarations: [Tab1Page]
+  declarations: [LoginPage]
 })
-export class Tab1PageModule { }
+export class LoginPageModule { }

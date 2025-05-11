@@ -1,32 +1,70 @@
-<ion-header [translucent]="true">
+<ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-buttons slot="end">
-      <ion-button (click)="isMenuOpen = true">
-        <ion-icon name="ellipsis-vertical"></ion-icon>
-      </ion-button>
+    <ion-buttons slot="start">
+      <ion-back-button mode="md" text="Configuración" defaultHref="/tabs/profile"></ion-back-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 3</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+  <ion-list>
+    <ion-item-group>
+      <ion-item-divider>
+        <ion-label>Apariencia</ion-label>
+      </ion-item-divider>
 
-  <ion-popover [isOpen]="isMenuOpen" (didDismiss)="isMenuOpen = false">
-    <ng-template>
-      <ion-list>
-        <ion-item button (click)="onLogin()">
-          <ion-label>Login</ion-label>
-        </ion-item>
-        <ion-item button (click)="onLogout()">
-          <ion-label>Logout</ion-label>
-        </ion-item>
-      </ion-list>
-    </ng-template>
-  </ion-popover>
+      <ion-item button (click)="toggleDarkMode()">
+        <ion-icon slot="start" name="moon-outline"></ion-icon>
+        <ion-label>Modo oscuro</ion-label>
+        <ion-toggle [(ngModel)]="settings.darkMode" slot="end"></ion-toggle>
+      </ion-item>
+    </ion-item-group>
 
-  <app-explore-container name="Tab 3 page"></app-explore-container>
+    <ion-item-group>
+      <ion-item-divider>
+        <ion-label>Notificaciones</ion-label>
+      </ion-item-divider>
+
+      <ion-item button (click)="toggleNotifications()">
+        <ion-icon slot="start" name="notifications-outline"></ion-icon>
+        <ion-label>Notificaciones push</ion-label>
+        <ion-toggle [(ngModel)]="settings.notifications" slot="end"></ion-toggle>
+      </ion-item>
+    </ion-item-group>
+
+    <ion-item-group>
+      <ion-item-divider>
+        <ion-label>Idioma</ion-label>
+      </ion-item-divider>
+
+      <ion-item button (click)="openLanguageSelector()">
+        <ion-icon slot="start" name="language-outline"></ion-icon>
+        <ion-label>Idioma de la aplicación</ion-label>
+        <ion-note slot="end">{{ getLanguageName(settings.language) }}</ion-note>
+        <ion-icon slot="end" name="chevron-forward"></ion-icon>
+      </ion-item>
+    </ion-item-group>
+
+    <ion-item-group>
+      <ion-item-divider>
+        <ion-label>Cuenta</ion-label>
+      </ion-item-divider>
+
+      <ion-item button (click)="clearCache()" color="medium">
+        <ion-icon slot="start" name="trash-outline"></ion-icon>
+        <ion-label>Limpiar caché</ion-label>
+      </ion-item>
+
+      <ion-item button (click)="openHelp()">
+        <ion-icon slot="start" name="help-circle-outline"></ion-icon>
+        <ion-label>Ayuda y soporte</ion-label>
+        <ion-icon slot="end" name="chevron-forward"></ion-icon>
+      </ion-item>
+
+      <ion-item button (click)="logout()" color="danger">
+        <ion-icon slot="start" name="log-out-outline"></ion-icon>
+        <ion-label>Cerrar sesión</ion-label>
+      </ion-item>
+    </ion-item-group>
+  </ion-list>
 </ion-content>

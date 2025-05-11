@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { AuthService, User } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
 import { addIcons } from 'ionicons';
 import { 
@@ -17,8 +17,14 @@ import {
   receipt, 
   callOutline, 
   locationOutline,
-  logInOutline
+  logInOutline,
+  camera
 } from 'ionicons/icons';
+import { ToastController } from '@ionic/angular';
+
+interface ProfileUser extends User {
+  name: string;
+}
 
 @Component({
   selector: 'app-profile',
@@ -28,15 +34,17 @@ import {
   imports: [IonicModule, CommonModule, FormsModule]
 })
 export class ProfilePage implements OnInit {
-  user = {
+  user: ProfileUser = {
+    id: '',
     name: 'Usuario',
     email: 'usuario@example.com',
-    phone: '+34 600 123 456',
-    address: 'Calle Valencia, 123, Valencia'
+    phone: '',
+    address: '',
+    photoUrl: undefined
   };
 
   isAuthenticated = false;
-  logoUrl: string = 'assets/vlc-logo.svg'; // Cambiado al nuevo logo SVG
+  logoUrl: string = 'assets/vlc-logo.svg';
 
   menuItems = [
     { icon: 'bag', label: 'Mis Pedidos', route: '/tabs/orders' },
@@ -48,7 +56,8 @@ export class ProfilePage implements OnInit {
   constructor(
     private router: Router,
     private authService: AuthService,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private toastController: ToastController
   ) {
     addIcons({
       personCircle,
@@ -61,15 +70,21 @@ export class ProfilePage implements OnInit {
       receipt,
       callOutline,
       locationOutline,
-      logInOutline
+      logInOutline,
+      camera
     });
   }
 
+  ionViewWillEnter() {
+    this.checkAuthStatus();
+  }
+
   ngOnInit() {
-    console.log('ProfilePage - ngOnInit');
-    // Comprobar si el usuario está autenticado
+    this.checkAuthStatus();
+  }
+
+  async checkAuthStatus() {
     this.authService.user$.subscribe(user => {
-      console.log('ProfilePage - Usuario recibido:', user);
       this.isAuthenticated = !!user;
       if (user) {
         this.loadUserData(user);
@@ -77,28 +92,32 @@ export class ProfilePage implements OnInit {
     });
   }
 
-  loadUserData(user: any) {
-    console.log('ProfilePage - Cargando datos de usuario:', user);
-    // En un caso real, cargaríamos los datos del usuario desde el servicio
-    if (user.displayName) {
-      this.user.name = user.displayName;
-    } else if (user.email) {
-      // Usar el email como nombre si no hay displayName
-      this.user.name = user.email.split('@')[0];
-    }
-    if (user.email) {
-      this.user.email = user.email;
-    }
+  loadUserData(userData: User) {
+    this.user = {
+      id: userData.id,
+      name: userData.fullName || userData.email.split('@')[0],
+      email: userData.email,
+      phone: userData.phone || '',
+      address: userData.address || '',
+      photoUrl: userData.photoUrl
+    };
   }
 
   editProfile() {
-    // Navegar a la página de edición de perfil
     this.router.navigate(['/tabs/edit-profile']);
   }
 
   async logout() {
     await this.authService.logout();
-    this.router.navigate(['/login']);
+    const toast = await this.toastController.create({
+      message: 'Has cerrado sesión correctamente',
+      duration: 2000,
+      position: 'bottom',
+      color: 'primary'
+    });
+    await toast.present();
+    
+    this.router.navigate(['/']);
   }
 
   navigate(route: string) {
@@ -113,12 +132,139 @@ export class ProfilePage implements OnInit {
     this.router.navigate(['/register']);
   }
 
-  onImageError(event: Event) {
-    console.error('Error al cargar la imagen:', (event.target as HTMLImageElement).src);
+  async onPhotoUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) {
+      console.error('No files selected');
+      return;
+    }
+
+    const file = input.files[0];
+    console.log('Selected file:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
+
+    try {
+      // Obtener el ID del usuario actual
+      const currentUser = await this.authService.getCurrentUser();
+      if (!currentUser) {
+        console.error('No authenticated user');
+        throw new Error('No hay usuario autenticado');
+      }
+
+      console.log('Current user:', currentUser);
+
+      // Validar tamaño y tipo de archivo antes de la subida
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        const toastLarge = await this.toastController.create({
+          message: 'El archivo es demasiado grande. Máximo 5MB.',
+          duration: 3000,
+          position: 'bottom',
+          color: 'danger'
+        });
+        await toastLarge.present();
+        return;
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        const toastType = await this.toastController.create({
+          message: 'Tipo de archivo no permitido. Solo se aceptan JPEG, PNG y GIF.',
+          duration: 3000,
+          position: 'bottom',
+          color: 'danger'
+        });
+        await toastType.present();
+        return;
+      }
+
+      // Subir la foto de perfil
+      const photoUrl = await this.supabaseService.uploadProfilePhoto(file, currentUser.id);
+      
+      console.log('Photo uploaded successfully:', photoUrl);
+      console.log('Full photo details:', {
+        url: photoUrl,
+        userId: currentUser.id,
+        fileName: file.name
+      });
+
+      // Actualizar la URL de la foto en el estado local
+      this.user.photoUrl = photoUrl;
+
+      // Forzar actualización de la vista
+      this.authService.updateUserPhotoUrl(currentUser.id, photoUrl);
+
+      // Mostrar un toast de éxito
+      const toast = await this.toastController.create({
+        message: 'Foto de perfil actualizada',
+        duration: 2000,
+        position: 'bottom',
+        color: 'success'
+      });
+      await toast.present();
+
+    } catch (error) {
+      console.error('Comprehensive error in onPhotoUpload:', error);
+      
+      // Mostrar un toast de error con más detalles
+      const toast = await this.toastController.create({
+        message: `Error al actualizar la foto de perfil: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+        duration: 3000,
+        position: 'bottom',
+        color: 'danger'
+      });
+      await toast.present();
+    }
+  }
+
+  // Add onImageError method to handle image loading failures
+  onImageError(event: any) {
+    // Determine the source of the error
+    const imgElement = event.target;
+    const originalSrc = imgElement.src;
+
+    console.error('Image Load Error:', {
+      originalSrc: originalSrc,
+      alt: imgElement.alt,
+      fullEvent: event
+    });
+
+    // Fallback to default profile image
+    imgElement.src = 'assets/default-profile.svg';
     
-    // Si falla el SVG, usar un Data URI directamente
-    const fallbackSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='90' fill='%2300A884'/%3E%3Cg fill='white'%3E%3Cpath d='M65,80 L80,135 L95,135 L110,80 L95,80 L85,120 L75,80 Z'/%3E%3Cpath d='M120,80 L120,135 L150,135 L150,120 L135,120 L135,80 Z'/%3E%3C/g%3E%3C/svg%3E`;
-    
-    (event.target as HTMLImageElement).src = fallbackSvg;
+    // Optional: Log the error to help diagnose issues
+    this.logImageLoadError(originalSrc);
+  }
+
+  // Optional method to log image load errors
+  private async logImageLoadError(imageUrl: string) {
+    try {
+      const currentUser = await this.authService.getCurrentUser();
+      console.error('Detailed Image Load Error:', {
+        userId: currentUser?.id,
+        imageUrl: imageUrl,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent
+      });
+
+      // Optional: Send error to a logging service
+      // this.loggingService.logError('Image Load Failure', { imageUrl, userId: currentUser?.id });
+    } catch (error) {
+      console.error('Error logging image load failure:', error);
+    }
+
+    // Attempt to validate image URL
+    try {
+      const response = await fetch(imageUrl, { method: 'HEAD' });
+      console.log('Image URL Validation:', {
+        url: imageUrl,
+        status: response.status,
+        ok: response.ok
+      });
+    } catch (fetchError) {
+      console.error('URL Fetch Error:', fetchError);
+    }
   }
 } 

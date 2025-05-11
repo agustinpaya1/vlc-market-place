@@ -62,7 +62,15 @@ import {
   waterOutline,
   scanOutline,
   walletOutline,
-  cash, trash } from 'ionicons/icons';
+  cash,
+  trash,
+  trophy,
+  gift,
+  ribbon,
+  pricetag,
+  cube,
+  calendar
+} from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -146,7 +154,6 @@ export class StoresPage implements OnInit {
   notificationPopoverOpen = false;
   notificationPopoverEvent: any = null;
   
-  isDarkMode = false;
   selectedCategory: string = 'Todos';
   selectedSort: string = 'default';
   isLoading = false;
@@ -194,14 +201,48 @@ export class StoresPage implements OnInit {
     private authService: AuthService,
     private vlcoinService: VlcoinService
   ) {
-    addIcons({searchOutline,scanOutline,notificationsOutline,optionsOutline,walletOutline,location,time,star,storefront,trash,locationOutline,chevronDownOutline,timeOutline,arrowForwardOutline,notifications,search,trendingUp,arrowForward,map,starHalf,sunny,moon,camera,shirtOutline,pizzaOutline,fishOutline,basketOutline,wineOutline,leafOutline,restaurantOutline,fastFoodOutline,waterOutline,chatbubbleEllipses,cash});
-
-    // Check if dark mode was previously selected
-    const savedDarkMode = localStorage.getItem('darkMode');
-    if (savedDarkMode) {
-      this.isDarkMode = JSON.parse(savedDarkMode);
-      this.applyTheme();
-    }
+    addIcons({
+      locationOutline,
+      chevronDownOutline,
+      notificationsOutline,
+      searchOutline,
+      optionsOutline,
+      star,
+      timeOutline,
+      arrowForwardOutline,
+      notifications,
+      search,
+      trendingUp,
+      location,
+      time,
+      storefront,
+      arrowForward,
+      map,
+      starHalf,
+      sunny,
+      moon,
+      camera,
+      shirtOutline,
+      pizzaOutline,
+      fishOutline,
+      basketOutline,
+      wineOutline,
+      leafOutline,
+      restaurantOutline,
+      fastFoodOutline,
+      waterOutline,
+      chatbubbleEllipses,
+      scanOutline,
+      walletOutline,
+      cash,
+      trash,
+      trophy,
+      gift,
+      ribbon,
+      pricetag,
+      cube,
+      calendar
+    });
 
     // Set up search functionality with improved debounce
     this.searchTerms.pipe(
@@ -286,16 +327,6 @@ export class StoresPage implements OnInit {
       this.applyFilters();
       this.isLoading = false;
     }
-  }
-
-  toggleDarkMode() {
-    this.isDarkMode = !this.isDarkMode;
-    localStorage.setItem('darkMode', JSON.stringify(this.isDarkMode));
-    this.applyTheme();
-  }
-
-  private applyTheme() {
-    document.body.classList.toggle('dark', this.isDarkMode);
   }
 
   /**
@@ -427,22 +458,55 @@ export class StoresPage implements OnInit {
   }
 
   handleImageError(event: Event): void {
-    const target = event.target as HTMLImageElement;
-    if (target) {
-      console.error('Error cargando imagen:', {
-        failedUrl: target.src,
-        storeName: target.alt
-      });
+    // Proporcionar una imagen de respaldo cuando falla la carga de la imagen
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      // Usar una imagen por defecto
+      img.src = 'assets/stores/default-store.jpg';
+      // Prevenir bucle infinito si la imagen de respaldo también falla
+      img.onerror = null;
+    }
+  }
 
-      // Obtener la URL de la imagen por defecto del bucket
-      const defaultImageUrl = this.supabaseService.getClient()
-        .storage
-        .from('fotostiendas')
-        .getPublicUrl('default-store.jpg')
-        .data
-        .publicUrl;
-
-      target.src = defaultImageUrl;
+  // Método para manejar errores de carga de imágenes en notificaciones
+  handleNotificationImageError(event: Event, notificationType: string): void {
+    // Ocultar la imagen que falló y dejar que se muestre el icono por defecto
+    const img = event.target as HTMLImageElement;
+    if (img && img.parentElement) {
+      // Ocultar la imagen
+      img.style.display = 'none';
+      
+      // Crear y mostrar un icono de respaldo
+      const fallbackIcon = document.createElement('div');
+      fallbackIcon.className = `notification-fallback-icon notification-fallback-${notificationType}`;
+      
+      const icon = document.createElement('ion-icon');
+      
+      // Asignar icono según el tipo de notificación
+      switch (notificationType) {
+        case 'reto':
+          icon.setAttribute('name', 'trophy');
+          icon.setAttribute('color', 'warning');
+          break;
+        case 'recompensa':
+          icon.setAttribute('name', 'gift');
+          icon.setAttribute('color', 'tertiary');
+          break;
+        case 'oferta':
+          icon.setAttribute('name', 'pricetag');
+          icon.setAttribute('color', 'success');
+          break;
+        case 'recordatorio':
+          icon.setAttribute('name', 'calendar');
+          icon.setAttribute('color', 'primary');
+          break;
+        default:
+          icon.setAttribute('name', 'notifications');
+          icon.setAttribute('color', 'medium');
+      }
+      
+      fallbackIcon.appendChild(icon);
+      img.parentElement.appendChild(fallbackIcon);
     }
   }
 
@@ -536,6 +600,90 @@ export class StoresPage implements OnInit {
       title: 'Recordatorio',
       message: 'No olvides visitar el mercado hoy'
     });
+
+    // Añadir retos activos del modal VL Coins
+    const challenges = [
+      {
+        id: 1,
+        title: 'Reto del Mercado Central',
+        description: 'Visita 3 puestos diferentes en el Mercado Central y realiza una compra mínima de 5€ en cada uno.',
+        image: 'assets/images/market-challenge.jpg',
+        progress: { current: 0, total: 3 },
+        daysLeft: 5,
+        coins: 300
+      },
+      {
+        id: 2,
+        title: 'Reseñador Experto',
+        description: 'Escribe 5 reseñas detalladas con fotos en comercios locales que hayas visitado este mes.',
+        image: 'assets/images/review-challenge.jpg',
+        progress: { current: 0, total: 5 },
+        daysLeft: 12,
+        coins: 250
+      },
+      {
+        id: 3,
+        title: 'Explorador de Barrios',
+        description: 'Visita y compra en 4 tiendas diferentes en el barrio de Ruzafa durante este mes.',
+        image: 'assets/images/neighborhood-challenge.jpg',
+        progress: { current: 0, total: 4 },
+        daysLeft: 20,
+        coins: 400
+      }
+    ];
+
+    // Añadir recompensas disponibles del modal VL Coins
+    const rewards = [
+      {
+        id: 1,
+        title: '5€ Frutas/Verduras',
+        location: 'Mercado Central',
+        image: 'assets/images/fruits-reward.jpg',
+        coins: 200,
+        category: 'Mercado Central'
+      },
+      {
+        id: 2,
+        title: 'Degustación Jamón',
+        location: 'Mercado Ruzafa',
+        image: 'assets/images/ham-reward.jpg',
+        coins: 350,
+        category: 'Mercado Ruzafa'
+      },
+      {
+        id: 3,
+        title: 'Pack Snacks Asiáticos',
+        location: 'Asia Market',
+        image: 'assets/images/snacks-reward.jpg',
+        coins: 150,
+        category: 'Tiendas Chinas'
+      }
+    ];
+
+    // Añadir retos activos a las notificaciones
+    for (const challenge of challenges) {
+      this.notifications.push({
+        id: `challenge-${challenge.id}`,
+        type: 'reto',
+        title: `¡Nuevo reto: ${challenge.title}!`,
+        message: `${challenge.description} Gana ${challenge.coins} VLCoins en ${challenge.daysLeft} días.`,
+        image: challenge.image,
+        challenge: challenge
+      });
+    }
+
+    // Añadir recompensas disponibles a las notificaciones
+    for (const reward of rewards) {
+      this.notifications.push({
+        id: `reward-${reward.id}`,
+        type: 'recompensa',
+        title: `Recompensa disponible: ${reward.title}`,
+        message: `Canjea por ${reward.coins} VLCoins en ${reward.location}.`,
+        image: reward.image,
+        reward: reward
+      });
+    }
+
     this.notificationCount = this.notifications.length;
   }
 
@@ -1084,11 +1232,99 @@ export class StoresPage implements OnInit {
   }
 
   onNotificationClick(n: any) {
+    // Aplicar efecto de feedback visual
+    this.applyFeedbackAnimation(n.type);
+    
     if (n.type === 'oferta' && n.storeId) {
       this.closeNotificationPopover();
       this.viewStore(n.storeId);
+    } else if (n.type === 'reto') {
+      this.closeNotificationPopover();
+      // Mostrar modal VLCoins con la pestaña de retos seleccionada
+      this.showVLCoinsWithTab('challenges');
+    } else if (n.type === 'recompensa') {
+      this.closeNotificationPopover();
+      // Mostrar modal VLCoins con la pestaña de recompensas seleccionada
+      this.showVLCoinsWithTab('rewards');
     }
     // Puedes añadir más acciones según el tipo
+  }
+  
+  // Método para aplicar animación de feedback visual según el tipo de notificación
+  private applyFeedbackAnimation(type: string) {
+    let iconName: string;
+    let color: string;
+    
+    switch (type) {
+      case 'reto':
+        iconName = 'trophy';
+        color = 'warning';
+        break;
+      case 'recompensa':
+        iconName = 'gift';
+        color = 'tertiary';
+        break;
+      case 'oferta':
+        iconName = 'pricetag';
+        color = 'success';
+        break;
+      default:
+        iconName = 'notifications';
+        color = 'primary';
+    }
+    
+    // Mostrar un toast con un icono que indique el tipo de notificación
+    this.showToastWithIcon('Abriendo detalles...', iconName, color);
+  }
+  
+  // Método para mostrar un toast con icono
+  private async showToastWithIcon(message: string, iconName: string, color: string) {
+    const toast = await this.toastController.create({
+      message: `<ion-icon name="${iconName}" color="${color}"></ion-icon> ${message}`,
+      duration: 1000,
+      position: 'bottom',
+      cssClass: 'toast-with-icon',
+      color: 'light'
+    });
+    
+    await toast.present();
+  }
+
+  // Método para mostrar el modal VLCoins con una pestaña específica
+  async showVLCoinsWithTab(tab: string) {
+    try {
+      const modal = await this.modalController.create({
+        component: VlcoinModalComponent,
+        cssClass: 'vlcoin-modal',
+        componentProps: {
+          selectedSegment: tab
+        }
+      });
+      
+      await modal.present();
+      
+      // Añadir efecto visual al icono
+      const vlCoinIcon = document.querySelector('.wallet-button .vl-coin-icon');
+      if (vlCoinIcon) {
+        vlCoinIcon.classList.add('wallet-pulse');
+        setTimeout(() => {
+          vlCoinIcon.classList.remove('wallet-pulse');
+        }, 800);
+      }
+      
+      // Get result from modal to check if balance was updated
+      const { data } = await modal.onWillDismiss();
+      if (data && data.balanceUpdated) {
+        // Refresh the balance from the database
+        const user = await this.authService.user$.toPromise();
+        if (user && user.id) {
+          await this.vlcoinService.getVlcoinBalance(user.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error al abrir el modal de VLCoins:', error);
+      this.showToast('Error al mostrar los detalles. Inténtalo de nuevo.');
+    }
   }
 
   getStoreById(storeId: string) {

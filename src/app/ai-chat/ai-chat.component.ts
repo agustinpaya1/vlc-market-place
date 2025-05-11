@@ -21,7 +21,8 @@ import {
   closeOutline, 
   trashOutline, 
   micOutline,
-  imageOutline
+  imageOutline,
+  analyticsOutline
 } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 
@@ -73,7 +74,8 @@ export class AiChatComponent implements OnInit {
       closeOutline,
       trashOutline,
       micOutline,
-      imageOutline
+      imageOutline,
+      analyticsOutline
     });
   }
 
