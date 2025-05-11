@@ -4,7 +4,7 @@
 // Agrega las variables de la paleta de colores al principio del archivo
 :root {
   // Tema Claro
-  --ion-color-artemis-primary: #05668D;
+  --ion-color-artemis-primary: #02A396;
   --ion-color-artemis-secondary: #028090;
   --ion-color-artemis-tertiary: #02A396;
   --ion-color-artemis-light: #F0F3BD;
@@ -44,11 +44,11 @@ ion-button.register-btn {
 // Define clases de utilidad para usar nuestros colores
 .ion-color-artemis-primary {
   --ion-color-base: var(--ion-color-artemis-primary);
-  --ion-color-base-rgb: 5, 102, 141;
+  --ion-color-base-rgb: 2, 163, 150;
   --ion-color-contrast: #ffffff;
   --ion-color-contrast-rgb: 255, 255, 255;
-  --ion-color-shade: #045a7c;
-  --ion-color-tint: #1e7699;
+  --ion-color-shade: #028f84;
+  --ion-color-tint: #1baca1;
 }
 
 .ion-color-artemis-secondary {
@@ -118,11 +118,11 @@ ion-button.register-btn {
 // Opcional: redefine algunos de los colores estándar de Ionic para usar nuestra paleta
 :root {
   --ion-color-primary: var(--ion-color-artemis-primary);
-  --ion-color-primary-rgb: 5, 102, 141;
+  --ion-color-primary-rgb: 2, 163, 150;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #045a7c;
-  --ion-color-primary-tint: #1e7699;
+  --ion-color-primary-shade: #028f84;
+  --ion-color-primary-tint: #1baca1;
   
   --ion-color-secondary: var(--ion-color-artemis-secondary);
   --ion-color-secondary-rgb: 2, 128, 144;

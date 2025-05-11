@@ -30,7 +30,7 @@ ion-header {
 
 /* Barra de búsqueda */
 .search-container {
-  padding: 14px 16px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -38,12 +38,12 @@ ion-header {
   
   .search-bar {
     flex: 1;
-    height: 46px;
+    height: 44px;
     background-color: #ffffff;
     border-radius: var(--border-radius);
     display: flex;
     align-items: center;
-    padding: 0 16px;
+    padding: 0 14px;
     box-shadow: var(--shadow-small);
     
     input {
@@ -51,7 +51,7 @@ ion-header {
       border: none;
       background: transparent;
       height: 100%;
-      font-size: 16px;
+      font-size: 15px;
       color: #333;
       outline: none;
       
@@ -75,8 +75,8 @@ ion-header {
       --color: #ffffff;
       --background: transparent;
       margin: 0;
-      height: 44px;
-      width: 44px;
+      height: 42px;
+      width: 42px;
       
       ion-icon {
         font-size: 22px;
@@ -85,8 +85,8 @@ ion-header {
     
     .notification-badge {
       position: absolute;
-      top: 6px;
-      right: 6px;
+      top: 5px;
+      right: 5px;
       font-size: 10px;
       min-width: 16px;
       height: 16px;
@@ -98,8 +98,8 @@ ion-header {
       position: relative;
       
       .vl-coin-icon {
-        width: 28px;
-        height: 28px;
+        width: 26px;
+        height: 26px;
         filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
         transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }

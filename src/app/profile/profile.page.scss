@@ -13,6 +13,14 @@ $spacing-xl: 30px;
 $card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 $transition-speed: 0.3s;
 
+:host {
+  ion-content {
+    --background: var(--color-background);
+    --color: var(--color-text-primary);
+    font-family: var(--ion-font-family);
+  }
+}
+
 // User profile section
 .user-profile-header {
   display: flex;
@@ -226,18 +234,41 @@ $transition-speed: 0.3s;
 }
 
 .login-prompt-card {
-  background-color: var(--ion-color-light);
-  border-radius: 10px;
-  padding: 20px;
+  background-color: var(--color-card);
+  border-radius: var(--border-radius-large);
+  padding: var(--spacing-md);
   text-align: center;
-  max-width: 350px;
+  max-width: 320px;
   width: 100%;
+  box-shadow: var(--shadow-medium);
+  margin: var(--spacing-md);
+  
+  h2 {
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+    font-family: var(--ion-font-family);
+    font-size: 1.5rem;
+  }
+  
+  p {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-sm);
+    font-family: var(--ion-font-family);
+    font-size: 0.95rem;
+  }
+
+  ion-button {
+    margin: var(--spacing-sm) 0;
+    --border-radius: var(--border-radius-medium);
+    font-family: var(--ion-font-family);
+    height: 42px;
+  }
 }
 
 .large-profile-icon {
-  font-size: 100px;
+  font-size: 64px;
   color: var(--ion-color-medium);
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .register-prompt {

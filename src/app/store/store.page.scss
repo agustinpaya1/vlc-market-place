@@ -13,24 +13,112 @@ $transition-speed: 0.3s;
   --transition-speed: 0.3s;
 }
 
+/* Barra de búsqueda */
+.search-container {
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(#02A396);
+  
+  .search-bar {
+    flex: 1;
+    height: 44px;
+    background-color: #ffffff;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    box-shadow: var(--shadow-small);
+    
+    input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      height: 100%;
+      font-size: 15px;
+      color: #333;
+      outline: none;
+      
+      &::placeholder {
+        color: #888;
+      }
+    }
+    
+    .search-icon, .scan-icon {
+      color: var(--color-secondary);
+      font-size: 20px;
+    }
+  }
+  
+  .action-buttons {
+    display: flex;
+    
+    ion-button {
+      --padding-start: 0;
+      --padding-end: 0;
+      --color: #ffffff;
+      --background: transparent;
+      margin: 0;
+      height: 42px;
+      width: 42px;
+      
+      ion-icon {
+        font-size: 22px;
+      }
+    }
+    
+    .notification-badge {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 10px;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 8px;
+      --background: #ff3b30;
+    }
+    
+    .wallet-button {
+      position: relative;
+      
+      .vl-coin-icon {
+        width: 26px;
+        height: 26px;
+        filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+    }
+  }
+}
+
 /* Layout principal */
 ion-content {
+  --background: var(--color-background);
   --padding-top: 0;
   --padding-start: var(--page-padding);
   --padding-end: var(--page-padding);
   --padding-bottom: var(--page-padding);
+  --keyboard-offset: 0px;
+  --overflow: auto;
+  font-family: var(--ion-font-family);
 }
 
 /* Header de navegación */
 ion-header {
   ion-toolbar {
-    --background: $primary-color;
+    --background: #02A396;
     --color: white;
+    overflow: visible !important;
     
     ion-buttons {
+      overflow: visible !important;
+      margin-right: 8px;
+      
       ion-button, ion-back-button {
         --color: white;
         transition: opacity var(--transition-speed) ease;
+        overflow: visible !important;
         
         &:hover {
           opacity: 0.8;
@@ -50,13 +138,14 @@ ion-header {
   margin: 0 calc(var(--page-padding) * -1);
   margin-bottom: 20px;
   position: relative;
+  background: var(--color-surface);
   
   img {
     width: 100%;
     height: 200px;
     object-fit: cover;
     display: block;
-    background-color: #f0f0f0; /* Color temporal mientras carga */
+    background-color: var(--ion-color-light); 
     transition: filter var(--transition-speed) ease;
   }
   
@@ -91,7 +180,11 @@ ion-header {
 
 /* Estilos optimizados para detalles */
 .store-details {
-  margin-bottom: 24px;
+  background: var(--color-surface);
+  border-radius: var(--border-radius-medium);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-small);
   
   .rating {
     display: flex;
@@ -152,12 +245,16 @@ ion-header {
 
 /* Productos */
 .products-section {
+  background: var(--color-surface);
+  border-radius: var(--border-radius-medium);
+  padding: var(--spacing-md);
+  
   h3 {
+    color: var(--color-text-primary);
     font-size: 20px;
     font-weight: 600;
     margin-top: 0;
-    margin-bottom: 16px;
-    color: var(--ion-color-artemis-primary);
+    margin-bottom: var(--spacing-md);
   }
 }
 
@@ -358,8 +455,8 @@ ion-header {
 
 ion-badge {
   position: absolute;
-  top: -5px;
-  right: -5px;
+  top: -8px;
+  right: -8px;
   font-size: 0.7rem;
   font-weight: bold;
   padding: 3px 6px;
@@ -373,6 +470,7 @@ ion-badge {
   color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   z-index: 1;
+  overflow: visible;
 }
 
 // Floating action button
@@ -436,19 +534,28 @@ ion-fab {
   padding: 0;
   background: none;
   box-shadow: none;
+  margin-right: 12px;
+  overflow: visible !important;
 }
+
 .cart-icon-badge-wrapper {
   position: relative;
   display: inline-block;
+  margin-right: 8px;
+  overflow: visible !important;
+  padding: 4px;
 }
+
 .cart-icon-badge-wrapper ion-icon[name="cart"] {
   font-size: 26px;
-  color: var(--ion-color-primary, #1976d2);
+  color: white;
+  margin-right: 4px;
 }
+
 .cart-badge-header {
   position: absolute;
-  top: -7px;
-  right: -10px;
+  top: -6px;
+  right: -6px;
   font-size: 0.75rem;
   font-weight: bold;
   padding: 2px 6px;
@@ -461,5 +568,7 @@ ion-fab {
   background-color: var(--ion-color-danger);
   color: white;
   box-shadow: 0 2px 4px rgba(0,0,0,0.18);
-  z-index: 2;
+  z-index: 99;
+  overflow: visible !important;
+  transform: scale(1);
 } 

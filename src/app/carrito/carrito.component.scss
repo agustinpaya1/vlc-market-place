@@ -275,4 +275,10 @@ ion-label {
   .cart-price-old, .cart-price-new {
     font-size: 0.95rem;
   }
+}
+
+ion-content {
+  --background: var(--color-background);
+  --color: var(--color-text-primary);
+  font-family: var(--ion-font-family);
 } 

@@ -37,7 +37,7 @@
   --ion-font-family: 'Roboto', sans-serif;
   
   /* Esquema de colores principal */
-  --color-brand-primary: var(--ion-color-artemis-primary, #05668D);
+  --color-brand-primary: var(--ion-color-artemis-primary, #02A396);
   --color-brand-secondary: var(--ion-color-artemis-secondary, #028090);
   --color-brand-tertiary: var(--ion-color-artemis-tertiary, #02A396);
   --color-brand-light: var(--ion-color-artemis-light, #F0F3BD);
@@ -125,8 +125,12 @@ ion-content {
 }
 
 ion-header, ion-toolbar {
-  --background: var(--color-brand-primary);
+  --background: #02A396;
   --color: white;
+  
+  ion-back-button, ion-button {
+    --color: white;
+  }
 }
 
 /* Tarjetas */
@@ -146,8 +150,13 @@ ion-button {
 }
 
 ion-button.button-solid {
-  --background: var(--color-brand-tertiary);
+  --background: #02A396;
   --color: white;
+  
+  &:hover {
+    --background: #02b3a5;
+    --box-shadow: 0 4px 12px rgba(2, 163, 150, 0.3);
+  }
 }
 
 ion-button.button-outline {
@@ -172,8 +181,22 @@ ion-searchbar {
   --color: var(--color-brand-primary);
   --icon-color: var(--color-brand-secondary);
   --placeholder-color: rgba(5, 102, 141, 0.5);
-  --border-radius: var(--border-radius-small);
+  --border-radius: 25px;
   --box-shadow: var(--shadow-small);
+  
+  .searchbar-input {
+    border-radius: 25px !important;
+    padding-inline-start: 45px !important;
+    padding-inline-end: 20px !important;
+    font-size: 15px;
+    background: white;
+  }
+
+  .searchbar-search-icon {
+    width: 20px;
+    height: 20px;
+    left: 15px !important;
+  }
 }
 
 /* Componentes formulario */
@@ -268,15 +291,15 @@ ion-badge {
     display: flex;
     
     ion-button {
-      --padding-start: 0;
-      --padding-end: 0;
+      --padding-start: 8px;
+      --padding-end: 8px;
       --color: white;
       --background: transparent;
       margin: 0;
       height: 46px;
       width: 46px;
       position: relative;
-      overflow: visible;
+      overflow: visible !important;
       transition: transform 0.2s ease;
       
       &:hover {
@@ -291,34 +314,25 @@ ion-badge {
         font-size: 24px;
         filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
       }
-    }
-    
-    .notification-badge {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      font-size: 10px;
-      min-width: 18px;
-      height: 18px;
-      border-radius: 9px;
-      --background: #ff3b30;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 5px rgba(255, 59, 48, 0.4);
-      animation: pulse 2s infinite;
-      
-      @keyframes pulse {
-        0% {
-          box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.4);
-        }
-        70% {
-          box-shadow: 0 0 0 6px rgba(255, 59, 48, 0);
-        }
-        100% {
-          box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
-        }
+
+      .notification-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        font-size: 10px;
+        min-width: 18px;
+        height: 18px;
+        padding: 2px;
+        border-radius: 50%;
+        --background: #ff3b30;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(255, 59, 48, 0.4);
+        animation: pulse 2s infinite;
+        transform: translate(30%, -30%);
+        z-index: 100;
       }
     }
   }
@@ -411,12 +425,12 @@ img.lazy-loaded {
   opacity: 1;
 }
 
-/* Personalización del área de scroll */
+/* Estilo global para inner-scroll */
 .inner-scroll {
-  padding-top: 10px;
-  background-image: 
-    radial-gradient(circle at 20% 20%, rgba(2, 163, 150, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(5, 102, 141, 0.03) 0%, transparent 40%);
+  --background: var(--color-background);
+  background-color: var(--color-background);
+  font-family: var(--ion-font-family);
+  color: var(--color-text-primary);
 }
 
 /* Soporte para modo oscuro */
@@ -429,5 +443,38 @@ img.lazy-loaded {
     background-image: 
       radial-gradient(circle at 20% 20%, rgba(0, 115, 107, 0.07) 0%, transparent 50%),
       radial-gradient(circle at 80% 80%, rgba(2, 62, 88, 0.07) 0%, transparent 40%);
+  }
+}
+
+/* Optimizaciones para tarjetas de productos */
+.product-card {
+  ion-card-content {
+    ion-button {
+      margin-top: auto;
+      margin-bottom: 0;
+      --border-radius: 8px;
+      height: 36px;
+      --background: #02A396 !important;
+      --color: #ffffff !important;
+      --background-activated: #029387 !important;
+      --background-hover: #02b3a5 !important;
+      --color-activated: #ffffff !important;
+      --color-hover: #ffffff !important;
+      transition: all var(--transition-speed) ease;
+      color: #ffffff !important;
+      
+      &:hover {
+        --box-shadow: 0 4px 10px rgba(2, 163, 150, 0.3);
+        transform: translateY(-2px);
+      }
+
+      ion-icon {
+        color: #ffffff !important;
+      }
+
+      ::part(native) {
+        color: #ffffff !important;
+      }
+    }
   }
 }
