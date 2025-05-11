@@ -124,6 +124,20 @@ ion-item {
   margin-bottom: 8px;
   border-radius: 8px;
   --border-radius: 8px;
+
+  ::ng-deep {
+    .item-inner {
+      padding-right: 24px !important;
+      
+      .input-wrapper {
+        margin-right: 16px;
+      }
+    }
+  }
+  
+  ion-button[slot="end"] {
+    margin-right: 16px;
+  }
 }
 
 ion-img {

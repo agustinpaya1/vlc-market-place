@@ -1,14 +1,17 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
+import { NotificationService } from './notification.service';
 
 export interface User {
   id: string;
   email: string;
   fullName?: string;
   photoUrl?: string;
-  type?: 'user' | 'business';
+  type?: string;
   vlcoinBalance?: number;
+  phone?: string;
+  address?: string;
 }
 
 export interface BusinessProfile {
@@ -26,7 +29,7 @@ export class AuthService {
   private user = new BehaviorSubject<User | null>(null);
   public user$ = this.user.asObservable();
 
-  constructor(private supabaseService: SupabaseService) {
+  constructor(private supabaseService: SupabaseService, private notificationService: NotificationService) {
     this.initializeUser();
   }
 
@@ -78,7 +81,9 @@ export class AuthService {
           fullName: profile?.['full_name'] || user.user_metadata?.['name'] || user.user_metadata?.['full_name'] || '',
           type: profile?.['type'] || 'user',
           vlcoinBalance: profile?.['vlcoin_balance'] || 0,
-          photoUrl: profile?.['photo_url']
+          photoUrl: profile?.['photo_url'],
+          phone: profile?.['phone'],
+          address: profile?.['address']
         });
       } else {
         console.log('AuthService - No hay sesión activa');
@@ -133,7 +138,9 @@ export class AuthService {
           fullName: profile?.['full_name'] || session.user.user_metadata?.['name'] || session.user.user_metadata?.['full_name'] || '',
           type: profile?.['type'] || 'user',
           vlcoinBalance: profile?.['vlcoin_balance'] || 0,
-          photoUrl: profile?.['photo_url']
+          photoUrl: profile?.['photo_url'],
+          phone: profile?.['phone'],
+          address: profile?.['address']
         });
       } else {
         console.log('AuthService - Usuario desconectado');
@@ -228,6 +235,7 @@ export class AuthService {
   async logout(): Promise<void> {
     await this.supabaseService.getClient().auth.signOut();
     this.user.next(null);
+    await this.notificationService.showSuccess('Sesión cerrada correctamente');
   }
 
   async loginWithGoogle(): Promise<boolean> {
@@ -312,7 +320,9 @@ export class AuthService {
       fullName: userData?.['full_name'] || user.user_metadata?.['full_name'],
       photoUrl: userData?.['photo_url'],
       type: userData?.['type'] || 'user',
-      vlcoinBalance: userData?.['vlcoin_balance'] || 0
+      vlcoinBalance: userData?.['vlcoin_balance'] || 0,
+      phone: userData?.['phone'],
+      address: userData?.['address']
     };
   }
 
@@ -342,6 +352,37 @@ export class AuthService {
       }
     } catch (error) {
       console.error('Comprehensive error in updateUserPhotoUrl:', error);
+      throw error;
+    }
+  }
+
+  async updateUserProfile(updates: Partial<User>): Promise<void> {
+    try {
+      const currentUser = await this.getCurrentUser();
+      if (!currentUser) throw new Error('No hay usuario autenticado');
+
+      const profileData: any = {
+        full_name: updates.fullName,
+        phone: updates.phone,
+        address: updates.address
+      };
+
+      // Eliminar campos undefined
+      Object.keys(profileData).forEach(key => 
+        profileData[key] === undefined && delete profileData[key]
+      );
+
+      await this.supabaseService.getClient()
+        .from('profiles')
+        .update(profileData)
+        .eq('id', currentUser.id);
+
+      // Actualizar el estado local
+      const updatedUser = { ...currentUser, ...updates };
+      this.user.next(updatedUser);
+
+    } catch (error) {
+      console.error('Error actualizando perfil:', error);
       throw error;
     }
   }

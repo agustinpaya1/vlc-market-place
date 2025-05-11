@@ -105,7 +105,7 @@
           <ion-card-title>Resumen del Pedido</ion-card-title>
         </ion-card-header>
         <ion-card-content>
-          <p class="total">Total: ${{ totalPrice }}</p>
+          <p class="total">Total: {{ totalPrice | currency:'EUR' }}</p>
           <ion-button expand="block" color="primary" (click)="proceedToCheckout()">
             Proceder al Pago
           </ion-button>

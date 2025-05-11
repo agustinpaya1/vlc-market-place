@@ -478,3 +478,166 @@ img.lazy-loaded {
     }
   }
 }
+
+/* Estilos para la barra de navegación */
+ion-header {
+  &::after {
+    display: none;
+  }
+
+  ion-toolbar {
+    --background: var(--color-brand-primary);
+    --color: var(--color-text-primary);
+    --border-color: transparent;
+    --border-width: 0;
+    --min-height: 56px;
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+    
+    &.header-translucent {
+      --background: rgba(var(--ion-color-artemis-primary-rgb), 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    ion-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    ion-button {
+      --color: var(--color-text-primary);
+      --padding-start: 8px;
+      --padding-end: 8px;
+
+      &::part(native) {
+        padding: 0;
+      }
+
+      ion-icon {
+        font-size: 24px;
+      }
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+
+    ion-back-button {
+      --color: var(--color-text-primary);
+    }
+
+    ion-searchbar {
+      --background: rgba(var(--ion-background-color-rgb), 0.1);
+      --color: var(--color-text-primary);
+      --placeholder-color: rgba(var(--ion-text-color-rgb), 0.6);
+      --icon-color: var(--color-text-primary);
+      --border-radius: 8px;
+      padding: 0;
+    }
+  }
+}
+
+/* Modo oscuro */
+.dark-theme {
+  ion-header ion-toolbar {
+    --background: var(--color-brand-primary);
+    --color: var(--color-text-primary);
+    
+    &.header-translucent {
+      --background: rgba(var(--ion-color-artemis-primary-rgb), 0.9);
+    }
+  }
+}
+
+/* Estilos para las notificaciones */
+.app-notification {
+  --min-height: auto;
+  --width: 100%;
+  --max-width: 100%;
+  --border-radius: 0;
+  
+  margin: 0;
+  padding: 12px 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: slideInFromTop 0.2s ease-out forwards;
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+
+  &::part(wrapper) {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  &::part(message) {
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  &::part(button) {
+    color: inherit;
+    font-weight: 600;
+    padding-left: 16px;
+    margin-left: 12px;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  &.toast-success {
+    --background: var(--ion-color-success);
+    color: var(--ion-color-success-contrast);
+  }
+
+  &.toast-error {
+    --background: var(--ion-color-danger);
+    color: var(--ion-color-danger-contrast);
+  }
+
+  &.toast-warning {
+    --background: var(--ion-color-warning);
+    color: var(--ion-color-warning-contrast);
+  }
+
+  &.toast-info {
+    --background: var(--ion-color-primary);
+    color: var(--ion-color-primary-contrast);
+  }
+
+  /* Posicionamiento específico por página */
+  &.notification-store {
+    top: 56px; /* Altura del toolbar en la página de tienda */
+  }
+
+  &.has-search-container {
+    top: 120px;
+  }
+
+  &.no-search-container {
+    top: 56px;
+  }
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Asegurarse de que las notificaciones no tapen la barra de estado en iOS */
+@supports (-webkit-touch-callout: none) {
+  .app-notification {
+    &.notification-store {
+      top: calc(56px + env(safe-area-inset-top));
+    }
+  }
+}

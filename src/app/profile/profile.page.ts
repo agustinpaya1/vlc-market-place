@@ -22,6 +22,10 @@ import {
 } from 'ionicons/icons';
 import { ToastController } from '@ionic/angular';
 
+interface ProfileUser extends User {
+  name: string;
+}
+
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.page.html',
@@ -30,16 +34,17 @@ import { ToastController } from '@ionic/angular';
   imports: [IonicModule, CommonModule, FormsModule]
 })
 export class ProfilePage implements OnInit {
-  user = {
+  user: ProfileUser = {
+    id: '',
     name: 'Usuario',
     email: 'usuario@example.com',
-    phone: '+34 600 123 456',
-    address: 'Calle Valencia, 123, Valencia',
-    photoUrl: null as string | null
+    phone: '',
+    address: '',
+    photoUrl: undefined
   };
 
   isAuthenticated = false;
-  logoUrl: string = 'assets/vlc-logo.svg'; // Cambiado al nuevo logo SVG
+  logoUrl: string = 'assets/vlc-logo.svg';
 
   menuItems = [
     { icon: 'bag', label: 'Mis Pedidos', route: '/tabs/orders' },
@@ -71,19 +76,15 @@ export class ProfilePage implements OnInit {
   }
 
   ionViewWillEnter() {
-    // Verificar la autenticación cada vez que se entra en la página
     this.checkAuthStatus();
   }
 
   ngOnInit() {
-    console.log('ProfilePage - ngOnInit');
     this.checkAuthStatus();
   }
 
-  checkAuthStatus() {
-    // Comprobar si el usuario está autenticado
+  async checkAuthStatus() {
     this.authService.user$.subscribe(user => {
-      console.log('ProfilePage - Usuario recibido:', user);
       this.isAuthenticated = !!user;
       if (user) {
         this.loadUserData(user);
@@ -92,35 +93,22 @@ export class ProfilePage implements OnInit {
   }
 
   loadUserData(userData: User) {
-    console.log('ProfilePage - Cargando datos de usuario:', userData);
-    
-    // Actualizar el nombre con la mejor información disponible
-    if (userData.fullName) {
-      this.user.name = userData.fullName;
-    } else if (userData.email) {
-      // Usar el email como nombre si no hay fullName
-      this.user.name = userData.email.split('@')[0];
-    }
-    
-    // Actualizar el correo electrónico
-    if (userData.email) {
-      this.user.email = userData.email;
-    }
-
-    // Actualizar la URL de la foto de perfil si está disponible
-    if (userData.photoUrl) {
-      this.user.photoUrl = userData.photoUrl;
-    }
+    this.user = {
+      id: userData.id,
+      name: userData.fullName || userData.email.split('@')[0],
+      email: userData.email,
+      phone: userData.phone || '',
+      address: userData.address || '',
+      photoUrl: userData.photoUrl
+    };
   }
 
   editProfile() {
-    // Navegar a la página de edición de perfil
     this.router.navigate(['/tabs/edit-profile']);
   }
 
   async logout() {
     await this.authService.logout();
-    // Show a toast message
     const toast = await this.toastController.create({
       message: 'Has cerrado sesión correctamente',
       duration: 2000,

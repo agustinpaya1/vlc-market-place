@@ -78,10 +78,9 @@ export class CarritoComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.cartService.cartItems$.subscribe(items => {
+    this.cartService.getCartItems().subscribe((items: CartItem[]) => {
       this.cartItems = items;
-      this.totalItems = this.cartService.getTotalItems();
-      this.totalPrice = this.cartService.getTotalPrice();
+      this.calculateTotal();
     });
   }
 
@@ -89,6 +88,8 @@ export class CarritoComponent implements OnInit {
     const newQuantity = item.quantity + change;
     if (newQuantity > 0) {
       this.cartService.updateQuantity(item.id, newQuantity);
+    } else {
+      this.cartService.removeFromCart(item.id);
     }
   }
 
@@ -138,5 +139,10 @@ export class CarritoComponent implements OnInit {
         });
       }, 3000); // Increased to 3 seconds for better user experience
     }
+  }
+
+  calculateTotal() {
+    this.totalItems = this.cartService.getTotalItems();
+    this.totalPrice = this.cartService.getTotalPrice();
   }
 } 

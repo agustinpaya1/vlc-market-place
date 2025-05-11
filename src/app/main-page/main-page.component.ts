@@ -117,13 +117,13 @@ export class MainPageComponent implements OnInit {
   ) {
     addIcons({
       cart: cartOutline,
-      'ellipsis-vertical': ellipsisVerticalOutline,
+      ellipsisVertical: ellipsisVerticalOutline,
       remove: removeOutline,
       add: addOutline,
       trash: trashOutline,
-      'log-in': logInOutline,
-      'person-add': personAddOutline,
-      'log-out': logOutOutline
+      logIn: logInOutline,
+      personAdd: personAddOutline,
+      logOut: logOutOutline
     });
   }
 

@@ -1,0 +1,174 @@
+.product-image-container {
+  width: 100%;
+  height: 250px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  ion-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.product-details {
+  padding: 16px;
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--ion-color-dark);
+  }
+
+  .price-container {
+    margin-bottom: 20px;
+
+    .offer-price {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .new-price {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--ion-color-success);
+      }
+
+      .old-price {
+        font-size: 1.1rem;
+        text-decoration: line-through;
+        color: var(--ion-color-medium);
+      }
+    }
+
+    .regular-price {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--ion-color-primary);
+    }
+  }
+
+  .description {
+    margin-bottom: 24px;
+    color: var(--ion-color-medium);
+    line-height: 1.5;
+  }
+}
+
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin: var(--spacing-lg) 0;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-medium);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-small);
+
+  .quantity {
+    font-size: 1.2rem;
+    font-weight: 600;
+    min-width: 40px;
+    text-align: center;
+    color: var(--color-text-primary);
+  }
+
+  ion-button {
+    --padding-start: 0;
+    --padding-end: 0;
+    height: 32px;
+    width: 32px;
+    font-size: 18px;
+    font-weight: 600;
+    --background: var(--color-card);
+    --color: var(--color-text-secondary);
+    --border-radius: var(--border-radius-small);
+    --box-shadow: none;
+    --border-width: 1px;
+    --border-color: var(--border-light);
+    margin: 0;
+
+    &:hover {
+      --background: var(--ion-background-color-step-100);
+      --color: var(--color-text-primary);
+    }
+
+    &:active {
+      --background: var(--ion-background-color-step-150);
+    }
+  }
+}
+
+.total-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--color-surface);
+  border-radius: var(--border-radius-medium);
+  margin: var(--spacing-lg) 0;
+  box-shadow: var(--shadow-small);
+
+  span {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  .amount {
+    color: var(--ion-color-primary);
+  }
+}
+
+ion-footer {
+  ion-toolbar {
+    padding: var(--spacing-sm) var(--spacing-md);
+    --background: transparent;
+    --border-color: transparent;
+  }
+
+  ion-button {
+    --border-radius: var(--border-radius-small);
+    margin: 0;
+  }
+}
+
+// Dark theme specific styles are no longer needed since we're using CSS variables
+:host-context(.dark-theme) {
+  .quantity-selector, .total-price {
+    background: var(--color-surface);
+  }
+}
+
+.add-to-cart-container {
+  margin: var(--spacing-lg) 0;
+  padding: var(--spacing-md);
+
+  .add-first-time {
+    --background: var(--ion-color-primary);
+    --color: var(--ion-color-primary-contrast);
+    --border-radius: var(--border-radius-medium);
+    --box-shadow: var(--shadow-medium);
+    min-height: 56px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-transform: none;
+    margin: 0;
+
+    ion-icon {
+      font-size: 24px;
+      margin-right: var(--spacing-sm);
+    }
+
+    &:hover {
+      --background: var(--ion-color-primary-shade);
+      --box-shadow: var(--shadow-large);
+      transform: translateY(-2px);
+      transition: transform 0.2s ease;
+    }
+  }
+} 
