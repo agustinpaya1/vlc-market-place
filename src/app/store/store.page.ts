@@ -14,7 +14,9 @@ import {
   cart, 
   chevronBack,
   searchOutline,
-  arrowBack
+  arrowBack,
+  heartOutline,
+  share
 } from 'ionicons/icons';
 import { CartService, CartItem } from '../services/cart.service';
 import { ToastController, LoadingController } from '@ionic/angular';
@@ -58,7 +60,9 @@ export class StorePage implements OnInit {
       cart, 
       arrowBack,
       chevronBack,
-      searchOutline 
+      searchOutline,
+      heartOutline,
+      share
     });
     
     // Subscribe to cart changes
@@ -277,5 +281,35 @@ export class StorePage implements OnInit {
 
   updateCartStatus() {
     // Implementa la lógica para actualizar el estado del carrito aquí
+  }
+
+  // Methods for the overlaid buttons
+  toggleFavorite() {
+    // Implement favorite functionality
+    this.toastController.create({
+      message: 'Tienda añadida a favoritos',
+      duration: 2000,
+      position: 'bottom',
+      color: 'success'
+    }).then(toast => toast.present());
+  }
+
+  shareStore() {
+    // Implement share functionality
+    if (navigator.share) {
+      navigator.share({
+        title: this.store?.name,
+        text: this.store?.description,
+        url: window.location.href,
+      })
+      .catch((error) => console.log('Error sharing', error));
+    } else {
+      this.toastController.create({
+        message: 'Compartir no está disponible en este dispositivo',
+        duration: 2000,
+        position: 'bottom',
+        color: 'warning'
+      }).then(toast => toast.present());
+    }
   }
 } 
