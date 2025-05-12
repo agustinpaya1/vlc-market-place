@@ -4,36 +4,36 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Platform } from '@ionic/angular';
 import {
-  IonBadge,
-  IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonImg,
-  IonSearchbar,
-  IonSkeletonText,
-  IonSpinner,
-  IonTitle,
-  IonToolbar
+    IonBadge,
+    IonButton,
+    IonCard,
+    IonCardContent,
+    IonCardHeader,
+    IonCardSubtitle,
+    IonCardTitle,
+    IonContent,
+    IonHeader,
+    IonIcon,
+    IonImg,
+    IonSearchbar,
+    IonSkeletonText,
+    IonSpinner,
+    IonTitle,
+    IonToolbar
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
-  arrowForward,
-  callOutline,
-  cartOutline,
-  checkmarkCircle,
-  closeCircle,
-  closeOutline,
-  locationOutline,
-  pricetagOutline,
-  star,
-  storefrontOutline,
-  timeOutline
+    arrowForward,
+    callOutline,
+    cartOutline,
+    checkmarkCircle,
+    closeCircle,
+    closeOutline,
+    locationOutline,
+    pricetagOutline,
+    star,
+    storefrontOutline,
+    timeOutline
 } from 'ionicons/icons';
 import * as L from 'leaflet';
 import { Subscription } from 'rxjs';
@@ -128,6 +128,13 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   private leafletMap: L.Map | null = null;
   private leafletMarkers: L.Marker[] = [];
 
+  private customIcon = L.icon({
+    iconUrl: 'assets/map-icons/custom-marker.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+
   @HostListener('window:matchMedia')
   onColorSchemeChange() {
     const newColorScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -191,41 +198,70 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     // Añadir un marcador por cada tienda con coordenadas
     this.stores.forEach(store => {
       if (store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
-        const marker = L.marker([store.coordinates[1], store.coordinates[0]]);
+        const marker = L.marker([store.coordinates[1], store.coordinates[0]], {
+          icon: this.customIcon,
+          title: store.name
+        });
         marker.addTo(this.leafletMap!);
-        // Popup con botón para ver tienda
-        marker.bindPopup(
-          `<b>${store.name}</b><br><button class='leaflet-popup-btn' data-store-id='${store.id}'>Ver tienda</button>`
+        
+        // Crear el popup pero no vincularlo todavía
+        const popup = L.popup().setContent(
+          `<div class="marker-popup">
+            <b>${store.name}</b>
+            ${store.address ? `<p>${store.address}</p>` : ''}
+            <button class='leaflet-popup-btn' data-store-id='${store.id}'>Ver tienda</button>
+          </div>`
         );
-        marker.on('popupopen', () => {
+
+        // Manejar el clic en el marcador
+        marker.on('click', () => {
+          // Calcular la posición centrada con offset
+          const offsetY = this.isBottomSheetActive ? this.getMapOffset() : 0;
+          const targetLatLng = marker.getLatLng();
+          const targetPoint = this.leafletMap!.project(targetLatLng, this.leafletMap!.getZoom()).subtract([0, offsetY/2]);
+          const newLatLng = this.leafletMap!.unproject(targetPoint, this.leafletMap!.getZoom());
+          
+          // Centrar el mapa con una animación más rápida
+          this.leafletMap?.flyTo(newLatLng, 16, {
+            duration: 0.75, // Reducido de 1.5 a 0.75 segundos
+            easeLinearity: 0.5
+          });
+
+          // Abrir el popup inmediatamente
+          marker.bindPopup(popup).openPopup();
+          
+          // Configurar el botón del popup después de abrirlo
           setTimeout(() => {
-            const btn = document.querySelector(`.leaflet-popup-btn[data-store-id='${store.id}']`);
+            const btn = document.querySelector(`button[data-store-id="${store.id}"]`);
             if (btn) {
-              btn.addEventListener('click', () => {
-                this.selectStoreFromMap(store);
-              });
+              btn.addEventListener('click', () => this.selectStoreFromMap(store));
             }
           }, 0);
         });
+
         this.leafletMarkers.push(marker);
       }
     });
   }
 
-  // Nueva función para seleccionar tienda desde el mapa
+  // Actualizar también los métodos de selección para usar la misma velocidad
   private selectStoreFromMap(store: Store) {
     this.selectedStore = store;
     this.loadStoreProducts(store.id);
     this.showProductSheet();
     this.isBottomSheetActive = true;
-    // Centrar el mapa en la tienda con offset vertical
+    
     if (this.leafletMap && store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
       const offsetY = this.isBottomSheetActive ? this.getMapOffset() : 0;
       const targetLatLng = L.latLng(store.coordinates[1], store.coordinates[0]);
-      const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY]);
+      const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY/2]);
       const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
-      this.leafletMap.setView(newLatLng, 16, { animate: true });
-      // Abrir el popup del marcador correspondiente
+      
+      this.leafletMap.flyTo(newLatLng, 16, {
+        duration: 0.75,
+        easeLinearity: 0.5
+      });
+      
       const marker = this.leafletMarkers.find(m => {
         const latlng = m.getLatLng();
         return latlng.lat === store.coordinates![1] && latlng.lng === store.coordinates![0];
@@ -241,14 +277,18 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     this.loadStoreProducts(store.id);
     this.showProductSheet();
     this.isBottomSheetActive = true;
-    // Centrar el mapa en la tienda con offset vertical
+    
     if (this.leafletMap && store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
       const offsetY = this.isBottomSheetActive ? this.getMapOffset() : 0;
       const targetLatLng = L.latLng(store.coordinates[1], store.coordinates[0]);
-      const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY]);
+      const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY/2]);
       const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
-      this.leafletMap.setView(newLatLng, 16, { animate: true });
-      // Abrir el popup del marcador correspondiente
+      
+      this.leafletMap.flyTo(newLatLng, 16, {
+        duration: 0.75,
+        easeLinearity: 0.5
+      });
+      
       const marker = this.leafletMarkers.find(m => {
         const latlng = m.getLatLng();
         return latlng.lat === store.coordinates![1] && latlng.lng === store.coordinates![0];

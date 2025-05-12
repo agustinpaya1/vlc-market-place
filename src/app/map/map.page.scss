@@ -1050,4 +1050,30 @@ ion-fab {
 :host-context(.dark-theme) .product-sheet-header h1,
 :host-context(.dark-theme) .product-sheet .product-card ion-card-title {
   color: var(--color-text-dark, #fff) !important;
+}
+
+.leaflet-marker-icon {
+  width: 32px !important;
+  height: 32px !important;
+  margin-left: -16px !important;
+  margin-top: -32px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.leaflet-popup-btn {
+  background: var(--ion-color-primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin-top: 8px;
+  cursor: pointer;
+  
+  &:hover {
+    background: var(--ion-color-primary-shade);
+  }
 } 
