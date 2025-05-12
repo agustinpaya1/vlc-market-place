@@ -207,14 +207,14 @@ ion-content {
   .store-item {
     display: flex;
     align-items: stretch;
-    background: var(--ion-card-background);
+    background: var(--color-card, #fff) !important;
+    color: var(--color-text, #222) !important;
     border-radius: 12px;
     margin-bottom: 12px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     cursor: pointer;
     transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
-    color: var(--ion-text-color);
 
     &:active {
       transform: scale(0.98);
@@ -389,124 +389,6 @@ ion-content {
   color: var(--color-muted-dark);
 }
 
-// Sección del mapa
-.map-wrapper {
-  flex: 1;
-  position: relative;
-  height: calc(100% - (var(--page-padding) * 2));
-  width: calc(100% - var(--side-panel-width) - var(--page-padding) * 3);
-  margin-left: calc(var(--side-panel-width) + var(--page-padding));
-  background: #1e1e1e;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-#map,
-.fullscreen-map {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
-
-// Leyenda del mapa
-.map-legend {
-  position: absolute;
-  bottom: 24px;
-  right: 24px;
-  background: rgba(30, 30, 30, 0.9);
-  padding: 12px 16px;
-  border-radius: 12px;
-  z-index: 1;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  transition: opacity var(--transition-speed) ease;
-  
-  &:hover {
-    opacity: 0.9;
-  }
-  
-  h4 {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-    color: white;
-    font-weight: 600;
-  }
-  
-  .legend-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 6px;
-    
-    .legend-color {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      margin-right: 8px;
-      border: 2px solid #121212;
-      
-      &.open {
-        background-color: var(--marker-color-open);
-      }
-      
-      &.closed {
-        background-color: var(--marker-color-closed);
-      }
-    }
-    
-    span {
-      font-size: 12px;
-      color: #ddd;
-    }
-  }
-}
-
-// Botones de control para el mapa
-.map-controls {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  z-index: 1;
-  
-  .control-button {
-    background: rgba(var(--ion-color-artemis-primary-rgb), 0.9);
-    color: white;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    margin-bottom: 12px;
-    transition: all var(--transition-speed) ease;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    cursor: pointer;
-    
-    ion-icon {
-      font-size: 20px;
-    }
-    
-    &:hover {
-      background: rgba(var(--ion-color-artemis-tertiary-rgb), 0.9);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    }
-    
-    &:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-  }
-}
-
 // Estilos para modo oscuro
 @media (prefers-color-scheme: dark) {
   .side-panel {
@@ -621,26 +503,16 @@ ion-range {
   --knob-background: #ffffff;
 }
 
-.map-container {
+
+#map {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: 1;
 }
 
-#map {
-  width: 100%;
-  height: 100%;
-}
-
-.fullscreen-map {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  width: 100%; height: 100%;
-  z-index: 1;
-}
 
 // Bottom Sheet de tiendas
 .bottom-sheet {
@@ -649,9 +521,9 @@ ion-range {
   left: 0;
   width: 100%;
   height: 120px;
-  background: var(--bottom-sheet-bg);
+  background: var(--color-card, #fff) !important;
   border-radius: var(--bottom-sheet-radius) var(--bottom-sheet-radius) 0 0;
-  box-shadow: var(--bottom-sheet-shadow);
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
   z-index: 2;
   transition: height var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1), 
               transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
@@ -663,7 +535,8 @@ ion-range {
     height: 50px;
   }
   &.dark-theme {
-    background: var(--bottom-sheet-bg-dark);
+    background: var(--color-card-dark, #232323) !important;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.32);
   }
   &.light-theme {
     background: var(--bottom-sheet-bg-light);
@@ -695,14 +568,13 @@ ion-range {
     .store-item {
       display: flex;
       align-items: stretch;
-      background: var(--ion-card-background);
+      background: var(--color-card, #fff) !important;
+      color: var(--color-text, #222) !important;
       border-radius: 12px;
       margin-bottom: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
       overflow: hidden;
       cursor: pointer;
       transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
-      color: var(--ion-text-color);
       &:active {
         transform: scale(0.98);
       }
@@ -797,7 +669,7 @@ ion-range {
     padding: 16px;
     ion-skeleton-text {
       --border-radius: 12px;
-      --background: rgba(255, 255, 255, 0.05);
+
     }
   }
 }
@@ -809,9 +681,9 @@ ion-range {
   left: 0;
   width: 100%;
   height: 0;
-  background: var(--bottom-sheet-bg);
+  background: var(--color-card, #fff) !important;
   border-radius: var(--bottom-sheet-radius) var(--bottom-sheet-radius) 0 0;
-  box-shadow: var(--bottom-sheet-shadow);
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
   z-index: 3;
   transition: height var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
@@ -1153,4 +1025,29 @@ ion-fab {
 .products-list .product-card ion-card-title,
 .products-list .product-card ion-card-subtitle {
   color: var(--ion-text-color);
+}
+
+// 2. Limitar altura de la cabecera de la tarjeta seleccionada/product-sheet-header
+.product-sheet-header {
+  max-height: 120px;
+  overflow: auto;
+}
+
+// 3. Offset para el mapa y el marcador cuando el bottom sheet está abierto
+#map {
+  /* El mapa ocupa toda la pantalla, pero el centrado del marcador se ajusta en TS */
+}
+
+// Títulos y textos principales en modo claro y oscuro
+.bottom-sheet .store-details h2,
+.bottom-sheet .store-details .rating span,
+.product-sheet-header h1,
+.product-sheet .product-card ion-card-title {
+  color: var(--color-text, #222) !important;
+}
+:host-context(.dark-theme) .bottom-sheet .store-details h2,
+:host-context(.dark-theme) .bottom-sheet .store-details .rating span,
+:host-context(.dark-theme) .product-sheet-header h1,
+:host-context(.dark-theme) .product-sheet .product-card ion-card-title {
+  color: var(--color-text-dark, #fff) !important;
 } 

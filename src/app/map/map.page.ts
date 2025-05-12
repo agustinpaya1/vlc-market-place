@@ -191,12 +191,72 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     // Añadir un marcador por cada tienda con coordenadas
     this.stores.forEach(store => {
       if (store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
-        const marker = L.marker([store.coordinates[1], store.coordinates[0]])
-          .addTo(this.leafletMap!)
-          .bindPopup(`<b>${store.name}</b>`);
+        const marker = L.marker([store.coordinates[1], store.coordinates[0]]);
+        marker.addTo(this.leafletMap!);
+        // Popup con botón para ver tienda
+        marker.bindPopup(
+          `<b>${store.name}</b><br><button class='leaflet-popup-btn' data-store-id='${store.id}'>Ver tienda</button>`
+        );
+        marker.on('popupopen', () => {
+          setTimeout(() => {
+            const btn = document.querySelector(`.leaflet-popup-btn[data-store-id='${store.id}']`);
+            if (btn) {
+              btn.addEventListener('click', () => {
+                this.selectStoreFromMap(store);
+              });
+            }
+          }, 0);
+        });
         this.leafletMarkers.push(marker);
       }
     });
+  }
+
+  // Nueva función para seleccionar tienda desde el mapa
+  private selectStoreFromMap(store: Store) {
+    this.selectedStore = store;
+    this.loadStoreProducts(store.id);
+    this.showProductSheet();
+    this.isBottomSheetActive = true;
+    // Centrar el mapa en la tienda con offset vertical
+    if (this.leafletMap && store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
+      const offsetY = this.isBottomSheetActive ? this.getMapOffset() : 0;
+      const targetLatLng = L.latLng(store.coordinates[1], store.coordinates[0]);
+      const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY]);
+      const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
+      this.leafletMap.setView(newLatLng, 16, { animate: true });
+      // Abrir el popup del marcador correspondiente
+      const marker = this.leafletMarkers.find(m => {
+        const latlng = m.getLatLng();
+        return latlng.lat === store.coordinates![1] && latlng.lng === store.coordinates![0];
+      });
+      if (marker) {
+        marker.openPopup();
+      }
+    }
+  }
+
+  selectStore(store: Store) {
+    this.selectedStore = store;
+    this.loadStoreProducts(store.id);
+    this.showProductSheet();
+    this.isBottomSheetActive = true;
+    // Centrar el mapa en la tienda con offset vertical
+    if (this.leafletMap && store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
+      const offsetY = this.isBottomSheetActive ? this.getMapOffset() : 0;
+      const targetLatLng = L.latLng(store.coordinates[1], store.coordinates[0]);
+      const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY]);
+      const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
+      this.leafletMap.setView(newLatLng, 16, { animate: true });
+      // Abrir el popup del marcador correspondiente
+      const marker = this.leafletMarkers.find(m => {
+        const latlng = m.getLatLng();
+        return latlng.lat === store.coordinates![1] && latlng.lng === store.coordinates![0];
+      });
+      if (marker) {
+        marker.openPopup();
+      }
+    }
   }
 
   private async loadStoresFromDatabase() {
@@ -241,13 +301,9 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     if (!this.isBottomSheetActive) {
       this.hideProductSheet();
     }
-  }
-
-  selectStore(store: Store) {
-    this.selectedStore = store;
-    this.loadStoreProducts(store.id);
-    this.showProductSheet();
-    this.isBottomSheetActive = true;
+    if (this.leafletMap) {
+      setTimeout(() => this.leafletMap!.invalidateSize(), 300);
+    }
   }
 
   async loadStoreProducts(storeId: string) {
@@ -265,10 +321,16 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
 
   showProductSheet() {
     this.isProductSheetActive = true;
+    if (this.leafletMap) {
+      setTimeout(() => this.leafletMap!.invalidateSize(), 300);
+    }
   }
 
   hideProductSheet() {
     this.isProductSheetActive = false;
+    if (this.leafletMap) {
+      setTimeout(() => this.leafletMap!.invalidateSize(), 300);
+    }
   }
 
   onSearchInput(event: any) {
@@ -338,17 +400,23 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     if (this.leafletMap) {
       this.leafletMap.remove();
     }
-    const map = L.map('map', {
-      center: [39.469, -0.376], // Valencia
-      zoom: 14,
-      zoomControl: true,
-      attributionControl: true
-    });
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const map = L.map('map').setView([39.469, -0.376], 14);
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(map);
+    });
+    osm.addTo(map);
     this.leafletMap = map;
     this.addStoreMarkersToMap();
+
+    setTimeout(() => {
+      this.leafletMap!.invalidateSize();
+    }, 300);
+  }
+
+  // Devuelve el offset vertical en píxeles para centrar el marcador por encima del bottom sheet
+  private getMapOffset(): number {
+    // Usa el 30% de la altura de la ventana como offset (ajustable)
+    return window.innerHeight * 0.3;
   }
 }
