@@ -262,7 +262,11 @@ export class StorePage implements OnInit {
         product: product
       },
       breakpoints: [0, 0.5, 0.8, 1],
-      initialBreakpoint: 0.8
+      initialBreakpoint: 0.8,
+      cssClass: 'product-modal',
+      showBackdrop: true,
+      backdropDismiss: true,
+      handle: true
     });
 
     await modal.present();

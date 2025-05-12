@@ -1,7 +1,7 @@
 <ion-header class="ion-no-border">
   <div class="header-container">
     <div class="location-wrapper">
-      <span class="location-label">Location</span>
+      <span class="location-label">Ubicación</span>
       <div class="location-container">
         <ion-icon name="location-outline"></ion-icon>
         <span class="location-text">{{ userLocation }}</span>
@@ -10,18 +10,21 @@
     </div>
     <div class="header-actions">
       <ion-button fill="clear" class="wallet-button" (click)="showVLCoinsInfo()">
-        <img src="assets/icons/vl-coin.svg" alt="VL Coins" class="vl-coin-icon">
+        <img src="assets/icons/vl-coin.svg" alt="Monedas VL" class="vl-coin-icon">
       </ion-button>
-      <ion-button fill="clear" class="notification-button" (click)="openNotificationPopover($event)">
+      <ion-button *ngIf="isAuthenticated" fill="clear" class="notification-button" (click)="openNotificationPopover($event)">
         <ion-icon name="notifications-outline"></ion-icon>
         <div *ngIf="notificationCount > 0" class="notification-dot"></div>
+      </ion-button>
+      <ion-button *ngIf="!isAuthenticated" fill="clear" class="login-button" (click)="navigateToLogin()">
+        <ion-icon name="log-in-outline"></ion-icon>
       </ion-button>
     </div>
   </div>
   <div class="search-row">
     <div class="search-bar">
       <ion-icon name="search-outline" class="search-icon"></ion-icon>
-      <input type="text" [(ngModel)]="searchTerm" (input)="updateSearchTerm($event)" placeholder="Buscar tiendas o productos">
+      <input type="text" [(ngModel)]="searchTerm" (input)="updateSearchTerm($event)" placeholder="Buscar tiendas">
       <ion-icon name="scan-outline" class="scan-icon" (click)="openScanner()"></ion-icon>
     </div>
     <ion-button fill="clear" class="options-button" (click)="presentFilterOptions($event)">
@@ -68,7 +71,7 @@
   <!-- Floating AI chat button instead of camera -->
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button (click)="openAiChat()" class="ai-fab">
-      <img src="assets/icons/ai-logo.svg" alt="AI Assistant" class="ai-logo-img">
+      <img src="assets/icons/ai-logo.svg" alt="Asistente IA" class="ai-logo-img">
     </ion-fab-button>
   </ion-fab>
 

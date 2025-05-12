@@ -11,7 +11,7 @@ import {
   IonLabel
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { arrowBackOutline, eyeOffOutline, eyeOutline, logoGoogle } from 'ionicons/icons';
+import { arrowBackOutline, eyeOffOutline, eyeOutline, logoGoogle, logoFacebook, logoApple } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
 
@@ -41,7 +41,7 @@ export class LoginPage {
     private authService: AuthService,
     private supabaseService: SupabaseService
   ) {
-    addIcons({logoGoogle,eyeOutline,eyeOffOutline,arrowBackOutline});
+    addIcons({logoFacebook,logoApple,logoGoogle,eyeOutline,eyeOffOutline,arrowBackOutline});
   }
 
 

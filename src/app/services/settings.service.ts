@@ -59,7 +59,8 @@ export class SettingsService {
 
   private applySettings(settings: Settings) {
     // Apply dark mode to documentElement
-    document.documentElement.classList.toggle('dark', settings.darkMode);
+    document.documentElement.classList.toggle('dark-theme', settings.darkMode);
+    document.documentElement.classList.toggle('dark', settings.darkMode); // Mantener por compatibilidad
     
     // Apply language
     document.documentElement.lang = settings.language;

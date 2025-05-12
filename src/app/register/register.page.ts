@@ -9,9 +9,13 @@ import {
     IonItem,
     IonLabel,
     IonSelect,
-    IonSelectOption
+    IonSelectOption,
+    IonIcon
 } from '@ionic/angular/standalone';
 import { AuthService, BusinessProfile } from '../services/auth.service';
+import { CommonModule } from '@angular/common';
+import { addIcons } from 'ionicons';
+import { eyeOutline, eyeOffOutline, arrowBackOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-register',
@@ -19,19 +23,22 @@ import { AuthService, BusinessProfile } from '../services/auth.service';
   styleUrls: ['./register.page.scss'],
   imports: [
     ReactiveFormsModule,
+    CommonModule,
     IonContent,
     IonButton,
     IonItem,
     IonInput,
     IonLabel,
     IonSelect,
-    IonSelectOption
+    IonSelectOption,
+    IonIcon
   ],
   standalone: true
 })
 export class RegisterPage {
   registerForm: FormGroup;
   showBusinessFields = false;
+  showPassword = false;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -39,6 +46,8 @@ export class RegisterPage {
     private router: Router,
     private alertController: AlertController
   ) {
+    addIcons({ eyeOutline, eyeOffOutline, arrowBackOutline });
+    
     this.registerForm = this.formBuilder.group({
       type: ['user', Validators.required],
       fullName: ['', [Validators.required, Validators.minLength(3)]],
@@ -146,5 +155,9 @@ export class RegisterPage {
 
   goToLogin() {
     this.router.navigate(['/login']);
+  }
+
+  togglePassword() {
+    this.showPassword = !this.showPassword;
   }
 }

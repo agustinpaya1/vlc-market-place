@@ -1,10 +1,11 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { IonicModule, ModalController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
-import { CartService } from '../../services/cart.service';
+import { CartService, CartItem } from '../../services/cart.service';
 import { addIcons } from 'ionicons';
-import { cartOutline, closeOutline } from 'ionicons/icons';
+import { cartOutline, close, arrowBack, add, remove } from 'ionicons/icons';
 import { NotificationService } from '../../services/notification.service';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-product-modal',
@@ -23,24 +24,24 @@ export class ProductModalComponent implements OnInit {
     private cartService: CartService,
     private notificationService: NotificationService
   ) {
-    addIcons({ cart: cartOutline, close: closeOutline });
+    addIcons({
+      cartOutline,
+      close,
+      arrowBack,
+      add,
+      remove
+    });
   }
 
   ngOnInit() {
-    this.checkIfInCart();
-  }
-
-  dismiss() {
-    this.modalCtrl.dismiss();
-  }
-
-  async checkIfInCart() {
-    const cartItems = this.cartService.getCurrentCartItems();
-    const existingItem = cartItems.find(item => item.id === this.product.id);
-    if (existingItem) {
-      this.isInCart = true;
-      this.quantity = existingItem.quantity;
-    }
+    // Comprobar si el producto ya está en el carrito
+    this.cartService.getCartItems().pipe(take(1)).subscribe((cartItems: CartItem[]) => {
+      const cartItem = cartItems.find(item => item.id === this.product.id);
+      if (cartItem) {
+        this.quantity = cartItem.quantity;
+        this.isInCart = true;
+      }
+    });
   }
 
   incrementQuantity() {
@@ -53,31 +54,36 @@ export class ProductModalComponent implements OnInit {
     }
   }
 
-  async addToCart() {
-    if (!this.isInCart) {
-      // Primera vez que se añade al carrito
-      this.quantity = 1;
-      await this.cartService.addToCart({
-        ...this.product,
-        quantity: this.quantity
-      });
-      this.isInCart = true;
-      this.modalCtrl.dismiss({ added: true });
-    } else if (this.quantity === 0) {
-      await this.notificationService.showWarning('Por favor, selecciona la cantidad que deseas añadir');
-      return;
-    } else {
-      this.updateCartQuantity();
-      this.modalCtrl.dismiss({ added: true });
+  handleImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.src = 'assets/images/default-product.jpg';
     }
   }
 
-  private async updateCartQuantity() {
-    if (this.quantity === 0) {
-      await this.cartService.removeFromCart(this.product.id);
-      this.isInCart = false;
-    } else {
-      await this.cartService.updateQuantity(this.product.id, this.quantity);
+  addToCart() {
+    if (this.quantity > 0) {
+      this.cartService.addToCart({
+        id: this.product.id,
+        name: this.product.name,
+        price: this.product.offerPrice || this.product.price,
+        quantity: this.quantity,
+        imageUrl: this.product.imageUrl
+      });
+      
+      // Mostrar notificación (opcional)
+      this.notificationService.showSuccess('Producto añadido al carrito');
+      
+      // Cerrar el modal y pasar datos
+      this.modalCtrl.dismiss({
+        added: true,
+        productId: this.product.id,
+        quantity: this.quantity
+      });
     }
+  }
+
+  dismiss() {
+    this.modalCtrl.dismiss();
   }
 } 

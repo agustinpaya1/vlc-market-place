@@ -1,138 +1,303 @@
-// Variables de colores de la nueva paleta
-$color-primary: #05668D; // Azul oscuro
-$color-secondary: #028090; // Azul verdoso
-$color-tertiary: #00A896; // Verde azulado
-$color-accent: #02C39A; // Verde brillante
-$color-background: #F0F3BD; // Amarillo pálido
-$color-text-dark: #05668D; // Para texto oscuro
-$color-text-light: #F0F3BD; // Para texto claro
+// Variables de colores basados en la imagen de referencia
+$color-primary: #02A396; // Verde azulado principal
+$color-secondary: #02877b; // Verde azulado más oscuro
+$color-bg: #EDF5F0; // Fondo claro verde-gris
+$color-text: #2C3E50; // Texto oscuro
+$color-light-text: #7F8C8D; // Texto claro
+$color-white: #FFFFFF; // Blanco
+$font-family: 'Roboto', sans-serif;
+
+// Variables para modo oscuro
+$dark-bg: #121212; // Fondo oscuro
+$dark-surface: #1e1e1e; // Superficie de componentes en modo oscuro
+$dark-primary: #02c4b4; // Verde azulado más brillante para modo oscuro
+$dark-text: #E0E0E0; // Texto claro para modo oscuro
+$dark-secondary-text: #9E9E9E; // Texto secundario para modo oscuro
 
 // Importando el módulo color de sass
 @use "sass:color";
 
+// Estilos para modo claro (predeterminado)
+ion-content {
+  --background: linear-gradient(170deg, #{$color-primary} 30%, #{$color-bg} 30%);
+  
+  &::part(scroll) {
+    padding-bottom: 50px;
+  }
+}
+
 .register-container {
-    padding: 20px;
-    max-width: 500px;
-    margin: 0 auto;
+  padding: 20px;
+  max-width: 500px;
+  margin: 0 auto;
+  font-family: $font-family;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .title {
+    font-size: 42px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: $color-white;
+    font-family: $font-family;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 30px;
+    font-family: $font-family;
+    font-size: 16px;
+    font-weight: 400;
+  }
+}
+
+.register-form {
+  background-color: transparent;
+  padding: 20px 0;
+  margin-bottom: 10px;
+  position: relative;
   
-    .title {
-      font-size: 32px;
-      font-weight: bold;
-      margin-bottom: 8px;
-      color: $color-primary;
+  ion-item {
+    --background: #F8F9FA;
+    --border-radius: 25px;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    --min-height: 55px;
+    margin-bottom: 16px;
+    --border-width: 0;
+    --highlight-color-focused: #{$color-primary};
+    --inner-padding-end: 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    border-radius: 25px;
+    
+    &.item-has-focus {
+      --background: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
     }
+
+    .item-native {
+      border-radius: 25px;
+    }
+
+    ion-label {
+      color: $color-light-text;
+      font-weight: 500;
+      font-family: $font-family;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    ion-input, ion-select {
+      --padding-start: 0;
+      --placeholder-color: rgba(127, 140, 141, 0.7);
+      --placeholder-opacity: 0.7;
+      color: $color-text;
+      font-family: $font-family;
+      font-size: 15px;
+      --border-radius: 25px;
+    }
+
+    ion-icon {
+      color: $color-light-text;
+      font-size: 20px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+  }
+}
+
+.business-fields {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(127, 140, 141, 0.1);
+}
+
+.register-btn {
+  --background: #5fe3d0;
+  --border-radius: 25px;
+  --color: #2C3E50;
+  height: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-top: 16px;
+  --box-shadow: none;
+  font-family: $font-family;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
   
-    .subtitle {
-      color: $color-secondary;
-      margin-bottom: 32px;
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.05) 100%);
+    z-index: -1;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 5%;
+    width: 90%;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: 0 8px 15px rgba(95, 227, 208, 0.35);
+    z-index: -2;
+  }
+  
+  &:hover:not([disabled]) {
+    --background: #4dd8c5;
+    transform: translateY(-2px);
+    
+    &::after {
+      box-shadow: 0 10px 20px rgba(95, 227, 208, 0.45);
     }
   }
   
-  .register-form {
-    padding: 0 16px;
-    margin: 0 auto;
-    max-width: 400px;
+  &:active:not([disabled]) {
+    transform: translateY(1px);
+    --background: #3accb9;
+    
+    &::after {
+      box-shadow: 0 5px 10px rgba(95, 227, 208, 0.3);
+    }
+  }
+  
+  &[disabled] {
+    opacity: 0.7;
+    --background: #8feadb;
+  }
+}
 
+.login-text {
+  text-align: center;
+  color: $color-light-text;
+  margin-top: 30px;
+  font-size: 15px;
+  cursor: pointer;
+
+  a {
+    color: #5fe3d0;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: #4dd8c5;
+    }
+  }
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  font-family: $font-family;
+  font-size: 14px;
+  transition: opacity 0.2s ease;
+  
+  ion-icon {
+    margin-right: 6px;
+    font-size: 18px;
+  }
+  
+  &:hover {
+    opacity: 0.8;
+  }
+  
+  &:active {
+    opacity: 0.6;
+  }
+}
+
+// Estilos para modo oscuro - solo se aplican cuando la clase dark-theme está presente
+:host-context(.dark-theme) {
+  ion-content {
+    --background: linear-gradient(170deg, #{color.adjust($color-primary, $lightness: -15%)} 30%, #{$dark-bg} 30%);
+  }
+
+  .register-container {
+    .title {
+      color: $dark-text;
+    }
+
+    .subtitle {
+      color: rgba(224, 224, 224, 0.8);
+    }
+  }
+
+  .register-form {
     ion-item {
-      --background: white;
-      --border-radius: 8px;
-      --padding-start: 16px;
-      --padding-end: 16px;
-      --padding-top: 12px;
-      --padding-bottom: 12px;
-      margin-bottom: 16px;
-      --border-color: transparent;
-      --border-width: 0;
-      --border-color: $color-tertiary;
-      --highlight-color: $color-accent;
+      --background: #{$dark-surface};
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       
-      &::part(native) {
-        border-radius: 8px;
+      &.item-has-focus {
+        --background: #{color.adjust($dark-surface, $lightness: 5%)};
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
       }
-  
+
       ion-label {
-        color: $color-primary;
-        font-weight: 500;
-        margin-bottom: 4px;
+        color: $dark-secondary-text;
       }
-  
-      ion-input {
-        --padding-start: 0;
-        --placeholder-color: rgba(5, 102, 141, 0.5);
-        --placeholder-opacity: 0.7;
-        color: $color-secondary;
-      }
-  
-      ion-select {
-        color: $color-secondary;
-        --placeholder-color: rgba(5, 102, 141, 0.5);
-        margin-top: 6px;
+
+      ion-input, ion-select {
+        --placeholder-color: rgba(158, 158, 158, 0.7);
+        color: $dark-text;
       }
 
       ion-icon {
-        color: $color-secondary;
-        font-size: 20px;
-        cursor: pointer;
+        color: $dark-secondary-text;
       }
-    }
-  }
-  
-  .login-text {
-    text-align: center;
-    color: $color-secondary;
-    margin-top: 30px;
-    font-size: 15px;
-    cursor: pointer;
-  
-    a {
-      color: $color-accent;
-      text-decoration: none;
-      font-weight: 600;
-      transition: color 0.2s ease;
-      
-      &:hover {
-        color: color.adjust($color-accent, $lightness: -10%);
-      }
-    }
-  }
-
-  ion-content {
-    --background: linear-gradient(135deg, white 60%, #{$color-background} 100%);
-  }
-
-  form {
-    max-width: 500px;
-    margin: 0 auto;
-  }
-
-  ion-list {
-    background: transparent;
-    padding: 0;
-  }
-
-  ion-item {
-    --background: white;
-    margin-bottom: 16px;
-    --border-radius: 8px;
-    --border-width: 1px;
-    --border-style: solid;
-    --border-color: $color-tertiary;
-
-    &:last-child {
-      margin-bottom: 0;
     }
   }
 
   .business-fields {
-    margin-top: 16px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(2, 128, 144, 0.2);
+    border-top: 1px solid rgba(158, 158, 158, 0.1);
   }
 
-  // Restauramos el efecto hover para el botón de registro
   .register-btn {
-    &:hover {
-      --background: color.adjust($color-accent, $lightness: -5%);
-      box-shadow: 0 6px 12px rgba(2, 195, 154, 0.4);
+    --background: #{$dark-primary};
+    --color: $dark-text;
+    
+    &:hover:not([disabled]) {
+      --background: #{color.adjust($dark-primary, $lightness: -5%)};
+    }
+    
+    &:active:not([disabled]) {
+      --background: #{color.adjust($dark-primary, $lightness: -10%)};
+    }
+    
+    &[disabled] {
+      opacity: 0.5;
+      --background: #{color.adjust($dark-primary, $lightness: 10%)};
     }
   }
+
+  .login-text {
+    color: $dark-secondary-text;
+
+    a {
+      color: $dark-primary;
+      
+      &:hover {
+        color: #{color.adjust($dark-primary, $lightness: 5%)};
+      }
+    }
+  }
+
+  .back-button {
+    color: rgba(224, 224, 224, 0.8);
+  }
+}

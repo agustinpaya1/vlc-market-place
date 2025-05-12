@@ -1,17 +1,13 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>{{ product.name }}</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="dismiss()">
+<ion-content class="ion-padding">
+  <div class="drag-indicator"></div>
+  <div class="product-image-container">
+    <!-- Botones de acción sobre la imagen -->
+    <div class="image-actions">
+      <ion-button fill="clear" class="close-button" (click)="dismiss()">
         <ion-icon name="close"></ion-icon>
       </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content class="ion-padding">
-  <div class="product-image-container">
-    <ion-img [src]="product.imageUrl" [alt]="product.name"></ion-img>
+    </div>
+    <ion-img [src]="product.imageUrl" [alt]="product.name" (error)="handleImageError($event)"></ion-img>
   </div>
 
   <div class="product-details">
@@ -37,14 +33,14 @@
         color="primary" 
         (click)="decrementQuantity()" 
         [disabled]="quantity === 0">
-        -
+        <ion-icon name="remove"></ion-icon>
       </ion-button>
       <span class="quantity">{{ quantity }}</span>
       <ion-button 
         fill="outline" 
         color="primary" 
         (click)="incrementQuantity()">
-        +
+        <ion-icon name="add"></ion-icon>
       </ion-button>
     </div>
 

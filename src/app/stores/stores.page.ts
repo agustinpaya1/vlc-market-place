@@ -1,6 +1,5 @@
-import { Component, OnInit, ViewChild, NgZone, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ViewChild, NgZone, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { 
-  IonBadge,
   IonButton,
   IonCard,
   IonCardContent,
@@ -69,11 +68,12 @@ import {
   ribbon,
   pricetag,
   cube,
-  calendar
+  calendar,
+  logInOutline
 } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, takeUntil, take } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { ToastController } from '@ionic/angular/standalone';
 import { AiChatComponent } from '../ai-chat/ai-chat.component';
@@ -140,12 +140,11 @@ interface Store {
     IonFab,
     IonFabButton,
     IonPopover,
-    IonBadge,
     IonSegment,
     IonSegmentButton
   ]
 })
-export class StoresPage implements OnInit {
+export class StoresPage implements OnInit, OnDestroy {
   @ViewChild('filterPopover') filterPopover!: IonPopover;
   @ViewChild('notificationPopover') notificationPopover!: IonPopover;
   
@@ -192,6 +191,10 @@ export class StoresPage implements OnInit {
 
   notifications: any[] = [];
 
+  // Add property for authentication state
+  isAuthenticated: boolean = false;
+  private destroy$ = new Subject<void>();
+
   constructor(
     private router: Router,
     private supabaseService: SupabaseService,
@@ -205,46 +208,13 @@ export class StoresPage implements OnInit {
     private vlcoinService: VlcoinService
   ) {
     addIcons({
-      locationOutline,
-      chevronDownOutline,
-      notificationsOutline,
-      searchOutline,
-      optionsOutline,
-      star,
-      timeOutline,
-      arrowForwardOutline,
-      notifications,
-      search,
-      trendingUp,
-      location,
-      time,
-      storefront,
-      arrowForward,
-      map,
-      starHalf,
-      sunny,
-      moon,
-      camera,
-      shirtOutline,
-      pizzaOutline,
-      fishOutline,
-      basketOutline,
-      wineOutline,
-      leafOutline,
-      restaurantOutline,
-      fastFoodOutline,
-      waterOutline,
-      chatbubbleEllipses,
-      scanOutline,
-      walletOutline,
-      cash,
-      trash,
-      trophy,
-      gift,
-      ribbon,
-      pricetag,
-      cube,
-      calendar
+      storefront, location, time, arrowForward, star, trendingUp, map, starHalf,
+      sunny, moon, notifications, searchOutline, search, locationOutline,
+      chevronDownOutline, notificationsOutline, optionsOutline, timeOutline,
+      arrowForwardOutline, camera, chatbubbleEllipses, shirtOutline, pizzaOutline,
+      fishOutline, basketOutline, wineOutline, leafOutline, restaurantOutline,
+      fastFoodOutline, waterOutline, scanOutline, walletOutline, cash, trash,
+      trophy, gift, ribbon, pricetag, cube, calendar, logInOutline
     });
 
     // Set up search functionality with improved debounce
@@ -256,6 +226,19 @@ export class StoresPage implements OnInit {
       this.searchTerm = term;
       // Apply filters when search term changes
       this.applyFilters();
+    });
+
+    // Set up authentication listener
+    this.authService.user$.pipe(takeUntil(this.destroy$)).subscribe(user => {
+      this.isAuthenticated = !!user;
+      // Only simulate notifications if user is authenticated
+      if (this.isAuthenticated) {
+        this.simulateNotifications();
+      } else {
+        // Clear notifications if not authenticated
+        this.notifications = [];
+        this.notificationCount = 0;
+      }
     });
   }
 
@@ -330,6 +313,12 @@ export class StoresPage implements OnInit {
       this.applyFilters();
       this.isLoading = false;
     }
+  }
+
+  ionViewWillLeave() {
+    // Resetear el estado del popover de notificaciones al salir de la página
+    this.notificationPopoverOpen = false;
+    this.notificationPopoverEvent = null;
   }
 
   /**
@@ -515,6 +504,9 @@ export class StoresPage implements OnInit {
 
   async viewStore(storeId: string) {
     console.log('Navegando a la tienda con ID:', storeId);
+    // Asegurarse de que el popover de notificaciones esté cerrado
+    this.notificationPopoverOpen = false;
+    this.notificationPopoverEvent = null;
     this.router.navigate(['/tabs/store', storeId]);
   }
 
@@ -557,12 +549,17 @@ export class StoresPage implements OnInit {
 
   // Simular llegada de notificaciones
   private async simulateNotifications() {
+    // If user is not authenticated, don't generate notifications
+    if (!this.isAuthenticated) {
+      return;
+    }
+    
     // Helper para buscar id de tienda por nombre
     const getStoreIdByName = (name: string) => {
       const store = this.allStores.find(s => s.name.toLowerCase().includes(name.toLowerCase()));
       return store ? store.id : undefined;
     };
-
+    
     // Limpiar notificaciones previas
     this.notifications = [];
 
@@ -662,7 +659,7 @@ export class StoresPage implements OnInit {
         category: 'Tiendas Chinas'
       }
     ];
-
+    
     // Añadir retos activos a las notificaciones
     for (const challenge of challenges) {
       this.notifications.push({
@@ -773,6 +770,12 @@ export class StoresPage implements OnInit {
    * Muestra información sobre los VLCoins
    */
   async showVLCoinsInfo() {
+    if (!this.isAuthenticated) {
+      // If not authenticated, redirect to login
+      this.showLoginRequiredToast('iniciar sesión para acceder a VL Coins');
+      return;
+    }
+
     console.log('Mostrando información de VLCoins');
     
     try {
@@ -782,7 +785,7 @@ export class StoresPage implements OnInit {
       });
       
       await modal.present();
-      
+
       // Añadir efecto visual al icono
       const vlCoinIcon = document.querySelector('.wallet-button .vl-coin-icon');
       if (vlCoinIcon) {
@@ -796,7 +799,14 @@ export class StoresPage implements OnInit {
       const { data } = await modal.onWillDismiss();
       if (data && data.balanceUpdated) {
         // Refresh the balance from the database
-        const user = await this.authService.user$.toPromise();
+        // Get the current user using firstValueFrom
+        const user = await new Promise<any>(resolve => {
+          this.authService.user$.pipe(
+            takeUntil(this.destroy$),
+            take(1)
+          ).subscribe(user => resolve(user));
+        });
+        
         if (user && user.id) {
           await this.vlcoinService.getVlcoinBalance(user.id);
         }
@@ -814,6 +824,28 @@ export class StoresPage implements OnInit {
       
       await toast.present();
     }
+  }
+
+  // Add a method to display login required message
+  async showLoginRequiredToast(action: string) {
+    const toast = await this.toastController.create({
+      message: `Debes ${action}`,
+      duration: 3000,
+      position: 'bottom',
+      buttons: [
+        {
+          text: 'Iniciar sesión',
+          role: 'action',
+          handler: () => {
+            this.navigateToLogin();
+          }
+        }
+      ],
+      color: 'primary',
+      cssClass: 'notification-toast'
+    });
+    
+    await toast.present();
   }
 
   /**
@@ -1221,6 +1253,10 @@ export class StoresPage implements OnInit {
   }
 
   openNotificationPopover(event: Event) {
+    if (!this.isAuthenticated) {
+      this.navigateToLogin();
+      return;
+    }
     this.notificationPopoverOpen = true;
     this.notificationPopoverEvent = event;
   }
@@ -1230,27 +1266,40 @@ export class StoresPage implements OnInit {
   }
 
   removeNotification(id: string) {
+    if (!this.isAuthenticated) {
+      return;
+    }
+    
     this.notifications = this.notifications.filter(n => n.id !== id);
     this.notificationCount = this.notifications.length;
   }
 
   onNotificationClick(n: any) {
+    if (!this.isAuthenticated) {
+      this.showLoginRequiredToast('iniciar sesión para ver notificaciones');
+      return;
+    }
+    
     // Aplicar efecto de feedback visual
     this.applyFeedbackAnimation(n.type);
     
+    // Cerrar el popover inmediatamente para evitar que permanezca abierto
+    this.notificationPopoverOpen = false;
+    
     if (n.type === 'oferta' && n.storeId) {
-      this.closeNotificationPopover();
-      this.viewStore(n.storeId);
+      // Utilizar setTimeout para asegurar que el popover se cierra antes de navegar
+      setTimeout(() => {
+        this.viewStore(n.storeId);
+      }, 100);
     } else if (n.type === 'reto') {
-      this.closeNotificationPopover();
-      // Mostrar modal VLCoins con la pestaña de retos seleccionada
-      this.showVLCoinsWithTab('challenges');
+      setTimeout(() => {
+        this.showVLCoinsWithTab('challenges');
+      }, 100);
     } else if (n.type === 'recompensa') {
-      this.closeNotificationPopover();
-      // Mostrar modal VLCoins con la pestaña de recompensas seleccionada
-      this.showVLCoinsWithTab('rewards');
+      setTimeout(() => {
+        this.showVLCoinsWithTab('rewards');
+      }, 100);
     }
-    // Puedes añadir más acciones según el tipo
   }
   
   // Método para aplicar animación de feedback visual según el tipo de notificación
@@ -1332,6 +1381,16 @@ export class StoresPage implements OnInit {
 
   getStoreById(storeId: string) {
     return this.allStores.find(s => s.id === storeId);
+  }
+
+  // Add method to navigate to login page
+  navigateToLogin() {
+    this.router.navigate(['/login']);
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
 

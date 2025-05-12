@@ -35,12 +35,14 @@
         const settings = JSON.parse(savedSettings);
         if (settings.darkMode) {
           document.documentElement.classList.add('dark');
+          document.documentElement.classList.add('dark-theme');
         }
       } else {
         // Check system preference
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
         if (prefersDark.matches) {
           document.documentElement.classList.add('dark');
+          document.documentElement.classList.add('dark-theme');
         }
       }
     })();

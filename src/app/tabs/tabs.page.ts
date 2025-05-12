@@ -8,7 +8,12 @@ import {
   IonBadge
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { storefront, map, cart, person, storefrontOutline, mapOutline, cartOutline, personOutline } from 'ionicons/icons';
+import { 
+  home, homeOutline,
+  map, mapOutline, 
+  cart, cartOutline, 
+  person, personOutline
+} from 'ionicons/icons';
 import { CartService } from '../services/cart.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
@@ -34,7 +39,12 @@ export class TabsPage {
     public cartService: CartService,
     private router: Router
   ) {
-    addIcons({storefrontOutline,mapOutline,cartOutline,personOutline,storefront,map,cart,person});
+    addIcons({
+      homeOutline, home,
+      mapOutline, map,
+      cartOutline, cart,
+      personOutline, person
+    });
   }
 
   navigateToProfile() {

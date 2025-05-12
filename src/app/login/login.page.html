@@ -1,7 +1,9 @@
 <ion-content [fullscreen]="true" class="ion-padding">
   <div class="login-container">
-    <h1 class="title">Bienvenido de nuevo</h1>
-    <p class="subtitle">Inicia sesión para continuar</p>
+    <div class="header-content">
+      <h1 class="title">¡Hola!</h1>
+      <p class="subtitle">Bienvenido a VLC Market Place</p>
+    </div>
 
     <form class="login-form" (ngSubmit)="login()">
       <ion-item>
@@ -39,7 +41,7 @@
     </form>
 
     <div class="divider">
-      <span>O continúa con</span>
+      <span>O inicia sesión con</span>
     </div>
 
     <div class="social-buttons">
@@ -61,7 +63,7 @@
     </div>
 
     <p class="register-text">
-      ¿No tienes una cuenta? <a (click)="goToRegister()">Regístrate</a>
+      ¿No tienes cuenta? <a (click)="goToRegister()">Regístrate</a>
     </p>
   </div>
 </ion-content>

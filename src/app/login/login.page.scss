@@ -1,68 +1,128 @@
-// Variables de colores de la nueva paleta
-$color-primary: #05668D; // Azul oscuro
-$color-secondary: #028090; // Azul verdoso
-$color-tertiary: #00A896; // Verde azulado
-$color-accent: #02C39A; // Verde brillante
-$color-background: #F0F3BD; // Amarillo pálido
-$color-text-dark: #05668D; // Para texto oscuro
-$color-text-light: #F0F3BD; // Para texto claro
+// Variables de colores basados en la imagen de referencia
+$color-primary: #02A396; // Verde azulado principal
+$color-secondary: #02877b; // Verde azulado más oscuro
+$color-bg: #EDF5F0; // Fondo claro verde-gris
+$color-text: #2C3E50; // Texto oscuro
+$color-light-text: #7F8C8D; // Texto claro
+$color-white: #FFFFFF; // Blanco
 $font-family: 'Roboto', sans-serif;
+
+// Variables para modo oscuro
+$dark-bg: #121212; // Fondo oscuro
+$dark-surface: #1e1e1e; // Superficie de componentes en modo oscuro
+$dark-primary: #02c4b4; // Verde azulado más brillante para modo oscuro
+$dark-text: #E0E0E0; // Texto claro para modo oscuro
+$dark-secondary-text: #9E9E9E; // Texto secundario para modo oscuro
 
 // Importando el módulo color de sass
 @use "sass:color";
+
+// Estilos para modo claro (predeterminado)
+ion-content {
+  --background: linear-gradient(170deg, #{$color-primary} 30%, #{$color-bg} 30%);
+  
+  &::part(scroll) {
+    padding-bottom: 50px;
+  }
+}
 
 .login-container {
   padding: 20px;
   max-width: 500px;
   margin: 0 auto;
   font-family: $font-family;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .header-content {
+    margin-top: 20px;
+    margin-bottom: 40px;
+  }
 
   .title {
-    font-size: 32px;
+    font-size: 42px;
     font-weight: bold;
     margin-bottom: 8px;
-    color: $color-primary;
+    color: $color-white;
     font-family: $font-family;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   .subtitle {
-    color: $color-secondary;
-    margin-bottom: 32px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 10px;
     font-family: $font-family;
+    font-size: 16px;
+    font-weight: 400;
   }
 }
 
 .login-form {
-  font-family: $font-family;
+  background-color: transparent;
+  padding: 20px 0;
+  margin-bottom: 10px;
+  position: relative;
+  
+  &::after {
+    content: "";
+    position: absolute;
+    right: 20px;
+    top: -20px;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    z-index: -1;
+  }
   
   ion-item {
-    --background: white;
-    --border-radius: 8px;
+    --background: #F8F9FA;
+    --border-radius: 25px;
     --padding-start: 16px;
     --padding-end: 16px;
     --padding-top: 12px;
     --padding-bottom: 12px;
+    --min-height: 55px;
     margin-bottom: 16px;
-    --border-color: $color-tertiary;
-    --highlight-color: $color-accent;
+    --border-width: 0;
+    --highlight-color-focused: #{$color-primary};
+    --inner-padding-end: 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    border-radius: 25px;
+    
+    &.item-has-focus {
+      --background: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .item-native {
+      border-radius: 25px;
+    }
 
     ion-label {
-      color: $color-primary;
+      color: $color-light-text;
       font-weight: 500;
       font-family: $font-family;
+      font-size: 14px;
+      margin-bottom: 8px;
     }
 
     ion-input {
       --padding-start: 0;
-      --placeholder-color: rgba(5, 102, 141, 0.5);
+      --placeholder-color: rgba(127, 140, 141, 0.7);
       --placeholder-opacity: 0.7;
-      color: $color-secondary;
+      color: $color-text;
       font-family: $font-family;
+      font-size: 15px;
+      --border-radius: 25px;
     }
 
     ion-icon {
-      color: $color-secondary;
+      color: $color-light-text;
       font-size: 20px;
+      margin-right: 10px;
       cursor: pointer;
     }
   }
@@ -70,24 +130,72 @@ $font-family: 'Roboto', sans-serif;
 
 .forgot-password {
   text-align: right;
-  margin: 16px 0;
+  margin: 16px 0 24px;
   cursor: pointer;
   font-family: $font-family;
   
   a {
-    color: $color-tertiary;
+    color: $color-light-text;
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 400;
+    font-size: 14px;
   }
 }
 
-// Restauramos el efecto hover para el botón de login
 .login-btn {
+  --background: #5fe3d0;
+  --border-radius: 25px;
+  --color: #2C3E50;
+  height: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-top: 16px;
+  --box-shadow: none;
   font-family: $font-family;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.05) 100%);
+    z-index: -1;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 5%;
+    width: 90%;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: 0 8px 15px rgba(95, 227, 208, 0.35);
+    z-index: -2;
+  }
   
   &:hover {
-    --background: color.adjust($color-accent, $lightness: -5%);
-    box-shadow: 0 6px 12px rgba(2, 195, 154, 0.4);
+    --background: #4dd8c5;
+    transform: translateY(-2px);
+    
+    &::after {
+      box-shadow: 0 10px 20px rgba(95, 227, 208, 0.45);
+    }
+  }
+  
+  &:active {
+    transform: translateY(1px);
+    --background: #3accb9;
+    
+    &::after {
+      box-shadow: 0 5px 10px rgba(95, 227, 208, 0.3);
+    }
   }
 }
 
@@ -96,7 +204,7 @@ $font-family: 'Roboto', sans-serif;
   align-items: center;
   text-align: center;
   margin: 30px 0;
-  color: $color-secondary;
+  color: $color-light-text;
   font-family: $font-family;
   font-size: 14px;
 
@@ -105,7 +213,7 @@ $font-family: 'Roboto', sans-serif;
     content: "";
     flex-grow: 1;
     height: 1px;
-    background-color: rgba(2, 128, 144, 0.3);
+    background-color: rgba(127, 140, 141, 0.2);
   }
 
   &::before {
@@ -122,211 +230,261 @@ $font-family: 'Roboto', sans-serif;
 }
 
 .social-buttons {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  padding: 0 16px;
-  margin: 24px auto;
-  max-width: 400px;
-  
-  ion-button {
-    --border-radius: 8px;
-    --border-width: 0 !important;
-    --border-color: transparent !important;
-    --border-style: none !important;
-    --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    --background-activated: inherit;
-    --background-focused: inherit;
-    --background-hover: inherit;
-    --ripple-color: transparent;
-    --padding-top: 0;
-    --padding-bottom: 0;
-    --padding-start: 16px;
-    --padding-end: 16px;
-    height: 44px;
-    font-size: 14px;
-    text-transform: none;
-    margin: 0;
-    font-weight: 500;
-    font-family: $font-family;
+  display: flex;
+  justify-content: center;
+  margin: 24px 0;
+}
 
-    &.facebook-btn {
-      --background: #1877F2;
-      --color: white;
-      
-      ion-icon {
-        margin-right: 8px;
-      }
+.social-buttons .social-button {
+  width: 55px;
+  height: 55px;
+  border-radius: 10px;
+  background-color: $color-white;
+  border: 1px solid rgba(127, 140, 141, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  ion-icon {
+    font-size: 24px;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &.facebook-btn {
+    ion-icon {
+      color: #1877F2;
+    }
+  }
+
+  &.apple-btn {
+    ion-icon {
+      color: #000000;
     }
   }
 }
 
 .register-text {
   text-align: center;
-  color: $color-secondary;
+  color: $color-light-text;
   margin-top: 30px;
   font-size: 15px;
   cursor: pointer;
 
   a {
-    color: $color-accent;
+    color: #5fe3d0;
     text-decoration: none;
     font-weight: 600;
     transition: color 0.2s ease;
     
     &:hover {
-      color: color.adjust($color-accent, $lightness: -10%);
-    }
-  }
-}
-
-// Estilo global para la página
-ion-content {
-  --background: linear-gradient(135deg, white 60%, #{$color-background} 100%);
-}
-
-// Estilos específicos para el modo oscuro
-:host-context(.dark), .dark-theme {
-  .divider {
-    color: rgba(255, 255, 255, 0.7);
-    
-    &::before,
-    &::after {
-      background-color: rgba(255, 255, 255, 0.2);
-    }
-  }
-
-  .social-buttons {
-    ion-button {
-      &.google-btn {
-        --background: #202124;
-        --color: white;
-        
-        ion-icon {
-          color: #4285F4;
-        }
-      }
+      color: #4dd8c5;
     }
   }
 }
 
 // Estilos para el botón de Google Material Design
 .gsi-material-button {
-  -moz-user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  -webkit-appearance: none;
+  user-select: none;
+  appearance: none;
   background-color: white;
   background-image: none;
-  border: 1px solid #dadce0;
-  border-radius: 8px;
+  border: 1px solid rgba(127, 140, 141, 0.1);
+  border-radius: 25px;
   box-sizing: border-box;
   color: #1f1f1f;
   cursor: pointer;
   font-family: 'Roboto', sans-serif;
   font-size: 14px;
-  height: 44px;
+  height: 55px;
   letter-spacing: 0.25px;
   outline: none;
   overflow: hidden;
-  padding: 0 12px;
+  padding: 0 24px;
   position: relative;
   text-align: center;
-  transition: background-color .218s, border-color .218s, box-shadow .218s;
+  transition: all 0.3s ease;
   vertical-align: middle;
   white-space: nowrap;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 180px;
+  box-shadow: none;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 5%;
+    width: 90%;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    z-index: -1;
+  }
+  
+  &:hover {
+    box-shadow: none;
+    transform: translateY(-2px);
+    
+    &::after {
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    }
+  }
+  
+  &:active {
+    transform: translateY(1px);
+    
+    &::after {
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    }
+  }
 }
 
 .gsi-material-button .gsi-material-button-icon {
-  height: 18px;
-  margin-right: 8px;
-  min-width: 18px;
-  width: 18px;
+  height: 20px;
+  margin-right: 12px;
+  min-width: 20px;
+  width: 20px;
 }
 
 .gsi-material-button .gsi-material-button-content-wrapper {
   align-items: center;
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
-  height: 100%;
   justify-content: center;
-  position: relative;
-  width: 100%;
+  height: 100%;
 }
 
 .gsi-material-button .gsi-material-button-contents {
+  flex-grow: 0;
   font-family: 'Roboto', sans-serif;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: top;
-  padding-left: 0;
-  padding-right: 8px;
 }
 
 .gsi-material-button .gsi-material-button-state {
-  transition: opacity .218s;
-  bottom: 0;
-  left: 0;
-  opacity: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
+  display: none;
 }
 
-.gsi-material-button:disabled {
-  cursor: default;
-  background-color: #ffffff61;
-  border-color: #1f1f1f1f;
-}
+// Modo oscuro - solo se aplica cuando la clase dark-theme está presente
+:host-context(.dark-theme) {
+  ion-content {
+    --background: linear-gradient(170deg, #{color.adjust($color-primary, $lightness: -15%)} 30%, #{$dark-bg} 30%);
+  }
 
-.gsi-material-button:disabled .gsi-material-button-contents {
-  opacity: 38%;
-}
+  .login-container {
+    .title {
+      color: $dark-text;
+    }
 
-.gsi-material-button:disabled .gsi-material-button-icon {
-  opacity: 38%;
-}
+    .subtitle {
+      color: rgba(224, 224, 224, 0.8);
+    }
+  }
 
-.gsi-material-button:not(:disabled):active .gsi-material-button-state, 
-.gsi-material-button:not(:disabled):focus .gsi-material-button-state {
-  background-color: #303030;
-  opacity: 12%;
-}
+  .login-form {
+    ion-item {
+      --background: #{$dark-surface};
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      
+      &.item-has-focus {
+        --background: #{color.adjust($dark-surface, $lightness: 5%)};
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+      }
 
-.gsi-material-button:not(:disabled):hover {
-  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
-}
+      ion-label {
+        color: $dark-secondary-text;
+      }
 
-.gsi-material-button:not(:disabled):hover .gsi-material-button-state {
-  background-color: #303030;
-  opacity: 8%;
-}
+      ion-input {
+        --placeholder-color: rgba(158, 158, 158, 0.7);
+        color: $dark-text;
+      }
 
-// Dark theme
-:host-context(.dark), .dark-theme {
+      ion-icon {
+        color: $dark-secondary-text;
+      }
+    }
+  }
+
+  .forgot-password {
+    a {
+      color: $dark-secondary-text;
+      
+      &:hover {
+        color: $dark-text;
+      }
+    }
+  }
+
+  .login-btn {
+    --background: #{$dark-primary};
+    --color: $dark-text;
+    
+    &:hover {
+      --background: #{color.adjust($dark-primary, $lightness: -5%)};
+    }
+    
+    &:active {
+      --background: #{color.adjust($dark-primary, $lightness: -10%)};
+    }
+  }
+
+  .divider {
+    color: $dark-secondary-text;
+
+    &::before,
+    &::after {
+      background-color: rgba(158, 158, 158, 0.2);
+    }
+  }
+
+  // Estilos de modo oscuro para el botón de Google
   .gsi-material-button {
-    background-color: #202124;
-    border-color: #5f6368;
-    color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    background-color: $dark-surface;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: $dark-text;
+    
+    &::after {
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    &:hover {
+      box-shadow: none;
+      transform: translateY(-2px);
+      background-color: color.adjust($dark-surface, $lightness: 5%);
+      
+      &::after {
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.25);
+      }
+    }
+    
+    &:active {
+      transform: translateY(1px);
+      background-color: color.adjust($dark-surface, $lightness: -5%);
+      
+      &::after {
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+      }
+    }
   }
-  
-  .gsi-material-button:not(:disabled):hover {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .6), 0 1px 5px 2px rgba(0, 0, 0, .3);
-  }
-  
-  .gsi-material-button:not(:disabled):active .gsi-material-button-state,
-  .gsi-material-button:not(:disabled):focus .gsi-material-button-state {
-    background-color: #e8eaed;
-    opacity: 12%;
-  }
-  
-  .gsi-material-button:not(:disabled):hover .gsi-material-button-state {
-    background-color: #e8eaed;
-    opacity: 8%;
+
+  .register-text {
+    color: $dark-secondary-text;
+    
+    a {
+      color: $dark-primary;
+      
+      &:hover {
+        color: #{color.adjust($dark-primary, $lightness: 10%)};
+      }
+    }
   }
 }

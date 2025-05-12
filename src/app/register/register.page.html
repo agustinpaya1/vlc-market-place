@@ -1,6 +1,11 @@
 <ion-content [fullscreen]="true" class="ion-padding">
   <div class="register-container">
-    <h1 class="title">Registro</h1>
+    <div class="back-button" (click)="goToLogin()">
+      <ion-icon name="arrow-back-outline"></ion-icon>
+      <span>Volver a inicio de sesión</span>
+    </div>
+    
+    <h1 class="title">Regístrate</h1>
     <p class="subtitle">Crea tu cuenta para comenzar</p>
 
     <form [formGroup]="registerForm" (ngSubmit)="register()" class="register-form">
@@ -24,7 +29,12 @@
 
       <ion-item>
         <ion-label position="stacked">Contraseña</ion-label>
-        <ion-input type="password" formControlName="password" placeholder="********"></ion-input>
+        <ion-input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="********"></ion-input>
+        <ion-icon 
+          [name]="showPassword ? 'eye-outline' : 'eye-off-outline'" 
+          slot="end"
+          (click)="togglePassword()">
+        </ion-icon>
       </ion-item>
 
       <!-- Campos de negocio -->

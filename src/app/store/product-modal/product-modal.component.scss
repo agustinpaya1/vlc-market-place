@@ -1,23 +1,86 @@
+/* Estilo para asegurar que el contenido del modal empiece desde arriba */
+ion-content {
+  --padding-top: 0;
+  --background: transparent;
+}
+
+/* Indicador de arrastre en la parte superior del modal */
+.drag-indicator {
+  width: 40px;
+  height: 5px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  margin: 8px auto 16px;
+  transition: all 0.3s ease;
+}
+
+/* Animación al cargar el modal */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .product-image-container {
   width: 100%;
   height: 250px;
   margin-bottom: 20px;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  animation: fadeIn 0.5s ease forwards;
 
   ion-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.5s ease;
+    
+    &:hover {
+      transform: scale(1.03);
+    }
+  }
+
+  .image-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    
+    .close-button {
+      --background: rgba(0, 0, 0, 0.6);
+      --color: white;
+      --border-radius: 50%;
+      --padding-start: 8px;
+      --padding-end: 8px;
+      --padding-top: 8px;
+      --padding-bottom: 8px;
+      width: 36px;
+      height: 36px;
+      margin: 0;
+      transition: all 0.2s ease;
+      
+      ion-icon {
+        font-size: 20px;
+      }
+      
+      &:hover {
+        --background: rgba(0, 0, 0, 0.8);
+        transform: scale(1.1);
+      }
+    }
   }
 }
 
 .product-details {
   padding: 16px;
+  animation: fadeIn 0.6s ease forwards;
+  animation-delay: 0.1s;
+  opacity: 0;
+  animation-fill-mode: forwards;
 
   h2 {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     font-weight: 600;
     margin-bottom: 16px;
     color: var(--ion-color-dark);
@@ -31,21 +94,21 @@
       align-items: center;
       gap: 12px;
 
-      .new-price {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: var(--ion-color-success);
-      }
-
-      .old-price {
+      .original-price {
         font-size: 1.1rem;
         text-decoration: line-through;
         color: var(--ion-color-medium);
       }
+
+      .final-price {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--ion-color-success);
+      }
     }
 
-    .regular-price {
-      font-size: 1.4rem;
+    .price {
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--ion-color-primary);
     }
@@ -54,7 +117,7 @@
   .description {
     margin-bottom: 24px;
     color: var(--ion-color-medium);
-    line-height: 1.5;
+    line-height: 1.6;
   }
 }
 
@@ -66,8 +129,12 @@
   margin: var(--spacing-lg) 0;
   padding: var(--spacing-md);
   border-radius: var(--border-radius-medium);
-  background: var(--color-surface);
+  background: rgba(0, 0, 0, 0.03);
   box-shadow: var(--shadow-small);
+  animation: fadeIn 0.7s ease forwards;
+  animation-delay: 0.2s;
+  opacity: 0;
+  animation-fill-mode: forwards;
 
   .quantity {
     font-size: 1.2rem;
@@ -80,95 +147,125 @@
   ion-button {
     --padding-start: 0;
     --padding-end: 0;
-    height: 32px;
-    width: 32px;
+    height: 36px;
+    width: 36px;
     font-size: 18px;
     font-weight: 600;
     --background: var(--color-card);
     --color: var(--color-text-secondary);
-    --border-radius: var(--border-radius-small);
+    --border-radius: 50%;
     --box-shadow: none;
     --border-width: 1px;
     --border-color: var(--border-light);
     margin: 0;
+    transition: transform 0.2s ease;
 
     &:hover {
       --background: var(--ion-background-color-step-100);
       --color: var(--color-text-primary);
+      transform: scale(1.05);
     }
 
     &:active {
       --background: var(--ion-background-color-step-150);
+      transform: scale(0.95);
     }
   }
 }
 
-.total-price {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-md);
-  background: var(--color-surface);
-  border-radius: var(--border-radius-medium);
-  margin: var(--spacing-lg) 0;
-  box-shadow: var(--shadow-small);
-
-  span {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--color-text-primary);
+/* Estilo para el botón de añadir al carrito */
+ion-button[expand="block"] {
+  margin-top: 24px;
+  --border-radius: 12px;
+  height: 50px;
+  --background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+  --box-shadow: 0 8px 16px rgba(var(--ion-color-primary-rgb), 0.3);
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+  animation: fadeIn 0.8s ease forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+  animation-fill-mode: forwards;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    --background: linear-gradient(135deg, var(--ion-color-primary-shade), var(--ion-color-primary));
+    --box-shadow: 0 10px 20px rgba(var(--ion-color-primary-rgb), 0.4);
+    transform: translateY(-2px);
   }
-
-  .amount {
-    color: var(--ion-color-primary);
-  }
-}
-
-ion-footer {
-  ion-toolbar {
-    padding: var(--spacing-sm) var(--spacing-md);
-    --background: transparent;
-    --border-color: transparent;
-  }
-
-  ion-button {
-    --border-radius: var(--border-radius-small);
-    margin: 0;
+  
+  &:active {
+    transform: translateY(0);
+    --box-shadow: 0 5px 10px rgba(var(--ion-color-primary-rgb), 0.2);
   }
 }
 
-// Dark theme specific styles are no longer needed since we're using CSS variables
-:host-context(.dark-theme) {
-  .quantity-selector, .total-price {
-    background: var(--color-surface);
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .drag-indicator {
+    background-color: rgba(255, 255, 255, 0.2);
   }
-}
+  
+  .quantity-selector {
+    background: rgba(255, 255, 255, 0.05);
+  }
 
-.add-to-cart-container {
-  margin: var(--spacing-lg) 0;
-  padding: var(--spacing-md);
+  .product-image-container {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
 
-  .add-first-time {
-    --background: var(--ion-color-primary);
-    --color: var(--ion-color-primary-contrast);
-    --border-radius: var(--border-radius-medium);
-    --box-shadow: var(--shadow-medium);
-    min-height: 56px;
-    font-size: 1.2rem;
-    font-weight: 600;
-    text-transform: none;
-    margin: 0;
-
-    ion-icon {
-      font-size: 24px;
-      margin-right: var(--spacing-sm);
+  .product-details {
+    h2 {
+      color: #ffffff;
     }
 
+    .description {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .price-container {
+      .price {
+        color: var(--ion-color-primary-tint);
+      }
+      
+      .offer-price {
+        .original-price {
+          color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .final-price {
+          color: var(--ion-color-success-tint);
+        }
+      }
+    }
+  }
+
+  ion-button[expand="block"] {
+    --background: linear-gradient(135deg, var(--ion-color-primary-shade), var(--ion-color-primary));
+    --box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    
     &:hover {
-      --background: var(--ion-color-primary-shade);
-      --box-shadow: var(--shadow-large);
-      transform: translateY(-2px);
-      transition: transform 0.2s ease;
+      --background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-tint));
+      --box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  .quantity-selector {
+    ion-button {
+      --background: rgba(255, 255, 255, 0.08);
+      --color: rgba(255, 255, 255, 0.8);
+      --border-color: rgba(255, 255, 255, 0.1);
+      
+      &:hover {
+        --background: rgba(255, 255, 255, 0.15);
+        --color: white;
+      }
+    }
+    
+    .quantity {
+      color: white;
     }
   }
 } 

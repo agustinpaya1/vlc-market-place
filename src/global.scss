@@ -641,3 +641,80 @@ ion-header {
     }
   }
 }
+
+/*====================================
+  MODALES PERSONALIZADOS
+====================================*/
+
+/* Modal de producto sin cabecera verde */
+.product-modal {
+  --background: transparent;
+  
+  .modal-wrapper {
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: modalSlideUp 0.3s ease-out forwards;
+  }
+  
+  .ion-page {
+    background: linear-gradient(to bottom, #f9f9f9, #ffffff);
+    border-radius: 16px 16px 0 0;
+    overflow: hidden;
+  }
+}
+
+/* Animación de entrada del modal */
+@keyframes modalSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .product-modal {
+    .ion-page {
+      background: linear-gradient(to bottom, #2d2d2d, #1e1e1e);
+      color: #ffffff;
+    }
+    
+    .modal-wrapper {
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5);
+    }
+  }
+}
+
+/* Tab bar full width fix */
+ion-tabs {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  
+  ion-tab-bar {
+    width: 100%;
+    left: 0;
+    bottom: 0;
+    position: fixed;
+  }
+}
+
+ion-content.has-tabs {
+  --padding-bottom: 65px;
+}
+
+/* Add safe area padding for iOS */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  ion-tab-bar {
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(65px + env(safe-area-inset-bottom)) !important;
+  }
+  
+  ion-content.has-tabs {
+    --padding-bottom: calc(65px + env(safe-area-inset-bottom));
+  }
+}
