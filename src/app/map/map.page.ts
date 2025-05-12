@@ -401,11 +401,10 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       this.leafletMap.remove();
     }
     const map = L.map('map').setView([39.469, -0.376], 14);
-    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    });
-    osm.addTo(map);
+    L.tileLayer('https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=nd6CeZ7IspRMBLuVFPiI', {
+      attribution: '&copy; <a href=\"https://www.maptiler.com/copyright/\">MapTiler</a> &copy; OpenStreetMap contributors',
+      maxZoom: 20
+    }).addTo(map);
     this.leafletMap = map;
     this.addStoreMarkersToMap();
 
