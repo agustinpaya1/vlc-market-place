@@ -1,22 +1,32 @@
 <ion-header class="ion-no-border">
-  <div class="search-container">
-    <div class="search-bar">
-      <ion-icon name="search-outline" class="search-icon"></ion-icon>
-      <input type="text" [(ngModel)]="searchTerm" (input)="updateSearchTerm($event)" placeholder="Buscar tiendas o productos">
-      <ion-icon name="scan-outline" class="scan-icon" (click)="openScanner()"></ion-icon>
+  <div class="header-container">
+    <div class="location-wrapper">
+      <span class="location-label">Location</span>
+      <div class="location-container">
+        <ion-icon name="location-outline"></ion-icon>
+        <span class="location-text">{{ userLocation }}</span>
+        <ion-icon name="chevron-down-outline" class="chevron-icon"></ion-icon>
+      </div>
     </div>
-    <div class="action-buttons">
+    <div class="header-actions">
       <ion-button fill="clear" class="wallet-button" (click)="showVLCoinsInfo()">
         <img src="assets/icons/vl-coin.svg" alt="VL Coins" class="vl-coin-icon">
       </ion-button>
       <ion-button fill="clear" class="notification-button" (click)="openNotificationPopover($event)">
         <ion-icon name="notifications-outline"></ion-icon>
-        <ion-badge *ngIf="notificationCount > 0" class="notification-badge">{{ notificationCount }}</ion-badge>
-      </ion-button>
-      <ion-button fill="clear" class="options-button" (click)="presentFilterOptions($event)" aria-label="Filtrar opciones">
-        <ion-icon name="options-outline"></ion-icon>
+        <div *ngIf="notificationCount > 0" class="notification-dot"></div>
       </ion-button>
     </div>
+  </div>
+  <div class="search-row">
+    <div class="search-bar">
+      <ion-icon name="search-outline" class="search-icon"></ion-icon>
+      <input type="text" [(ngModel)]="searchTerm" (input)="updateSearchTerm($event)" placeholder="Buscar tiendas o productos">
+      <ion-icon name="scan-outline" class="scan-icon" (click)="openScanner()"></ion-icon>
+    </div>
+    <ion-button fill="clear" class="options-button" (click)="presentFilterOptions($event)">
+      <ion-icon name="options-outline"></ion-icon>
+    </ion-button>
   </div>
 </ion-header>
 

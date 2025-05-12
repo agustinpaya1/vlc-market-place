@@ -154,6 +154,9 @@ export class StoresPage implements OnInit {
   notificationPopoverOpen = false;
   notificationPopoverEvent: any = null;
   
+  // Usuario ubicación
+  userLocation: string = 'Valencia, España';
+  
   selectedCategory: string = 'Todos';
   selectedSort: string = 'default';
   isLoading = false;

@@ -25,116 +25,207 @@ ion-content {
 }
 
 ion-header {
-  box-shadow: none;
+  background-color: #02A396;
+  border-radius: 0 0 24px 24px;
+  box-shadow: var(--shadow-medium);
+  padding-top: 10px;
 }
 
-/* Barra de búsqueda */
-.search-container {
-  padding: 12px 14px;
+/* Nuevo header con ubicación */
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px 14px;
+}
+
+/* Contenedor de la ubicación con etiqueta */
+.location-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.location-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-left: 2px;
+}
+
+.location-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: white;
+  
+  ion-icon[name="location-outline"] {
+    font-size: 18px;
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 6px;
+    border-radius: 50%;
+    color: #FFD700; /* Color amarillo para el icono de ubicación */
+  }
+}
+
+.location-text {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.chevron-icon {
+  font-size: 14px;
+  margin-left: 2px;
+}
+
+.header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: var(#02A396);
   
-  .search-bar {
-    flex: 1;
+  ion-button {
+    --padding-start: 0;
+    --padding-end: 0;
+    --color: #ffffff;
+    --background: transparent;
+    margin: 0;
     height: 44px;
-    background-color: #ffffff;
-    border-radius: var(--border-radius);
-    display: flex;
-    align-items: center;
-    padding: 0 14px;
-    box-shadow: var(--shadow-small);
+    width: 44px;
     
-    input {
-      flex: 1;
-      border: none;
-      background: transparent;
-      height: 100%;
-      font-size: 15px;
-      color: #333;
-      outline: none;
-      
-      &::placeholder {
-        color: #888;
-      }
-    }
-    
-    .search-icon, .scan-icon {
-      color: var(--color-secondary);
-      font-size: 20px;
+    ion-icon {
+      font-size: 24px;
     }
   }
   
-  .action-buttons {
-    display: flex;
+  .notification-button {
+    position: relative;
     
-    ion-button {
-      --padding-start: 0;
-      --padding-end: 0;
-      --color: #ffffff;
-      --background: transparent;
-      margin: 0;
-      height: 42px;
-      width: 42px;
-      
-      ion-icon {
-        font-size: 22px;
-      }
-    }
-    
-    .notification-badge {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      font-size: 10px;
-      min-width: 16px;
-      height: 16px;
-      border-radius: 8px;
-      --background: #ff3b30;
-    }
-    
-    .wallet-button {
-      position: relative;
-      
-      .vl-coin-icon {
-        width: 26px;
-        height: 26px;
-        filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      }
-    }
-    
-    .vlcoin-badge {
+    .notification-dot {
       position: absolute;
       top: 6px;
       right: 6px;
-      font-size: 10px;
-      min-width: 16px;
-      height: 16px;
-      border-radius: 8px;
-      --background: #ffb700;
-      color: #000;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #ff3b30;
+      box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+      animation: notificationPulse 2s infinite;
     }
+  }
+  
+  @keyframes notificationPulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.6);
+    }
+    70% {
+      box-shadow: 0 0 0 4px rgba(255, 59, 48, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
+    }
+  }
+  
+  .wallet-button {
+    position: relative;
     
-    .wallet-pulse {
-      animation: walletPulse 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    .vl-coin-icon {
+      width: 26px;
+      height: 26px;
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
+  }
+  
+  .vlcoin-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 10px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    --background: #ffb700;
+    color: #000;
+  }
+  
+  .wallet-pulse {
+    animation: walletPulse 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  @keyframes walletPulse {
+    0% {
+      transform: scale(1);
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+    }
+    50% {
+      transform: scale(1.35);
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+    }
+    100% {
+      transform: scale(1);
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+    }
+  }
+}
+
+/* Fila de búsqueda */
+.search-row {
+  display: flex;
+  align-items: center;
+  padding: 0 16px 20px;
+  gap: 10px;
+}
+
+/* Barra de búsqueda */
+.search-bar {
+  flex: 1;
+  height: 48px;
+  background-color: #ffffff;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  box-shadow: var(--shadow-small);
+  
+  input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    height: 100%;
+    font-size: 16px;
+    color: #333;
+    outline: none;
     
-    @keyframes walletPulse {
-      0% {
-        transform: scale(1);
-        filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
-      }
-      50% {
-        transform: scale(1.35);
-        filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
-      }
-      100% {
-        transform: scale(1);
-        filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
-      }
+    &::placeholder {
+      color: #888;
     }
+  }
+  
+  .search-icon, .scan-icon {
+    color: #558b6e;
+    font-size: 20px;
+    opacity: 0.9;
+    filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.2));
+    transition: all 0.2s ease;
+    
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+}
+
+.options-button {
+  --padding-start: 0;
+  --padding-end: 0;
+  --color: #ffffff;
+  --background: rgba(255, 255, 255, 0.2);
+  margin: 0;
+  height: 48px;
+  width: 48px;
+  border-radius: 24px;
+  
+  ion-icon {
+    font-size: 22px;
   }
 }
 
@@ -1062,6 +1153,32 @@ ion-col {
 @media (prefers-color-scheme: dark) {
   .notification-popover {
     --background: #1e1e1e;
+  }
+  
+  /* Estilos para la barra de búsqueda en modo oscuro */
+  .search-bar {
+    background-color: #2d2d2d;
+    
+    input {
+      color: #ffffff;
+      
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+      }
+    }
+    
+    .search-icon, .scan-icon {
+      color: #ffffff;
+    }
+  }
+  
+  /* Estilos para el botón de opciones en modo oscuro */
+  .options-button {
+    --background: rgba(255, 255, 255, 0.3);
+    
+    ion-icon {
+      color: #ffffff;
+    }
   }
   
   .notification-list {
