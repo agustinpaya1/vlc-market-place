@@ -1,70 +1,39 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button mode="md" text="Configuración" defaultHref="/tabs/profile"></ion-back-button>
-    </ion-buttons>
+    <ion-title>Configuración</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
+  <!-- User Menu List -->
   <ion-list>
-    <ion-item-group>
-      <ion-item-divider>
-        <ion-label>Apariencia</ion-label>
-      </ion-item-divider>
-
-      <ion-item button (click)="toggleDarkMode()">
-        <ion-icon slot="start" name="moon-outline"></ion-icon>
-        <ion-label>Modo oscuro</ion-label>
-        <ion-toggle [(ngModel)]="settings.darkMode" slot="end"></ion-toggle>
-      </ion-item>
-    </ion-item-group>
-
-    <ion-item-group>
-      <ion-item-divider>
-        <ion-label>Notificaciones</ion-label>
-      </ion-item-divider>
-
-      <ion-item button (click)="toggleNotifications()">
-        <ion-icon slot="start" name="notifications-outline"></ion-icon>
-        <ion-label>Notificaciones push</ion-label>
-        <ion-toggle [(ngModel)]="settings.notifications" slot="end"></ion-toggle>
-      </ion-item>
-    </ion-item-group>
-
-    <ion-item-group>
-      <ion-item-divider>
-        <ion-label>Idioma</ion-label>
-      </ion-item-divider>
-
-      <ion-item button (click)="openLanguageSelector()">
-        <ion-icon slot="start" name="language-outline"></ion-icon>
-        <ion-label>Idioma de la aplicación</ion-label>
-        <ion-note slot="end">{{ getLanguageName(settings.language) }}</ion-note>
-        <ion-icon slot="end" name="chevron-forward"></ion-icon>
-      </ion-item>
-    </ion-item-group>
-
-    <ion-item-group>
-      <ion-item-divider>
-        <ion-label>Cuenta</ion-label>
-      </ion-item-divider>
-
-      <ion-item button (click)="clearCache()" color="medium">
-        <ion-icon slot="start" name="trash-outline"></ion-icon>
-        <ion-label>Limpiar caché</ion-label>
-      </ion-item>
-
-      <ion-item button (click)="openHelp()">
-        <ion-icon slot="start" name="help-circle-outline"></ion-icon>
-        <ion-label>Ayuda y soporte</ion-label>
-        <ion-icon slot="end" name="chevron-forward"></ion-icon>
-      </ion-item>
-
-      <ion-item button (click)="logout()" color="danger">
-        <ion-icon slot="start" name="log-out-outline"></ion-icon>
-        <ion-label>Cerrar sesión</ion-label>
-      </ion-item>
-    </ion-item-group>
+    <ion-item class="custom-item">
+      <ion-icon name="notifications" slot="start"></ion-icon>
+      <ion-label>Notificaciones push</ion-label>
+      <ion-toggle slot="end"></ion-toggle>
+    </ion-item>
+    
+    <ion-item class="custom-item">
+      <ion-icon name="language" slot="start"></ion-icon>
+      <ion-label>Idioma</ion-label>
+      <ion-select interface="popover" value="es" slot="end">
+        <ion-select-option value="es">Español</ion-select-option>
+        <ion-select-option value="en">English</ion-select-option>
+      </ion-select>
+    </ion-item>
   </ion-list>
+
+  <!-- Settings Section -->
+  <div class="settings-section">
+    <div class="section-content">
+      <ion-item>
+        <ion-icon slot="start" name="notifications"></ion-icon>
+        <ion-label>
+          <h4>Notificaciones Push</h4>
+          <p>Recibe notificaciones de tus pedidos</p>
+        </ion-label>
+        <ion-toggle slot="end"></ion-toggle>
+      </ion-item>
+    </div>
+  </div>
 </ion-content>

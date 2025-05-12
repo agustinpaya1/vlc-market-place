@@ -52,7 +52,7 @@ ion-header {
 }
 
 ion-content {
-  --background: linear-gradient(to bottom, var(--ion-color-artemis-dark-primary), var(--ion-color-artemis-dark-secondary));
+  --background: var(--color-background);
   --padding-top: var(--spacing-md);
   --padding-bottom: var(--spacing-md);
   --padding-start: var(--spacing-md);
@@ -61,78 +61,36 @@ ion-content {
   ion-list {
     background: transparent;
     padding: 0;
-    margin: 0;
-
-    ion-item-group {
-      margin-bottom: var(--spacing-lg);
-
-      ion-item-divider {
-        --background: transparent;
-        --color: var(--ion-color-primary);
-        --padding-start: var(--spacing-md);
-        --padding-end: var(--spacing-md);
-        --padding-top: var(--spacing-sm);
-        --padding-bottom: var(--spacing-sm);
-        border: none;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        font-size: 14px;
+    
+    ion-item {
+      --padding-start: 16px;
+      --padding-end: 16px;
+      --inner-padding-end: 0;
+      --min-height: 56px;
+      
+      &::part(native) {
+        padding: 0;
       }
 
-      ion-item {
-        --background: var(--color-surface);
-        --background-hover: var(--color-surface);
-        --background-activated: var(--color-surface);
-        --border-color: var(--border-light);
-        --border-radius: var(--border-radius-medium);
-        --padding-start: var(--spacing-md);
-        --padding-end: var(--spacing-md);
-        --padding-top: var(--spacing-sm);
-        --padding-bottom: var(--spacing-sm);
-        --min-height: 56px;
-        margin-bottom: var(--spacing-xs);
-
-        &:last-child {
-          margin-bottom: 0;
-        }
-
-        ion-icon {
-          font-size: 24px;
-          color: var(--ion-color-medium);
-        }
-
-        ion-label {
-          font-weight: 500;
-          font-size: 16px;
-        }
-
-        ion-note {
-          font-size: 14px;
-          color: var(--ion-color-medium);
-        }
-
-        ion-toggle {
-          --background: var(--ion-color-medium);
-          --background-checked: var(--ion-color-primary);
-          --handle-background: var(--ion-color-light);
-          --handle-background-checked: var(--ion-color-light);
-        }
-
-        &[color="medium"] {
-          --background: var(--ion-color-light);
-          ion-icon {
-            color: var(--ion-color-medium);
-          }
-        }
-
-        &[color="danger"] {
-          --background: var(--ion-color-danger);
-          --color: var(--ion-color-danger-contrast);
-          ion-icon {
-            color: var(--ion-color-danger-contrast);
-          }
-        }
+      .input-wrapper {
+        display: none;
+      }
+      
+      ion-icon {
+        margin-right: 16px;
+        font-size: 22px;
+        color: var(--ion-color-medium);
+      }
+      
+      ion-label {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 500;
+      }
+      
+      ion-select {
+        min-width: 120px;
+        max-width: 50%;
       }
     }
   }
@@ -150,11 +108,7 @@ ion-item[color="danger"] {
 // Dark mode adjustments
 :host-context(.dark) {
   ion-content {
-    --background: linear-gradient(
-      to bottom,
-      var(--ion-color-artemis-dark-primary),
-      var(--ion-color-artemis-dark-secondary)
-    );
+    --background: var(--color-background);
   }
 
   ion-item-group {
