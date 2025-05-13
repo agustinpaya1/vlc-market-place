@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <style>
+    .market-illustration { fill: #ff4081; }
+    .market-outline { fill: none; stroke: #333; stroke-width: 2; }
+    .shopper { fill: #333; }
+    .background { fill: #ffcce0; opacity: 0.3; }
+  </style>
+  <circle cx="200" cy="180" r="150" class="background" />
+  <g transform="translate(100, 80)">
+    <!-- Mercado local -->
+    <path d="M30,120 L30,220 L170,220 L170,120 L30,120 Z" class="market-outline" />
+    <path d="M10,120 L190,120 L170,90 L30,90 Z" class="market-outline" />
+    <path d="M50,140 L70,140 L70,180 L50,180 Z" class="market-outline" />
+    <path d="M90,140 L110,140 L110,180 L90,180 Z" class="market-outline" />
+    <path d="M130,140 L150,140 L150,180 L130,180 Z" class="market-outline" />
+    <path d="M40,90 L40,50 C40,30 60,30 60,50 L60,90" class="market-outline" />
+    <path d="M80,90 L80,50 C80,30 100,30 100,50 L100,90" class="market-outline" />
+    <path d="M120,90 L120,50 C120,30 140,30 140,50 L140,90" class="market-outline" />
+    <path d="M160,90 L160,50 C160,30 180,30 180,50 L180,90" class="market-outline" />
+    <!-- Productos -->
+    <circle cx="60" cy="160" r="10" class="market-illustration" />
+    <circle cx="100" cy="160" r="10" class="market-illustration" />
+    <circle cx="140" cy="160" r="10" class="market-illustration" />
+    <!-- Persona -->
+    <circle cx="200" cy="200" r="20" class="shopper" />
+    <path d="M185,230 L215,230 L215,280 L185,280 Z" class="shopper" />
+    <path d="M175,250 L185,240 L185,260 Z" class="shopper" />
+    <path d="M225,250 L215,240 L215,260 Z" class="shopper" />
+    <!-- Teléfono móvil -->
+    <rect x="230" y="180" width="30" height="50" rx="5" ry="5" fill="#5a64ff" />
+    <rect x="233" y="185" width="24" height="40" rx="2" ry="2" fill="white" />
+    <circle cx="245" cy="230" r="2" fill="white" />
+  </g>
+</svg> 

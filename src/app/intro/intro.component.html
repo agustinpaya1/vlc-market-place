@@ -1,0 +1,102 @@
+<ion-content>
+  <div class="intro-container">
+    <div class="slides-container">
+      <!-- Logo intro slide (new first slide) -->
+      <div class="intro-slide" [class.active]="currentSlide === 0">
+        <div class="slide-content logo-slide">
+          <div class="logo-intro-wrapper">
+            <div class="logo-intro">
+              <img src="https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/logoapp//logo.png" alt="VLC Market Logo" class="app-logo">
+              <h1 class="app-name">VLC Market Place</h1>
+              <p class="app-tagline">Tu mercado valenciano en tu móvil</p>
+            </div>
+          </div>
+          <div class="dots">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+          <div class="actions logo-actions">
+            <button class="next-button start-explore" (click)="nextSlide()">
+              <span>Explorar</span>
+              <ion-icon name="arrow-forward-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Primera pantalla de introducción (now slide 1) -->
+      <div class="intro-slide" [class.active]="currentSlide === 1">
+        <div class="slide-content">
+          <div class="illustration">
+            <img src="assets/intro/slide1.svg" alt="Mercados locales ilustración">
+          </div>
+          <div class="text-content">
+            <h2>Descubre Mercados Locales</h2>
+            <p>Explora los mejores mercados y tiendas locales de Valencia. Apoya el comercio de proximidad desde tu móvil.</p>
+          </div>
+          <div class="dots">
+            <span class="dot"></span>
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+          <div class="actions">
+            <button class="skip-button" (click)="skip()">Saltar</button>
+            <button class="next-button" (click)="nextSlide()">Next</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segunda pantalla de introducción (now slide 2) -->
+      <div class="intro-slide" [class.active]="currentSlide === 2">
+        <div class="slide-content">
+          <div class="illustration">
+            <img src="assets/intro/slide2.svg" alt="Productos frescos ilustración">
+          </div>
+          <div class="text-content">
+            <h2>Productos Frescos y de Calidad</h2>
+            <p>Encuentra los mejores productos frescos directamente de productores locales. Calidad garantizada y precios justos.</p>
+          </div>
+          <div class="dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot active"></span>
+            <span class="dot"></span>
+          </div>
+          <div class="actions">
+            <button class="skip-button" (click)="skip()">Saltar</button>
+            <button class="next-button" (click)="nextSlide()">Next</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tercera pantalla de introducción (now slide 3) -->
+      <div class="intro-slide" [class.active]="currentSlide === 3">
+        <div class="slide-content">
+          <div class="illustration">
+            <img src="assets/intro/slide3.svg" alt="Compra sostenible ilustración">
+          </div>
+          <div class="text-content">
+            <h2>Compra Sostenible y Gana</h2>
+            <p>Acumula VLCoins con cada compra, apoya el comercio local y canjea recompensas mientras reduces tu huella ecológica.</p>
+          </div>
+          <div class="dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot active"></span>
+          </div>
+          <div class="actions">
+            <button class="skip-button" (click)="skip()">Saltar</button>
+            <button class="next-button start-button" (click)="finish()" [disabled]="isFinishing">
+              <span>Comenzar</span>
+              <ion-icon name="arrow-forward-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>

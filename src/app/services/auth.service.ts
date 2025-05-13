@@ -30,24 +30,40 @@ export class AuthService {
   public user$ = this.user.asObservable();
 
   constructor(private supabaseService: SupabaseService, private notificationService: NotificationService) {
+    console.log('AuthService - Constructor called');
     this.initializeUser();
   }
 
   private async initializeUser() {
     try {
       console.log('AuthService - Inicializando usuario');
-      const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
+      
+      // Force check local storage for existing token
+      const localToken = localStorage.getItem('supabase-auth-token');
+      console.log('AuthService - Local storage token exists:', !!localToken);
+      
+      const { data: { session }, error: sessionError } = await this.supabaseService.getClient().auth.getSession();
+      
+      if (sessionError) {
+        console.error('AuthService - Error getting session:', sessionError);
+        this.user.next(null);
+        return;
+      }
       
       if (session) {
         console.log('AuthService - Sesión existente encontrada:', session);
         const user = session.user;
         
         // Intentar obtener el perfil del usuario desde la base de datos
-        const { data: profile } = await this.supabaseService.getClient()
+        const { data: profile, error: profileError } = await this.supabaseService.getClient()
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
+          
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error('AuthService - Error fetching profile:', profileError);
+        }
 
         // Si el perfil no existe y el usuario existe en auth, crearlo
         if (!profile && user) {
@@ -235,6 +251,10 @@ export class AuthService {
   async logout(): Promise<void> {
     await this.supabaseService.getClient().auth.signOut();
     this.user.next(null);
+    
+    // Don't clear the activeSession flag when logging out
+    // This ensures the intro slides won't appear again
+    
     await this.notificationService.showSuccess('Sesión cerrada correctamente');
   }
 

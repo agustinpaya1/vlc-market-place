@@ -17,9 +17,7 @@ import {
     IonImg,
     IonSearchbar,
     IonSkeletonText,
-    IonSpinner,
-    IonTitle,
-    IonToolbar
+    IonSpinner
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -90,8 +88,6 @@ interface Store {
     CommonModule,
     FormsModule,
     IonHeader,
-    IonToolbar,
-    IonTitle,
     IonContent,
     IonCard,
     IonCardHeader,
@@ -395,7 +391,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   }
 
   viewStoreDetails(store: Store) {
-    this.router.navigate(['/tabs/stores', store.id]);
+    this.router.navigate(['/tabs/store', store.id]);
   }
 
   private detectSystemTheme() {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
@@ -21,6 +21,7 @@ import {
   camera
 } from 'ionicons/icons';
 import { ToastController } from '@ionic/angular';
+import { Subscription } from 'rxjs';
 
 interface ProfileUser extends User {
   name: string;
@@ -33,7 +34,7 @@ interface ProfileUser extends User {
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule]
 })
-export class ProfilePage implements OnInit {
+export class ProfilePage implements OnInit, OnDestroy {
   user: ProfileUser = {
     id: '',
     name: 'Usuario',
@@ -44,7 +45,8 @@ export class ProfilePage implements OnInit {
   };
 
   isAuthenticated = false;
-  logoUrl: string = 'assets/vlc-logo.svg';
+  logoUrl: string = 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/logoapp//logo.png';
+  private authSubscription: Subscription | null = null;
 
   menuItems = [
     { icon: 'bag', label: 'Mis Pedidos', route: '/tabs/orders' },
@@ -73,26 +75,56 @@ export class ProfilePage implements OnInit {
       logInOutline,
       camera
     });
+    console.log('ProfilePage constructor called');
   }
 
   ionViewWillEnter() {
+    console.log('ProfilePage - ionViewWillEnter');
     this.checkAuthStatus();
   }
 
   ngOnInit() {
+    console.log('ProfilePage - ngOnInit');
     this.checkAuthStatus();
   }
 
+  ngOnDestroy() {
+    console.log('ProfilePage - ngOnDestroy');
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
+  }
+
   async checkAuthStatus() {
-    this.authService.user$.subscribe(user => {
+    console.log('ProfilePage - checkAuthStatus');
+    
+    // Force refresh from Supabase to ensure we have the latest auth state
+    try {
+      const { data } = await this.supabaseService.getClient().auth.getSession();
+      console.log('ProfilePage - Current session:', data.session);
+    } catch (error) {
+      console.error('Error getting current session:', error);
+    }
+    
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
+    
+    this.authSubscription = this.authService.user$.subscribe(user => {
+      console.log('ProfilePage - Auth subscription update:', user);
       this.isAuthenticated = !!user;
+      
       if (user) {
+        console.log('ProfilePage - User is authenticated:', user);
         this.loadUserData(user);
+      } else {
+        console.log('ProfilePage - User is NOT authenticated');
       }
     });
   }
 
   loadUserData(userData: User) {
+    console.log('ProfilePage - Loading user data:', userData);
     this.user = {
       id: userData.id,
       name: userData.fullName || userData.email.split('@')[0],
@@ -117,7 +149,7 @@ export class ProfilePage implements OnInit {
     });
     await toast.present();
     
-    this.router.navigate(['/']);
+    this.router.navigate(['/tabs/stores'], { replaceUrl: true });
   }
 
   navigate(route: string) {

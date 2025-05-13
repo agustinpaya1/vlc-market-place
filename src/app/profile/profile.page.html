@@ -89,7 +89,7 @@
   <!-- Contenido cuando el usuario NO está autenticado -->
   <div *ngIf="!isAuthenticated" class="not-authenticated-container">
     <div class="app-logo">
-      <img [src]="logoUrl" alt="VLC Marketplace" (error)="onImageError($event)">
+      <img [src]="logoUrl" alt="VLC Marketplace" class="transparent-logo" (error)="onImageError($event)">
       <h1>VLC Marketplace</h1>
     </div>
     

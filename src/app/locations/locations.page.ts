@@ -44,6 +44,7 @@ export class LocationsPage implements OnInit, AfterViewInit {
   }
 
   viewStore(storeId: string) {
+    console.log('Navegando a la tienda con ID:', storeId);
     this.router.navigate(['/tabs/store', storeId]);
   }
 

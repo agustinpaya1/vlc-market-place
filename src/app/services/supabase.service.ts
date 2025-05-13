@@ -26,6 +26,12 @@ export class SupabaseService {
     }
 
     try {
+      console.log('Initializing Supabase client...');
+      
+      // Check if we have any existing auth token in localStorage
+      const existingToken = localStorage.getItem('supabase-auth-token');
+      console.log('Existing auth token in localStorage:', existingToken ? 'Present' : 'Not found');
+      
       // Use a single client creation method
       this.supabaseInstance = createClient(
         environment.supabase.url, 
@@ -34,8 +40,8 @@ export class SupabaseService {
           auth: {
             persistSession: true,
             autoRefreshToken: true,
-            // Prevent multiple client instances
-            storageKey: 'supabase-auth-token'
+            storageKey: 'supabase-auth-token',
+            storage: localStorage
           },
           global: {
             headers: {
@@ -48,6 +54,13 @@ export class SupabaseService {
       // Ensure client is ready
       this.initSubject.next(true);
       console.log('Supabase client initialized successfully');
+      
+      // Test session detection
+      this.supabaseInstance.auth.getSession().then(({ data }) => {
+        console.log('Session check on init:', data.session ? 'Session exists' : 'No session');
+      }).catch(err => {
+        console.error('Error checking session on init:', err);
+      });
     } catch (error) {
       console.error('Error initializing Supabase client:', error);
       this.initSubject.error(error);

@@ -34,6 +34,7 @@ export class LoginPage {
   email: string = '';
   password: string = '';
   showPassword: boolean = false;
+  isLoading: boolean = false;
 
   constructor(
     private router: Router,
@@ -52,17 +53,27 @@ export class LoginPage {
 
   async login() {
     if (this.validateForm()) {
-      //console.log('Login with:', this.email, this.password);
-      // Aquí implementarías la lógica de login
+      console.log('Login with:', this.email, this.password);
       try {
+        this.isLoading = true;
         const success = await this.authService.login(this.email, this.password);
+        this.isLoading = false;
+        
         if (success) {
-          //Redirigir al usuario a la página principal
-          this.router.navigate(['/tabs/stores']);
+          console.log('Login successful, redirecting to stores page');
+          
+          // Redirigir directamente a la página principal de tiendas 
+          // evitando cualquier redirección intermedia a la intro
+          this.router.navigate(['/tabs/stores'], { 
+            replaceUrl: true,
+            skipLocationChange: false
+          });
         } else {
           this.showAlert('Error', 'Invalid email or password');
         }
       } catch (error) {
+        this.isLoading = false;
+        console.error('Login error:', error);
         this.showAlert('Error', 'Login failed. Please try again.');
       }
     }
@@ -80,7 +91,10 @@ export class LoginPage {
     try {
       const success = await this.authService.loginWithGoogle();
       if (success) {
-        this.router.navigate(['/tabs/stores']);
+        this.router.navigate(['/tabs/stores'], { 
+          replaceUrl: true,
+          skipLocationChange: false
+        });
       } else {
         this.showAlert('Error', 'Google login failed');
       }

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <style>
+    .eco { fill: #4caf50; }
+    .eco-outline { fill: none; stroke: #333; stroke-width: 2; }
+    .person { fill: #333; }
+    .background { fill: #c8e6c9; opacity: 0.3; }
+    .coin { fill: #ffc107; stroke: #ff8f00; stroke-width: 1; }
+  </style>
+  <circle cx="200" cy="180" r="150" class="background" />
+  <g transform="translate(90, 80)">
+    <!-- Hoja/Símbolo ecológico -->
+    <path d="M140,100 C200,30 260,80 200,150 C140,80 200,30 140,100 Z" class="eco" />
+    <path d="M170,50 L170,150" stroke="#fff" stroke-width="2" />
+    
+    <!-- Persona -->
+    <circle cx="70" cy="150" r="20" class="person" />
+    <path d="M55,170 L85,170 L85,230 L55,230 Z" class="person" />
+    <path d="M45,190 L55,180 L55,200 Z" class="person" />
+    <path d="M95,190 L85,180 L85,200 Z" class="person" />
+    
+    <!-- Tienda/Comercio local -->
+    <path d="M150,150 L250,150 L250,230 L150,230 Z" class="eco-outline" />
+    <path d="M140,150 L260,150 L240,130 L160,130 Z" class="eco-outline" />
+    <path d="M180,230 L180,190 L220,190 L220,230" class="eco-outline" />
+    <path d="M190,130 L190,100 L210,100 L210,130" class="eco-outline" />
+    <rect x="170" y="160" width="60" height="20" class="eco" opacity="0.5" />
+    
+    <!-- Monedas/VLCoins -->
+    <g transform="translate(110, 190)">
+      <circle cx="0" cy="0" r="15" class="coin" />
+      <text x="0" y="5" font-family="Arial" font-size="10" text-anchor="middle" fill="#7b5100">VL</text>
+    </g>
+    <g transform="translate(140, 210)">
+      <circle cx="0" cy="0" r="15" class="coin" />
+      <text x="0" y="5" font-family="Arial" font-size="10" text-anchor="middle" fill="#7b5100">VL</text>
+    </g>
+    <g transform="translate(110, 230)">
+      <circle cx="0" cy="0" r="15" class="coin" />
+      <text x="0" y="5" font-family="Arial" font-size="10" text-anchor="middle" fill="#7b5100">VL</text>
+    </g>
+    
+    <!-- Flechas circulares - economía circular -->
+    <path d="M120,90 C150,70 180,90 180,120" stroke="#4caf50" stroke-width="3" fill="none" />
+    <path d="M180,120 L170,120 L180,130 L190,120 Z" fill="#4caf50" />
+    
+    <path d="M220,120 C220,90 250,70 280,90" stroke="#4caf50" stroke-width="3" fill="none" />
+    <path d="M280,90 L275,100 L290,100 L285,85 Z" fill="#4caf50" />
+  </g>
+</svg> 

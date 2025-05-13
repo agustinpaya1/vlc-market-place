@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <style>
+    .product { fill: #3f51b5; }
+    .product-outline { fill: none; stroke: #333; stroke-width: 2; }
+    .person { fill: #333; }
+    .background { fill: #c5cae9; opacity: 0.3; }
+  </style>
+  <circle cx="200" cy="180" r="150" class="background" />
+  <g transform="translate(100, 80)">
+    <!-- Canasta de productos -->
+    <path d="M50,150 C50,100 150,100 150,150 L170,230 L30,230 L50,150 Z" class="product-outline" />
+    <path d="M60,130 C60,120 140,120 140,130" stroke="#333" stroke-width="2" fill="none" />
+    
+    <!-- Frutas y verduras -->
+    <circle cx="80" cy="170" r="15" fill="#ff7043" class="product" />
+    <circle cx="110" cy="160" r="12" fill="#8bc34a" class="product" />
+    <circle cx="100" cy="190" r="13" fill="#ffeb3b" class="product" />
+    <circle cx="130" cy="180" r="14" fill="#e91e63" class="product" />
+    
+    <!-- Etiqueta de calidad -->
+    <path d="M160,140 L200,140 L200,180 L180,200 L160,180 Z" fill="#3f51b5" />
+    <text x="180" y="165" font-family="Arial" font-size="12" text-anchor="middle" fill="white">100%</text>
+    
+    <!-- Persona -->
+    <circle cx="70" cy="90" r="20" class="person" />
+    <path d="M55,110 L85,110 L85,160 L55,160 Z" class="person" />
+    <path d="M45,130 L55,120 L55,140 Z" class="person" />
+    <path d="M95,130 L85,120 L85,140 Z" class="person" />
+    
+    <!-- Agricultor -->
+    <circle cx="220" cy="110" r="20" class="person" />
+    <path d="M205,130 L235,130 L235,180 L205,180 Z" class="person" />
+    <path d="M195,150 L205,140 L205,160 Z" class="person" />
+    <path d="M245,150 L235,140 L235,160 Z" class="person" />
+    
+    <!-- Línea conectora -->
+    <path d="M110,100 C140,70 170,70 200,100" stroke="#333" stroke-width="2" stroke-dasharray="5,5" fill="none" />
+  </g>
+</svg> 

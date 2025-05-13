@@ -3,9 +3,14 @@ import { TabsPage } from './tabs.page';
 
 export const routes: Routes = [
   {
-    path: 'tabs',
+    path: '',
     component: TabsPage,
     children: [
+      {
+        path: '',
+        redirectTo: 'stores',
+        pathMatch: 'full',
+      },
       {
         path: 'map',
         loadComponent: () =>
@@ -60,12 +65,7 @@ export const routes: Routes = [
         path: 'locations',
         loadComponent: () =>
           import('../locations/locations.page').then((m) => m.LocationsPage),
-      },
-      {
-        path: '',
-        redirectTo: '/tabs/stores',
-        pathMatch: 'full',
-      },
+      }
     ],
   },
   {
@@ -77,10 +77,5 @@ export const routes: Routes = [
     path: 'register',
     loadComponent: () =>
       import('../register/register.page').then((m) => m.RegisterPage),
-  },
-  {
-    path: '',
-    redirectTo: '/tabs/stores',
-    pathMatch: 'full',
-  },
+  }
 ];

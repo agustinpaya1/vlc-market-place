@@ -1,0 +1,617 @@
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+ion-content {
+  --background: transparent;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.intro-container {
+  height: 100%;
+  width: 100%;
+  background-color: #f5f5f5;
+  background-image: linear-gradient(135deg, #f5f5f5 25%, #eeeeee 25%, 
+                     #eeeeee 50%, #f5f5f5 50%, #f5f5f5 75%, 
+                     #eeeeee 75%, #eeeeee 100%);
+  background-size: 40px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.slides-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+}
+
+.intro-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  opacity: 0;
+  transform: translateX(100px);
+  transition: all 0.4s ease;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.intro-slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  z-index: 5;
+}
+
+// Animación de salida para la última diapositiva
+.intro-slide.exit-animation {
+  animation: exitSlide 0.6s forwards;
+}
+
+@keyframes exitSlide {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+}
+
+.slide-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  justify-content: space-between;
+}
+
+.illustration {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 50px 0 30px 0;
+  max-height: 45vh;
+  
+  img {
+    height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+  }
+}
+
+.text-content {
+  text-align: center;
+  margin: 20px 0;
+  padding: 0 15px;
+  
+  h2 {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: #333;
+  }
+  
+  p {
+    font-size: 17px;
+    line-height: 1.5;
+    color: #666;
+    margin: 0 auto;
+    max-width: 90%;
+  }
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  margin: 15px 0;
+  
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #ddd;
+    margin: 0 5px;
+    transition: all 0.3s ease;
+    
+    &.active {
+      width: 24px;
+      border-radius: 12px;
+      background-color: #02A396;
+    }
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  margin-bottom: env(safe-area-inset-bottom, 10px);
+  padding: 0 10px;
+  
+  .skip-button {
+    background: transparent;
+    border: none;
+    color: #777;
+    font-size: 16px;
+    padding: 12px 16px;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      color: #555;
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+  }
+  
+  .next-button {
+    background-color: #000;
+    border: none;
+    color: white;
+    font-weight: 500;
+    font-size: 16px;
+    padding: 12px 32px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    
+    &:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    &:active {
+      transform: scale(0.98);
+    }
+    
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    
+    ion-icon {
+      font-size: 20px;
+      margin-left: 4px;
+    }
+  }
+  
+  // Estilo especial para el botón de comenzar en la última pantalla
+  .start-button {
+    min-width: 150px;
+    padding: 14px 32px;
+    font-size: 18px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: skewX(-20deg);
+      transition: all 0.4s ease;
+    }
+    
+    &:hover::before {
+      left: 100%;
+    }
+    
+    ion-icon {
+      transition: transform 0.3s ease;
+    }
+    
+    &:hover ion-icon {
+      transform: translateX(4px);
+    }
+  }
+}
+
+// Temas específicos para cada slide
+.intro-slide:nth-child(1) {
+  background-color: white;
+  
+  .dots .dot.active {
+    background-color: #02A396;
+  }
+  
+  .text-content h2 {
+    color: #02A396;
+  }
+  
+  .next-button {
+    background-color: #02A396;
+  }
+}
+
+.intro-slide:nth-child(2) {
+  background-color: #fff9fb;
+  
+  .dots .dot.active {
+    background-color: #ff4081;
+  }
+  
+  .text-content h2 {
+    color: #ff4081;
+  }
+  
+  .next-button {
+    background-color: #ff4081;
+  }
+}
+
+.intro-slide:nth-child(3) {
+  background-color: #f0f7ff;
+  
+  .dots .dot.active {
+    background-color: #3f51b5;
+  }
+  
+  .text-content h2 {
+    color: #3f51b5;
+  }
+  
+  .next-button {
+    background-color: #3f51b5;
+  }
+}
+
+.intro-slide:nth-child(4) {
+  background-color: #f4fff0;
+  
+  .dots .dot.active {
+    background-color: #4caf50;
+  }
+  
+  .text-content h2 {
+    color: #4caf50;
+  }
+  
+  .next-button {
+    background-color: #4caf50;
+  }
+}
+
+// Animaciones para elementos dentro de los slides
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.intro-slide.active .illustration {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.intro-slide.active .text-content {
+  animation: fadeInUp 0.6s 0.2s ease forwards;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+.intro-slide.active .dots {
+  animation: fadeInUp 0.6s 0.3s ease forwards;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+.intro-slide.active .actions {
+  animation: fadeInUp 0.6s 0.4s ease forwards;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+/* Media queries for responsive adjustments */
+@media (max-height: 600px) {
+  .illustration {
+    max-height: 30vh;
+  }
+  
+  .text-content h2 {
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+  
+  .text-content p {
+    font-size: 14px;
+  }
+  
+  .actions {
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .slide-content {
+    padding: 15px;
+  }
+  
+  .next-button {
+    padding: 10px 24px;
+    font-size: 14px;
+  }
+  
+  .skip-button {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+}
+
+.logo-container {
+  display: none;
+}
+
+/* Logo intro slide specific styles */
+.logo-slide {
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(135deg, #ffffff 0%, #f4f9f9 50%, #e8f8f8 100%);
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    right: -50%;
+    bottom: -50%;
+    background: radial-gradient(circle, rgba(2, 163, 150, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
+    z-index: 0;
+    animation: pulseBackground 6s infinite alternate ease-in-out;
+  }
+}
+
+@keyframes pulseBackground {
+  0% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+.logo-intro-wrapper {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+}
+
+.logo-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  
+  .app-logo {
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    margin-bottom: 25px;
+    animation: logoEntrance 1.5s ease-out forwards, logoFloat 3s infinite ease-in-out 1.5s;
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  
+  .app-name {
+    font-size: 32px;
+    font-weight: 700;
+    color: #02A396;
+    margin: 0;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: textSlideUp 1s 0.8s ease forwards;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .app-tagline {
+    font-size: 18px;
+    color: #4a6163;
+    margin-top: 8px;
+    font-weight: 400;
+    opacity: 0;
+    animation: textSlideUp 1s 1s ease forwards;
+  }
+}
+
+@keyframes logoEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(-50px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.1) translateY(10px);
+  }
+  80% {
+    transform: scale(0.95) translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes logoFloat {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes textSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.start-explore {
+  background-color: #02A396;
+  min-width: 160px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  animation: buttonPopIn 1s 1.2s ease forwards;
+  opacity: 0;
+  transform: scale(0.8);
+  position: relative;
+  overflow: hidden;
+  padding: 15px 35px;
+  border-radius: 40px;
+  box-shadow: 0 6px 15px rgba(2, 163, 150, 0.3);
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    animation: shimmer 3s infinite 2s;
+  }
+  
+  &:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 8px 20px rgba(2, 163, 150, 0.4);
+    
+    ion-icon {
+      transform: translateX(8px);
+    }
+  }
+  
+  ion-icon {
+    transition: transform 0.3s ease;
+    margin-left: 8px;
+    font-size: 22px;
+  }
+  
+  span {
+    font-size: 18px;
+  }
+}
+
+@keyframes buttonPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  85% {
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Additional media queries for responsive adjustments on the logo slide */
+@media (max-height: 600px) {
+  .logo-intro {
+    margin-bottom: 20px;
+    
+    .app-logo {
+      width: 130px;
+      height: 130px;
+      margin-bottom: 15px;
+    }
+    
+    .app-name {
+      font-size: 26px;
+    }
+  }
+}
+
+@media (max-width: 360px) {
+  .logo-intro {
+    .app-logo {
+      width: 120px;
+      height: 120px;
+    }
+    
+    .app-name {
+      font-size: 24px;
+    }
+  }
+}
+
+.logo-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  position: relative;
+  z-index: 2;
+}

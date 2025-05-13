@@ -141,8 +141,7 @@ interface Store {
     IonFabButton,
     IonPopover,
     IonSegment,
-    IonSegmentButton,
-    AiChatComponent
+    IonSegmentButton
   ]
 })
 export class StoresPage implements OnInit, OnDestroy {

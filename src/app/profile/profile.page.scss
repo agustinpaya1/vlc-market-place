@@ -31,7 +31,7 @@ $dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
 // Estilos para modo claro (predeterminado)
 :host {
   ion-content {
-    --background: linear-gradient(170deg, #{$color-primary} 30%, #{$color-bg} 30%);
+    --background: linear-gradient(170deg, #{$color-primary} 40%, #{$color-bg} 40%);
     --color: #{$color-text};
     font-family: $font-family;
     
@@ -247,7 +247,7 @@ $dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
 // Dark mode adjustments - solo se aplican cuando la clase dark-theme está presente
 :host-context(.dark-theme) {
   ion-content {
-    --background: linear-gradient(170deg, #{color.adjust($color-primary, $lightness: -15%)} 30%, #{$dark-bg} 30%);
+    --background: linear-gradient(170deg, #{color.adjust($color-primary, $lightness: -15%)} 40%, #{$dark-bg} 40%);
     --color: #{$dark-text};
   }
   
@@ -339,45 +339,85 @@ $dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   height: 100%;
   text-align: center;
+  padding-top: 80px;
 }
 
-.app-logo img {
-  max-width: 200px;
-  margin-bottom: 20px;
+.app-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40px;
+  
+  img {
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    margin-bottom: 20px;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  
+  h1 {
+    color: white;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .login-prompt-card {
-  background-color: var(--color-card);
-  border-radius: var(--border-radius-large);
-  padding: var(--spacing-md);
+  background-color: white;
+  border-radius: 16px;
+  padding: 25px 20px;
   text-align: center;
   max-width: 320px;
   width: 100%;
-  box-shadow: var(--shadow-medium);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   margin: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   
   h2 {
-    color: var(--color-text-primary);
-    margin-bottom: var(--spacing-xs);
-    font-family: var(--ion-font-family);
-    font-size: 1.5rem;
+    color: $color-primary;
+    margin-bottom: 15px;
+    font-family: $font-family;
+    font-size: 24px;
+    font-weight: 600;
+    text-align: center;
+    width: 100%;
   }
   
   p {
-    color: var(--color-text-secondary);
-    margin-bottom: var(--spacing-sm);
-    font-family: var(--ion-font-family);
-    font-size: 0.95rem;
+    color: $color-light-text;
+    margin-bottom: 20px;
+    font-family: $font-family;
+    font-size: 16px;
+    line-height: 1.5;
+    text-align: center;
+    width: 100%;
   }
 
   ion-button {
-    margin: var(--spacing-sm) 0;
-    --border-radius: var(--border-radius-medium);
-    font-family: var(--ion-font-family);
-    height: 42px;
+    margin: 15px 0;
+    --border-radius: 25px;
+    --background: #{$color-primary};
+    --background-activated: #{$color-secondary};
+    font-weight: 500;
+    font-size: 16px;
+    height: 46px;
+    width: 100%;
+    --box-shadow: 0 4px 8px rgba(2, 163, 150, 0.25);
+    
+    ion-icon {
+      margin-right: 8px;
+    }
   }
 }
 
@@ -413,4 +453,10 @@ $dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
   .login-prompt-card {
     padding: 20px;
   }
+}
+
+.transparent-logo {
+  background-color: transparent !important;
+  max-width: 100%;
+  mix-blend-mode: normal;
 } 

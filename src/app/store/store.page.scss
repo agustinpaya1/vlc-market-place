@@ -295,7 +295,7 @@ ion-content {
     ion-icon {
       font-size: 18px;
       color: white;
-      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
     }
   }
   
@@ -369,7 +369,7 @@ ion-content {
 /* Store details card */
 .store-details-card {
   margin: -20px 16px 0;
-  padding: 16px;
+  padding: 20px;
   background-color: white;
   border-radius: 16px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -388,21 +388,21 @@ ion-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .rating {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   
   ion-icon {
     color: #ffb400;
-    font-size: 18px;
+    font-size: 20px;
   }
   
   span {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
     color: #333;
   }
@@ -411,12 +411,12 @@ ion-content {
 .categories {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
   
   ion-chip {
     margin: 0;
-    height: 24px;
-    font-size: 11px;
+    height: 26px;
+    font-size: 12px;
     --background: rgba(2, 163, 150, 0.1);
     --color: #02A396;
     
@@ -429,22 +429,23 @@ ion-content {
 .store-info-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 20px;
+  margin-top: 16px;
 }
 
 .location-info, .time-info {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   
   ion-icon {
-    font-size: 16px;
+    font-size: 18px;
     color: #02A396;
   }
   
   span {
-    font-size: 14px;
-    color: #666;
+    font-size: 15px;
+    color: #555;
   }
 }
 

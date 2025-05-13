@@ -186,7 +186,7 @@ export class MainPageComponent implements OnInit {
   async onLogout() {
     this.isMenuOpen = false;
     await this.authService.logout();
-    this.router.navigate(['/']);
+    this.router.navigate(['/tabs/stores'], { replaceUrl: true });
   }
 
   onLogin() {
