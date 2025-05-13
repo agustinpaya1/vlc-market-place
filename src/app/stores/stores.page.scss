@@ -899,9 +899,18 @@ ion-segment.category-segment {
 
 /* Botón flotante de IA */
 .ai-fab {
-  --background: var(--color-card);
+  --background: white;
+  --border-radius: 50%;
   height: 56px;
   width: 56px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  
+  &::part(native) {
+    padding: 0;
+    background: white;
+    overflow: hidden;
+  }
   
   .ai-logo-img {
     width: 30px;

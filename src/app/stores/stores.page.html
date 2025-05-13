@@ -69,8 +69,8 @@
   </ion-popover>
 
   <!-- Floating AI chat button instead of camera -->
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button (click)="openAiChat()" class="ai-fab">
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="z-index: 1000; bottom: 65px; right: 16px; --background: transparent; background: transparent; contain: none; overflow: visible;">
+    <ion-fab-button (click)="openAiChat()" class="ai-fab" style="--background: white; background: white;">
       <img src="assets/icons/ai-logo.svg" alt="Asistente IA" class="ai-logo-img">
     </ion-fab-button>
   </ion-fab>

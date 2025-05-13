@@ -718,3 +718,17 @@ ion-content.has-tabs {
     --padding-bottom: calc(65px + env(safe-area-inset-bottom));
   }
 }
+
+/* Ajuste para eliminar el cuadrado blanco alrededor del botón de IA */
+ion-fab {
+  background: transparent !important;
+  contain: none !important;
+}
+
+ion-fab-button.ai-fab::part(native) {
+  background: white !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: none !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+}
