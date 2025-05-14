@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { SupabaseService } from './supabase.service';
 import { NotificationService } from './notification.service';
+import { SupabaseService } from './supabase.service';
 
 export interface User {
   id: string;
@@ -30,77 +30,50 @@ export class AuthService {
   public user$ = this.user.asObservable();
 
   constructor(private supabaseService: SupabaseService, private notificationService: NotificationService) {
-    console.log('AuthService - Constructor called');
     this.initializeUser();
   }
 
   private async initializeUser() {
     try {
-      console.log('AuthService - Inicializando usuario');
+      // Check if we already have a valid session
+      const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
       
-      // Force check local storage for existing token
-      const localToken = localStorage.getItem('supabase-auth-token');
-      console.log('AuthService - Local storage token exists:', !!localToken);
-      
-      const { data: { session }, error: sessionError } = await this.supabaseService.getClient().auth.getSession();
-      
-      if (sessionError) {
-        console.error('AuthService - Error getting session:', sessionError);
-        this.user.next(null);
-        return;
-      }
-      
-      if (session) {
-        console.log('AuthService - Sesión existente encontrada:', session);
-        const user = session.user;
+      if (session?.user) {
+        console.log('AuthService - Sesión existente recuperada');
         
-        // Intentar obtener el perfil del usuario desde la base de datos
-        const { data: profile, error: profileError } = await this.supabaseService.getClient()
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-          
-        if (profileError && profileError.code !== 'PGRST116') {
-          console.error('AuthService - Error fetching profile:', profileError);
-        }
-
-        // Si el perfil no existe y el usuario existe en auth, crearlo
-        if (!profile && user) {
-          console.log('AuthService - Perfil no encontrado, creando uno nuevo');
-          
-          // Obtener los datos del usuario desde los metadatos de auth
-          const userData = {
-            id: user.id,
-            email: user.email!,
-            full_name: user.user_metadata?.['full_name'] || user.user_metadata?.['name'] || '',
-            type: user.user_metadata?.['user_type'] || 'user',
-            vlcoin_balance: 0
-          };
-          
-          // Intentar crear el perfil
-          try {
-            await this.supabaseService.getClient()
-              .from('profiles')
-              .upsert(userData);
-              
-            console.log('AuthService - Perfil creado para el usuario:', userData);
-          } catch (error) {
-            console.error('AuthService - Error al crear perfil:', error);
+        try {
+          // Fetch user profile data
+          const { data: userData, error } = await this.supabaseService.getClient()
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+            
+          if (error) {
+            throw error;
           }
+          
+          this.user.next({
+            id: session.user.id,
+            email: session.user.email || '',
+            fullName: userData?.['full_name'] || session.user.user_metadata?.['full_name'] || '',
+            photoUrl: userData?.['photo_url'],
+            type: userData?.['type'] || 'user',
+            vlcoinBalance: userData?.['vlcoin_balance'] || 0,
+            phone: userData?.['phone'],
+            address: userData?.['address']
+          });
+          
+          console.log('AuthService - Usuario inicializado desde sesión existente');
+        } catch (profileError) {
+          console.error('AuthService - Error al cargar perfil de usuario:', profileError);
+          // If we can't load the profile, still set the basic user data
+          this.user.next({
+            id: session.user.id,
+            email: session.user.email || '',
+            fullName: session.user.user_metadata?.['full_name'] || ''
+          });
         }
-
-        // Actualizar el BehaviorSubject con los datos del usuario
-        this.user.next({
-          id: user.id,
-          email: user.email!,
-          fullName: profile?.['full_name'] || user.user_metadata?.['name'] || user.user_metadata?.['full_name'] || '',
-          type: profile?.['type'] || 'user',
-          vlcoinBalance: profile?.['vlcoin_balance'] || 0,
-          photoUrl: profile?.['photo_url'],
-          phone: profile?.['phone'],
-          address: profile?.['address']
-        });
       } else {
         console.log('AuthService - No hay sesión activa');
         this.user.next(null);
@@ -111,7 +84,7 @@ export class AuthService {
     }
 
     // Configurar el listener para cambios en el estado de autenticación
-    this.supabaseService.getClient().auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = this.supabaseService.getClient().auth.onAuthStateChange(async (_event, session) => {
       console.log('AuthService - Cambio en el estado de autenticación:', _event);
       
       if (session?.user) {
@@ -146,22 +119,42 @@ export class AuthService {
             console.error('AuthService - Error al crear perfil después de autenticación:', error);
           }
         }
-
-        // Actualizar el usuario en el BehaviorSubject
-        this.user.next({
-          id: session.user.id,
-          email: session.user.email!,
-          fullName: profile?.['full_name'] || session.user.user_metadata?.['name'] || session.user.user_metadata?.['full_name'] || '',
-          type: profile?.['type'] || 'user',
-          vlcoinBalance: profile?.['vlcoin_balance'] || 0,
-          photoUrl: profile?.['photo_url'],
-          phone: profile?.['phone'],
-          address: profile?.['address']
-        });
+        
+        try {
+          // Fetch user profile data again to get the latest
+          const { data: userData } = await this.supabaseService.getClient()
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+            
+          this.user.next({
+            id: session.user.id,
+            email: session.user.email || '',
+            fullName: userData?.['full_name'] || session.user.user_metadata?.['full_name'] || '',
+            photoUrl: userData?.['photo_url'],
+            type: userData?.['type'] || 'user',
+            vlcoinBalance: userData?.['vlcoin_balance'] || 0,
+            phone: userData?.['phone'],
+            address: userData?.['address']
+          });
+        } catch (profileError) {
+          console.error('AuthService - Error al cargar perfil actualizado:', profileError);
+          this.user.next({
+            id: session.user.id,
+            email: session.user.email || '',
+            fullName: session.user.user_metadata?.['full_name'] || ''
+          });
+        }
       } else {
         console.log('AuthService - Usuario desconectado');
         this.user.next(null);
       }
+    });
+    
+    // Cleanup subscription when the service is destroyed
+    window.addEventListener('beforeunload', () => {
+      subscription.unsubscribe();
     });
   }
 
@@ -251,10 +244,6 @@ export class AuthService {
   async logout(): Promise<void> {
     await this.supabaseService.getClient().auth.signOut();
     this.user.next(null);
-    
-    // Don't clear the activeSession flag when logging out
-    // This ensures the intro slides won't appear again
-    
     await this.notificationService.showSuccess('Sesión cerrada correctamente');
   }
 
