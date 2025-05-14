@@ -92,75 +92,110 @@
       </ion-button>
     </div>
 
-    <div class="product-sheet-header" *ngIf="selectedStore">
-      <h1>{{selectedStore.name}}</h1>
-      <p class="store-description">{{selectedStore.description || 'Tienda local en Valencia'}}</p>
-      
-      <div class="store-info">
-        <span class="address">
-          <ion-icon name="location-outline"></ion-icon>
-          {{selectedStore.address || selectedStore.location || 'Valencia, España'}}
-        </span>
-        <span class="phone" *ngIf="selectedStore.phone || selectedStore.contact_phone">
-          <ion-icon name="call-outline"></ion-icon>
-          {{selectedStore.phone || selectedStore.contact_phone}}
-        </span>
-      </div>
-      
-      <div class="view-details-button">
-        <ion-button expand="block" fill="outline" (click)="viewStoreDetails(selectedStore)">
-          Ver tienda completa
-          <ion-icon name="arrow-forward" slot="end"></ion-icon>
-        </ion-button>
-      </div>
-    </div>
-
     <div class="product-sheet-content">
-      <h2>Productos</h2>
-      
-      <div class="products-list" *ngIf="!isLoading && storeProducts.length > 0; else noProductsTemplate">
-        <ion-card class="product-card" *ngFor="let product of storeProducts">
-          <div class="product-image">
-            <ion-img [src]="product.imageUrl || 'assets/product-placeholder.jpg'" (ionError)="$event.target.src = 'assets/product-placeholder.jpg'"></ion-img>
-            <div class="product-badge" *ngIf="product.isOffer">Oferta</div>
-          </div>
-          <ion-card-header>
-            <ion-card-title>{{product.name}}</ion-card-title>
-            <ion-card-subtitle>{{product.category}}</ion-card-subtitle>
-          </ion-card-header>
-          <ion-card-content>
-            <p class="product-description">{{product.description}}</p>
-            
-            <div class="product-footer">
-              <div class="price">
-                <span class="current-price">{{product.price | currency:'EUR':'symbol':'1.2-2'}}</span>
-                <span class="original-price" *ngIf="product.isOffer && product.offerPrice">
-                  {{product.offerPrice | currency:'EUR':'symbol':'1.2-2'}}
-                </span>
-              </div>
-              
-              <div class="stock" [class.low]="product.stock < 10">
-                <ion-icon name="checkmark-circle" *ngIf="product.stock > 0"></ion-icon>
-                <ion-icon name="close-circle" *ngIf="product.stock <= 0"></ion-icon>
-                {{product.stock > 0 ? 'En stock' : 'Agotado'}}
-              </div>
+      <div class="store-container" *ngIf="selectedStore">
+        <!-- Image with overlaid buttons -->
+        <div class="store-header-image-container">
+          <img [src]="selectedStore.imageUrl" (error)="handleImageError($event)" alt="Imagen de la tienda" loading="lazy" class="store-header-image">
+          
+          <!-- Navigation elements overlaid on image -->
+          <div class="header-buttons">
+            <ion-button (click)="hideProductSheet()" class="nav-button back-button">
+              <ion-icon name="chevron-back"></ion-icon>
+            </ion-button>
+            <div class="right-buttons">
+              <ion-button class="nav-button share-button">
+                <ion-icon name="share"></ion-icon>
+              </ion-button>
+              <ion-button class="nav-button cart-button">
+                <ion-icon name="cart"></ion-icon>
+              </ion-button>
             </div>
-          </ion-card-content>
-        </ion-card>
+          </div>
+
+          <!-- Store name overlay at bottom of image -->
+          <div class="store-title-overlay">
+            <h1>{{ selectedStore.name }}</h1>
+            <p>{{ selectedStore.description }}</p>
+          </div>
+        </div>
+
+        <div class="store-details-card">
+          <div class="rating-row">
+            <div class="rating">
+              <ion-icon name="star" color="warning"></ion-icon>
+              <span>{{ selectedStore.rating || '4.5' }}/5</span>
+            </div>
+
+            <div class="categories">
+              <ion-chip *ngFor="let category of selectedStore.categories || [selectedStore.category]">{{ category }}</ion-chip>
+            </div>
+          </div>
+
+          <div class="store-info-row">
+            <div class="location-info">
+              <ion-icon name="location" color="tertiary"></ion-icon>
+              <span>{{ selectedStore.location || selectedStore.address }}</span>
+            </div>
+            
+            <div class="time-info">
+              <ion-icon name="time" color="tertiary"></ion-icon>
+              <span>{{ selectedStore.openTime || selectedStore.open_time }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="products-section">
+          <h3>Productos</h3>
+          <ion-searchbar placeholder="Buscar productos" class="products-searchbar"></ion-searchbar>
+
+          <ion-grid>
+            <ion-row>
+              <ion-col size="6" size-md="4" size-lg="3" *ngFor="let product of storeProducts">
+                <ion-card class="product-card">
+                  <ion-card-header>
+                    <img [src]="product.imageUrl || product.image_url" 
+                         (error)="handleImageError($event)" 
+                         [alt]="product.name" 
+                         loading="lazy" 
+                         width="100%" 
+                         height="140">
+                    <div *ngIf="product.offerPrice && product.price" class="discount-badge">
+                      -{{ ((100 - (product.offerPrice / product.price) * 100) | number:'1.0-0') }}%
+                    </div>
+                  </ion-card-header>
+
+                  <ion-card-content>
+                    <h4>{{ product.name }}</h4>
+                    <div class="category">{{ product.category }}</div>
+                    <div class="description">{{ product.description }}</div>
+                    <div class="price-container">
+                      <ng-container *ngIf="product.offerPrice; else regularPrice">
+                        <span class="price has-offer">{{ product.price | currency:'EUR' }}</span>
+                        <span class="offer-price">{{ product.offerPrice | currency:'EUR' }}</span>
+                      </ng-container>
+                      <ng-template #regularPrice>
+                        <span class="price">{{ product.price | currency:'EUR' }}</span>
+                      </ng-template>
+                    </div>
+                  </ion-card-content>
+                </ion-card>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+
+          <div class="empty-products" *ngIf="!isLoading && (!storeProducts || storeProducts.length === 0)">
+            <ion-icon name="cart-outline" size="large"></ion-icon>
+            <h4>No hay productos disponibles</h4>
+            <p>Esta tienda aún no ha añadido productos.</p>
+          </div>
+          
+          <div class="loading-products" *ngIf="isLoading">
+            <ion-skeleton-text animated style="width: 100%; height: 200px; margin-bottom: 16px;"></ion-skeleton-text>
+            <ion-skeleton-text animated style="width: 100%; height: 200px; margin-bottom: 16px;"></ion-skeleton-text>
+          </div>
+        </div>
       </div>
-      
-      <ng-template #noProductsTemplate>
-        <div class="empty-products" *ngIf="!isLoading">
-          <ion-icon name="cart-outline" size="large"></ion-icon>
-          <h3>No hay productos disponibles</h3>
-          <p>Esta tienda aún no ha añadido productos.</p>
-        </div>
-        
-        <div class="loading-products" *ngIf="isLoading">
-          <ion-skeleton-text animated style="width: 100%; height: 200px; margin-bottom: 16px;"></ion-skeleton-text>
-          <ion-skeleton-text animated style="width: 100%; height: 200px; margin-bottom: 16px;"></ion-skeleton-text>
-        </div>
-      </ng-template>
     </div>
   </div>
 

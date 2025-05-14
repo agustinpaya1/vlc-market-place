@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Platform, ToastController } from '@ionic/angular';
@@ -11,10 +11,14 @@ import {
     IonCardHeader,
     IonCardSubtitle,
     IonCardTitle,
+    IonChip,
+    IonCol,
     IonContent,
+    IonGrid,
     IonHeader,
     IonIcon,
     IonImg,
+    IonRow,
     IonSearchbar,
     IonSkeletonText,
     IonSpinner
@@ -24,15 +28,20 @@ import {
     arrowForward,
     callOutline,
     cartOutline,
+    cartSharp,
     checkmarkCircle,
+    chevronBack,
     closeCircle,
     closeOutline,
     compassOutline,
     locationOutline,
+    locationSharp,
     pricetagOutline,
+    share,
     star,
     storefrontOutline,
     timeOutline,
+    timeSharp,
     checkmarkCircleOutline,
     alertCircleOutline
 } from 'ionicons/icons';
@@ -102,6 +111,7 @@ interface Recompensa {
   templateUrl: './map.page.html',
   styleUrls: ['./map.page.scss'],
   standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [
     CommonModule,
     FormsModule,
@@ -118,7 +128,11 @@ interface Recompensa {
     IonImg,
     IonSkeletonText,
     IonSpinner,
-    IonBadge
+    IonBadge,
+    IonChip,
+    IonGrid,
+    IonRow,
+    IonCol
   ]
 })
 export class MapPage implements OnInit, OnDestroy, AfterViewInit {
@@ -149,12 +163,10 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   private leafletMap: L.Map | null = null;
   private leafletMarkers: L.Marker[] = [];
 
-  private customIcon = L.icon({
-    iconUrl: 'assets/map-icons/custom-marker.png',
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
-  });
+  // Tiles globales para poder acceder a ellos desde cualquier método
+  private lightTileLayer: L.TileLayer | null = null;
+  private darkTileLayer: L.TileLayer | null = null;
+  private currentTileLayer: L.TileLayer | null = null;
 
   private treasureIcon = L.icon({
     iconUrl: 'assets/col-icons/treasure-chest.svg',
@@ -169,6 +181,17 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     const newColorScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (this.isDarkTheme !== newColorScheme) {
       this.isDarkTheme = newColorScheme;
+      this.updateThemeClasses();
+      
+      // Actualizar el tile layer del mapa y los marcadores
+      this.updateMapTileLayer();
+      
+      // Forzar la actualización de los componentes de interfaz después del cambio de tema
+      setTimeout(() => {
+        if (this.leafletMap) {
+          this.leafletMap.invalidateSize();
+        }
+      }, 300);
     }
   }
 
@@ -183,15 +206,21 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     addIcons({
       locationOutline,
       timeOutline,
-      callOutline,
+      timeSharp,
+      star,
+      storefrontOutline,
       closeOutline,
+      chevronBack,
+      share,
+      cartOutline,
+      callOutline,
       checkmarkCircle,
       closeCircle,
-      storefrontOutline,
-      cartOutline,
       pricetagOutline,
       arrowForward,
-      star,
+      time: timeSharp,
+      cart: cartSharp,
+      location: locationSharp,
       compassOutline,
       checkmarkCircleOutline,
       alertCircleOutline
@@ -273,50 +302,27 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       },
       { 
         id: '4', 
-        lat: 39.4680, 
-        lng: -0.3745, 
-        titulo: 'Degustación de horchata gratis 🥛', 
-        descripcion: 'Ven a probar la mejor horchata tradicional valenciana',
-        coins: 5, 
-        tienda: 'Horchatería El Turia',
-        tiendaId: 'horchata1',
+        lat: 39.4675, 
+        lng: -0.3760, 
+        titulo: 'Pack gourmet gratis 🥘', 
+        descripcion: 'Recoge tu pack de productos gourmet de regalo',
+        coins: 30, 
+        tienda: 'Gourmet Valencia',
+        tiendaId: 'gourmet1',
+        tipo: 'regalo'
+      },
+      { 
+        id: '5', 
+        lat: 39.4740, 
+        lng: -0.3770, 
+        titulo: 'Descubre el tesoro oculto 💰', 
+        descripcion: 'Premio especial valorado en 100€ para los cazadores más rápidos',
+        coins: 50, 
+        tienda: 'Ayuntamiento',
+        tiendaId: 'ayuntamiento1',
         tipo: 'regalo'
       }
     ];
-    
-    // Generar recompensas aleatorias adicionales basadas en tiendas
-    setTimeout(() => {
-      if (this.stores.length > 0) {
-        this.stores.forEach((store, index) => {
-          if (store.coordinates && Math.random() > 0.6) { // 40% de probabilidad
-            const tipoRecompensa = ['descuento', 'regalo', 'experiencia'][Math.floor(Math.random() * 3)] as 'descuento' | 'regalo' | 'experiencia';
-            let titulo = '';
-            let coins = Math.floor(Math.random() * 20) + 5;
-            
-            if (tipoRecompensa === 'descuento') {
-              const porcentaje = [10, 15, 20, 25, 30][Math.floor(Math.random() * 5)];
-              titulo = `${porcentaje}% descuento en ${store.name}`;
-            } else if (tipoRecompensa === 'regalo') {
-              titulo = `Regalo sorpresa en ${store.name}`;
-            } else {
-              titulo = `Experiencia VIP en ${store.name}`;
-              coins += 10; // Las experiencias dan más monedas
-            }
-            
-            this.recompensas.push({
-              id: `tienda-${store.id}-${Date.now()}`,
-              lat: store.coordinates[1] + (Math.random() * 0.002 - 0.001), // Pequeña variación
-              lng: store.coordinates[0] + (Math.random() * 0.002 - 0.001), // Pequeña variación
-              titulo,
-              coins,
-              tienda: store.name,
-              tiendaId: store.id,
-              tipo: tipoRecompensa
-            });
-          }
-        });
-      }
-    }, 2000);
   }
 
   toggleModoCOL() {
@@ -504,25 +510,62 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     this.cerrarPopupRecompensa();
   }
 
+  // Crear icono de marcador personalizado con la imagen de la tienda
+  private createCustomMarkerIcon(store: Store): L.DivIcon {
+    // URL de la imagen (usar la imagen de la tienda o una imagen por defecto)
+    const imageUrl = store.image_url || 'assets/icons/store-default.png';
+    const isOpen = this.checkIfStoreIsOpen(store.open_time);
+    
+    // Crear el HTML para el marcador personalizado
+    const html = `
+      <div class="custom-marker ${isOpen ? 'open' : 'closed'}">
+        <div class="marker-base">
+          <img src="assets/icons/pingas.png" class="marker-bg" alt="Marker" />
+        </div>
+        <div class="marker-image" style="background-image: url('${imageUrl}')"></div>
+      </div>
+    `;
+    
+    return L.divIcon({
+      html: html,
+      className: 'custom-marker-icon',
+      iconSize: [40, 50],
+      iconAnchor: [20, 50],
+      popupAnchor: [0, -50]
+    });
+  }
+
   private addStoreMarkersToMap() {
     if (!this.leafletMap) return;
+    
     // Eliminar marcadores previos
     this.leafletMarkers.forEach(marker => marker.remove());
     this.leafletMarkers = [];
+    
     // Añadir un marcador por cada tienda con coordenadas
     this.stores.forEach(store => {
       if (store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
+        // Crear un marcador con icono personalizado
+        const customIcon = this.createCustomMarkerIcon(store);
         const marker = L.marker([store.coordinates[1], store.coordinates[0]], {
-          icon: this.customIcon,
+          icon: customIcon,
           title: store.name
         });
+        
         marker.addTo(this.leafletMap!);
         
         // Crear el popup pero no vincularlo todavía
+        const isOpen = this.checkIfStoreIsOpen(store.open_time);
         const popup = L.popup().setContent(
           `<div class="marker-popup">
-            <b>${store.name}</b>
-            ${store.address ? `<p>${store.address}</p>` : ''}
+            <div class="marker-popup-header">
+              <h3>${store.name}</h3>
+              <span class="status-badge ${isOpen ? 'open' : 'closed'}">
+                ${isOpen ? 'Abierto' : 'Cerrado'}
+              </span>
+            </div>
+            <p>${store.category || 'Tienda local'}</p>
+            ${store.address ? `<p><ion-icon name="location-outline"></ion-icon> ${store.address}</p>` : ''}
             <button class='leaflet-popup-btn' data-store-id='${store.id}'>Ver tienda</button>
           </div>`
         );
@@ -537,7 +580,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
           
           // Centrar el mapa con una animación más rápida
           this.leafletMap?.flyTo(newLatLng, 16, {
-            duration: 0.75, // Reducido de 1.5 a 0.75 segundos
+            duration: 0.75,
             easeLinearity: 0.5
           });
 
@@ -717,54 +760,123 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       this.isDarkTheme = darkModeMediaQuery.matches;
       this.updateThemeClasses();
+      
       const handleThemeChange = (e: MediaQueryListEvent) => {
         this.isDarkTheme = e.matches;
         this.updateThemeClasses();
+        // Actualizar el tile layer y los marcadores
+        this.updateMapTileLayer();
       };
-      if (darkModeMediaQuery.addEventListener) {
-        darkModeMediaQuery.addEventListener('change', handleThemeChange);
-      } else {
-        darkModeMediaQuery.addListener(handleThemeChange);
-      }
-    } else {
-      this.isDarkTheme = true;
-      this.updateThemeClasses();
+      
+      darkModeMediaQuery.addEventListener('change', handleThemeChange);
     }
   }
 
   private updateThemeClasses() {
-    const content = document.querySelector('ion-content');
-    if (content) {
-      content.classList.toggle('dark-theme', this.isDarkTheme);
-      content.classList.toggle('light-theme', !this.isDarkTheme);
-    }
-    const bottomSheet = document.querySelector('.bottom-sheet');
-    if (bottomSheet) {
-      bottomSheet.classList.toggle('dark-theme', this.isDarkTheme);
-      bottomSheet.classList.toggle('light-theme', !this.isDarkTheme);
-    }
-    const productSheet = document.querySelector('.product-sheet');
-    if (productSheet) {
-      productSheet.classList.toggle('dark-theme', this.isDarkTheme);
-      productSheet.classList.toggle('light-theme', !this.isDarkTheme);
-    }
+    document.body.classList.toggle('dark-theme', this.isDarkTheme);
+    document.body.classList.toggle('light-theme', !this.isDarkTheme);
+    
+    const elements = [
+      'ion-content',
+      '.bottom-sheet',
+      '.product-sheet',
+      '.loading-overlay',
+      '#map',
+      '.store-item',
+      '.store-details-card',
+      '.search-section',
+      '.stores-list',
+      '.product-card'
+    ];
+    
+    elements.forEach(selector => {
+      const elementList = document.querySelectorAll(selector);
+      elementList.forEach(element => {
+        element.classList.toggle('dark-theme', this.isDarkTheme);
+        element.classList.toggle('light-theme', !this.isDarkTheme);
+      });
+    });
+    
+    // Actualizar las variables CSS del documento
+    document.documentElement.style.setProperty(
+      '--ion-background-color', 
+      this.isDarkTheme ? 'var(--color-bg-dark)' : 'var(--color-bg-light)'
+    );
+    document.documentElement.style.setProperty(
+      '--ion-text-color', 
+      this.isDarkTheme ? 'var(--color-text-dark)' : 'var(--color-text-light)'
+    );
+    document.documentElement.style.setProperty(
+      '--ion-card-background', 
+      this.isDarkTheme ? 'var(--color-card-dark)' : 'var(--color-card-light)'
+    );
   }
 
   private initLeafletMap() {
     if (this.leafletMap) {
       this.leafletMap.remove();
     }
+
+    // Crear el mapa
     const map = L.map('map').setView([39.469, -0.376], 14);
-    L.tileLayer('https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=nd6CeZ7IspRMBLuVFPiI', {
+    
+    // Definir ambos tile layers
+    this.lightTileLayer = L.tileLayer(`https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=nd6CeZ7IspRMBLuVFPiI`, {
       attribution: '&copy; <a href=\"https://www.maptiler.com/copyright/\">MapTiler</a> &copy; OpenStreetMap contributors',
       maxZoom: 20
-    }).addTo(map);
+    });
+    
+    this.darkTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '©CartoDB',
+      maxZoom: 20
+    });
+    
+    // Agregar el tile layer adecuado según el tema actual
+    if (this.isDarkTheme) {
+      this.darkTileLayer.addTo(map);
+      this.currentTileLayer = this.darkTileLayer;
+    } else {
+      this.lightTileLayer.addTo(map);
+      this.currentTileLayer = this.lightTileLayer;
+    }
+    
     this.leafletMap = map;
     this.addStoreMarkersToMap();
 
     setTimeout(() => {
       this.leafletMap!.invalidateSize();
     }, 300);
+  }
+  
+  private updateMapTileLayer() {
+    if (!this.leafletMap || !this.lightTileLayer || !this.darkTileLayer) {
+      return;
+    }
+    
+    // Si ya hay un tile layer, quitarlo primero
+    if (this.currentTileLayer) {
+      this.leafletMap.removeLayer(this.currentTileLayer);
+    }
+    
+    // Agregar el nuevo tile layer según el tema actual
+    if (this.isDarkTheme) {
+      this.darkTileLayer.addTo(this.leafletMap);
+      this.currentTileLayer = this.darkTileLayer;
+    } else {
+      this.lightTileLayer.addTo(this.leafletMap);
+      this.currentTileLayer = this.lightTileLayer;
+    }
+    
+    // Actualizar los marcadores para reflejar el cambio de tema
+    this.updateMarkersForTheme();
+  }
+  
+  private updateMarkersForTheme() {
+    // Recrear los marcadores con el nuevo tema
+    if (this.leafletMap && this.stores && this.stores.length > 0) {
+      console.log('Actualizando marcadores para el nuevo tema:', this.isDarkTheme ? 'oscuro' : 'claro');
+      this.addStoreMarkersToMap();
+    }
   }
 
   // Devuelve el offset vertical en píxeles para centrar el marcador por encima del bottom sheet
@@ -793,19 +905,22 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   
   // Verificar si el usuario está lo suficientemente cerca de una recompensa (50 metros)
   private estaLoSuficientementeCerca(recompensa: Recompensa): boolean {
-    if (!this.leafletMap) return false;
+    if (!navigator.geolocation) {
+      alert('Tu navegador no soporta geolocalización');
+      return false;
+    }
     
-    // Obtener la posición actual del mapa como aproximación a la ubicación del usuario
-    const centroMapa = this.leafletMap.getCenter();
-    const distancia = this.calcularDistanciaEnMetros(
-      centroMapa.lat, 
-      centroMapa.lng, 
-      recompensa.lat, 
-      recompensa.lng
-    );
+    // Si estamos en modo desarrollo, permitir canjear desde cualquier lugar
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+      return true;
+    }
     
-    console.log(`Distancia a la recompensa: ${distancia.toFixed(2)} metros`);
-    return distancia <= 50; // 50 metros máximo
+    // Si la recompensa ya tiene calculada la distancia, usamos ese valor
+    if (recompensa.distanciaAlUsuario !== undefined) {
+      return recompensa.distanciaAlUsuario <= 50;
+    }
+    
+    return false;
   }
 
   // Guardar un canje en el historial de recompensas del usuario
@@ -836,5 +951,20 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       console.error('Error al guardar historial de canje:', error);
       return false;
     }
+  }
+
+  handleImageError(event: any) {
+    const target = event.target as HTMLImageElement;
+    target.src = 'assets/images/placeholder.png';
+  }
+
+  shareStore() {
+    // Implementar compartir tienda
+    console.log('Compartir tienda');
+  }
+
+  goToCart() {
+    // Implementar ir al carrito
+    console.log('Ir al carrito');
   }
 }
