@@ -159,6 +159,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   marcadoresRecompensa: L.Marker[] = [];
   recompensaSeleccionada: Recompensa | null = null;
   recompensasCanjeadas: string[] = [];
+  mostrarExplicacionCazador = false;
 
   private leafletMap: L.Map | null = null;
   private leafletMarkers: L.Marker[] = [];
@@ -218,12 +219,12 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       closeCircle,
       pricetagOutline,
       arrowForward,
-      time: timeSharp,
-      cart: cartSharp,
-      location: locationSharp,
       compassOutline,
       checkmarkCircleOutline,
-      alertCircleOutline
+      alertCircleOutline,
+      location: locationSharp,
+      cart: cartSharp,
+      time: timeSharp
     });
     
     this.subscriptions.push(
@@ -335,13 +336,21 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
     
-    this.modoCOLActivo = !this.modoCOLActivo;
-    
-    if (this.modoCOLActivo) {
-      this.activarModoCazador();
+    if (!this.modoCOLActivo) {
+      // Si vamos a activar el modo, primero mostramos la explicación
+      this.mostrarExplicacionCazador = true;
     } else {
+      // Si vamos a desactivar, lo hacemos directamente
+      this.modoCOLActivo = false;
       this.desactivarModoCazador();
     }
+  }
+
+  cerrarExplicacionCazador() {
+    this.mostrarExplicacionCazador = false;
+    // Activar el modo cazador después de cerrar la explicación
+    this.modoCOLActivo = true;
+    this.activarModoCazador();
   }
 
   activarModoCazador() {

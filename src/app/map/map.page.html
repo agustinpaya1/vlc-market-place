@@ -237,6 +237,38 @@
     </div>
   </div>
   
+  <!-- Pop-up de explicación del modo cazador -->
+  <div class="col-reward-popup" [class.active]="mostrarExplicacionCazador">
+    <div class="col-reward-content">
+      <div class="col-reward-header">
+        <h2>¡Modo Cazador Activado!</h2>
+        <ion-button fill="clear" class="close-button" (click)="cerrarExplicacionCazador()">
+          <ion-icon name="close-outline"></ion-icon>
+        </ion-button>
+      </div>
+      <div class="col-reward-body">
+        <div class="col-reward-image">
+          <img src="assets/col-icons/treasure-chest.svg" alt="Tesoro">
+        </div>
+        <h3>Cazador de Oportunidades Locales</h3>
+        <div class="col-explanation">
+          <p>Has activado el modo Cazador de Oportunidades Locales. Ahora podrás:</p>
+          <ul>
+            <li>Ver tesoros ocultos en el mapa</li>
+            <li>Acércate a menos de 50 metros de un tesoro para canjearlo</li>
+            <li>Gana VLCoins por cada tesoro que encuentres</li>
+            <li>Usa tus VLCoins para obtener descuentos y recompensas</li>
+          </ul>
+          <p>¡Explora la ciudad y encuentra todos los tesoros!</p>
+        </div>
+        
+        <ion-button expand="block" class="col-reward-button" (click)="cerrarExplicacionCazador()">
+          ¡Empezar a cazar!
+        </ion-button>
+      </div>
+    </div>
+  </div>
+  
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
   crossorigin=""></script>
