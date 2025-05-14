@@ -505,41 +505,32 @@ ion-range {
 
 
 #map {
-  position: fixed;
+  width: 100%;
+  height: 100%;
+  position: absolute;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
   z-index: 1;
 }
 
 
 // Bottom Sheet de tiendas
 .bottom-sheet {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
-  height: 120px;
-  background: var(--color-card, #fff) !important;
-  border-radius: var(--bottom-sheet-radius) var(--bottom-sheet-radius) 0 0;
-  box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
+  right: 0;
+  height: 30vh;
+  background: var(--ion-background-color);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
   z-index: 2;
-  transition: height var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1), 
-              transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
   overflow: hidden;
+
   &.active {
-    height: 65vh;
-  }
-  &.reduced {
-    height: 50px;
-  }
-  &.dark-theme {
-    background: var(--color-card-dark, #232323) !important;
-    box-shadow: 0 -8px 32px rgba(0,0,0,0.32);
-  }
-  &.light-theme {
-    background: var(--bottom-sheet-bg-light);
+    transform: translateY(0);
   }
   .bottom-sheet-handle {
     width: 100%;
@@ -676,19 +667,21 @@ ion-range {
 
 // Product sheet y loading overlay (mantener para UI)
 .product-sheet {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
-  height: 0;
-  background: var(--color-card, #fff) !important;
-  border-radius: var(--bottom-sheet-radius) var(--bottom-sheet-radius) 0 0;
-  box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
+  right: 0;
+  height: 70vh;
+  background: var(--ion-background-color);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
   z-index: 3;
-  transition: height var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
   overflow: hidden;
+
   &.active {
-    height: 75vh;
+    transform: translateY(0);
   }
   .product-sheet-handle {
     width: 100%;
@@ -1075,5 +1068,142 @@ ion-fab {
   
   &:hover {
     background: var(--ion-color-primary-shade);
+  }
+}
+
+// Estilos para el tooltip del mapa
+.map-tooltip {
+  padding: 12px;
+  border-radius: 8px;
+  min-width: 200px;
+  max-width: 300px;
+  background: var(--ion-background-color);
+  color: var(--ion-text-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+  .tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .status {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+
+      &.open {
+        background: var(--color-success-light);
+        color: #fff;
+      }
+
+      &.closed {
+        background: var(--color-danger-light);
+        color: #fff;
+      }
+    }
+  }
+
+  .tooltip-content {
+    p {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 6px 0;
+      font-size: 13px;
+      color: var(--ion-text-color);
+
+      ion-icon {
+        font-size: 16px;
+        color: var(--color-accent-light);
+      }
+    }
+
+    .category {
+      color: var(--color-accent-light);
+      font-weight: 500;
+    }
+
+    .rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+
+      ion-icon {
+        color: #ffc409;
+        font-size: 14px;
+      }
+
+      span {
+        font-weight: 600;
+        font-size: 13px;
+      }
+    }
+  }
+
+  .view-store-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    background: var(--color-accent-light);
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background: var(--color-accent-dark);
+    }
+  }
+}
+
+// Dark theme styles for tooltip
+:host-context(.dark-theme) .map-tooltip {
+  background: var(--color-bg-dark);
+  color: var(--color-text-dark);
+
+  .status {
+    &.open {
+      background: var(--color-success-dark);
+      color: #121212;
+    }
+
+    &.closed {
+      background: var(--color-danger-dark);
+      color: #121212;
+    }
+  }
+
+  .tooltip-content {
+    p {
+      color: var(--color-text-dark);
+
+      ion-icon {
+        color: var(--color-accent-dark);
+      }
+    }
+
+    .category {
+      color: var(--color-accent-dark);
+    }
+  }
+
+  .view-store-btn {
+    background: var(--color-accent-dark);
+
+    &:hover {
+      background: var(--color-accent-light);
+    }
   }
 } 

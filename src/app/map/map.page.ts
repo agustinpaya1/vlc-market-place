@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Platform } from '@ionic/angular';
+import { Platform, ModalController } from '@ionic/angular';
 import {
     IonBadge,
     IonButton,
@@ -33,10 +33,13 @@ import {
     storefrontOutline,
     timeOutline
 } from 'ionicons/icons';
-import * as L from 'leaflet';
-import { Subscription } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
+import { StorePage } from '../store/store.page';
+
+declare var mapboxgl: any;
+declare var Mapkick: any;
 
 interface Product {
   id: string;
@@ -100,14 +103,17 @@ interface Store {
     IonImg,
     IonSkeletonText,
     IonSpinner,
-    IonBadge
+    IonBadge,
+    StorePage
   ]
 })
 export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('productBottomSheet') productBottomSheet!: ElementRef;
   
-  private markers: any[] = [];
+  private map: any;
   private subscriptions: Subscription[] = [];
+  private mapInitialized = false;
+  private mapReady = new BehaviorSubject<boolean>(false);
   
   isDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
   isBottomSheetActive = false;
@@ -121,16 +127,6 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   storeProducts: Product[] = [];
   searchQuery: string = '';
 
-  private leafletMap: L.Map | null = null;
-  private leafletMarkers: L.Marker[] = [];
-
-  private customIcon = L.icon({
-    iconUrl: 'assets/map-icons/custom-marker.png',
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
-  });
-
   @HostListener('window:matchMedia')
   onColorSchemeChange() {
     const newColorScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -143,7 +139,9 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     private platform: Platform,
     private authService: AuthService,
     private router: Router,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private ngZone: NgZone,
+    private modalCtrl: ModalController
   ) {
     addIcons({
       locationOutline,
@@ -174,146 +172,112 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   async ngOnInit() {
     this.detectSystemTheme();
     await this.loadStoresFromDatabase();
+    await this.loadMapboxScript();
+
+    // Escuchar el evento viewStore del mapa
+    document.addEventListener('viewStore', ((e: CustomEvent) => {
+      const storeId = e.detail;
+      const store = this.stores.find(s => s.id === storeId);
+      if (store) {
+        this.viewStoreDetails(store);
+      }
+    }) as EventListener);
+  }
+
+  private async loadMapboxScript(): Promise<void> {
+    if (typeof mapboxgl !== 'undefined' && typeof Mapkick !== 'undefined') {
+      this.mapReady.next(true);
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
+      script.onload = async () => {
+        const mapkickScript = document.createElement('script');
+        mapkickScript.src = 'assets/js/mapkick.js';
+        mapkickScript.onload = () => {
+          console.log('Mapbox and Mapkick loaded successfully');
+          this.ngZone.run(() => {
+            this.mapReady.next(true);
+            resolve();
+          });
+        };
+        mapkickScript.onerror = (error) => {
+          console.error('Error loading Mapkick:', error);
+          reject(error);
+        };
+        document.body.appendChild(mapkickScript);
+      };
+      script.onerror = (error) => {
+        console.error('Error loading Mapbox:', error);
+        reject(error);
+      };
+      document.body.appendChild(script);
+    });
   }
 
   ngAfterViewInit() {
     this.platform.ready().then(() => {
-      this.initLeafletMap();
+      this.mapReady.subscribe(ready => {
+        if (ready && !this.mapInitialized) {
+          this.initMap();
+          this.mapInitialized = true;
+        }
+      });
     });
   }
 
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
-  }
-
-  private addStoreMarkersToMap() {
-    if (!this.leafletMap) return;
-    // Eliminar marcadores previos
-    this.leafletMarkers.forEach(marker => marker.remove());
-    this.leafletMarkers = [];
-    // Añadir un marcador por cada tienda con coordenadas
-    this.stores.forEach(store => {
-      if (store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
-        const marker = L.marker([store.coordinates[1], store.coordinates[0]], {
-          icon: this.customIcon,
-          title: store.name
-        });
-        marker.addTo(this.leafletMap!);
-        
-        // Crear el popup pero no vincularlo todavía
-        const popup = L.popup().setContent(
-          `<div class="marker-popup">
-            <b>${store.name}</b>
-            ${store.address ? `<p>${store.address}</p>` : ''}
-            <button class='leaflet-popup-btn' data-store-id='${store.id}'>Ver tienda</button>
-          </div>`
-        );
-
-        // Manejar el clic en el marcador
-        marker.on('click', () => {
-          // Calcular la posición centrada con offset
-          const offsetY = this.isBottomSheetActive ? this.getMapOffset() : 0;
-          const targetLatLng = marker.getLatLng();
-          const targetPoint = this.leafletMap!.project(targetLatLng, this.leafletMap!.getZoom()).subtract([0, offsetY/2]);
-          const newLatLng = this.leafletMap!.unproject(targetPoint, this.leafletMap!.getZoom());
-          
-          // Centrar el mapa con una animación más rápida
-          this.leafletMap?.flyTo(newLatLng, 16, {
-            duration: 0.75, // Reducido de 1.5 a 0.75 segundos
-            easeLinearity: 0.5
-          });
-
-          // Abrir el popup inmediatamente
-          marker.bindPopup(popup).openPopup();
-          
-          // Configurar el botón del popup después de abrirlo
-          setTimeout(() => {
-            const btn = document.querySelector(`button[data-store-id="${store.id}"]`);
-            if (btn) {
-              btn.addEventListener('click', () => this.selectStoreFromMap(store));
-            }
-          }, 0);
-        });
-
-        this.leafletMarkers.push(marker);
-      }
-    });
-  }
-
-  // Actualizar también los métodos de selección para usar la misma velocidad
-  private selectStoreFromMap(store: Store) {
-    this.selectedStore = store;
-    this.loadStoreProducts(store.id);
-    this.showProductSheet();
-    this.isBottomSheetActive = true;
-    
-    if (this.leafletMap && store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
-      const offsetY = this.isBottomSheetActive ? this.getMapOffset() : 0;
-      const targetLatLng = L.latLng(store.coordinates[1], store.coordinates[0]);
-      const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY/2]);
-      const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
-      
-      this.leafletMap.flyTo(newLatLng, 16, {
-        duration: 0.75,
-        easeLinearity: 0.5
-      });
-      
-      const marker = this.leafletMarkers.find(m => {
-        const latlng = m.getLatLng();
-        return latlng.lat === store.coordinates![1] && latlng.lng === store.coordinates![0];
-      });
-      if (marker) {
-        marker.openPopup();
-      }
+    if (this.map) {
+      // Cleanup map resources
     }
   }
 
-  selectStore(store: Store) {
-    this.selectedStore = store;
-    this.loadStoreProducts(store.id);
-    this.showProductSheet();
-    this.isBottomSheetActive = true;
-    
-    if (this.leafletMap && store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
-      const offsetY = this.isBottomSheetActive ? this.getMapOffset() : 0;
-      const targetLatLng = L.latLng(store.coordinates[1], store.coordinates[0]);
-      const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY/2]);
-      const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
-      
-      this.leafletMap.flyTo(newLatLng, 16, {
-        duration: 0.75,
-        easeLinearity: 0.5
-      });
-      
-      const marker = this.leafletMarkers.find(m => {
-        const latlng = m.getLatLng();
-        return latlng.lat === store.coordinates![1] && latlng.lng === store.coordinates![0];
-      });
-      if (marker) {
-        marker.openPopup();
-      }
+  // Método para manejar el evento viewStore
+  private onViewStore = ((e: CustomEvent) => {
+    const storeId = e.detail;
+    const store = this.stores.find(s => s.id === storeId);
+    if (store) {
+      this.viewStoreDetails(store);
     }
-  }
+  }) as EventListener;
 
   private async loadStoresFromDatabase() {
     try {
       this.isLoading = true;
-      const storesData = await this.supabaseService.getStores();
-      this.stores = storesData.map(store => {
-        const isOpenNow = this.checkIfStoreIsOpen(store.open_time);
-        return {
-          ...store,
-          coordinates: store.latitude && store.longitude ? [store.longitude, store.latitude] : [-0.376, 39.469],
-          isOpen: isOpenNow,
-          phone: store.contact_phone,
-          distance: this.calculateRandomDistance()
-        };
-      });
-      this.addStoreMarkersToMap();
+      // Suscribirse a cambios en tiempo real de las tiendas
+      const subscription = this.supabaseService.subscribeToStores().subscribe(
+        (storesData) => {
+          this.ngZone.run(() => {
+            this.stores = storesData.map(store => {
+              const isOpenNow = this.checkIfStoreIsOpen(store.open_time);
+              return {
+                ...store,
+                coordinates: store.latitude && store.longitude ? [store.longitude, store.latitude] : [-0.376, 39.469],
+                isOpen: isOpenNow,
+                phone: store.contact_phone,
+                distance: this.calculateRandomDistance()
+              };
+            });
+            this.updateMapMarkers();
+          });
+        },
+        (error) => {
+          console.error('Error en la suscripción de tiendas:', error);
+        }
+      );
+
+      // Añadir la suscripción al array de subscriptions para limpiarla después
+      this.subscriptions.push(subscription);
+
     } catch (error) {
       console.error('Error al cargar tiendas:', error);
     } finally {
-      this.isLoading = false;
+      this.ngZone.run(() => {
+        this.isLoading = false;
+      });
     }
   }
 
@@ -337,8 +301,8 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     if (!this.isBottomSheetActive) {
       this.hideProductSheet();
     }
-    if (this.leafletMap) {
-      setTimeout(() => this.leafletMap!.invalidateSize(), 300);
+    if (this.map) {
+      setTimeout(() => this.map.invalidateSize(), 300);
     }
   }
 
@@ -357,15 +321,15 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
 
   showProductSheet() {
     this.isProductSheetActive = true;
-    if (this.leafletMap) {
-      setTimeout(() => this.leafletMap!.invalidateSize(), 300);
+    if (this.map) {
+      setTimeout(() => this.map.invalidateSize(), 300);
     }
   }
 
   hideProductSheet() {
     this.isProductSheetActive = false;
-    if (this.leafletMap) {
-      setTimeout(() => this.leafletMap!.invalidateSize(), 300);
+    if (this.map) {
+      setTimeout(() => this.map.invalidateSize(), 300);
     }
   }
 
@@ -390,8 +354,23 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  viewStoreDetails(store: Store) {
-    this.router.navigate(['/tabs/store', store.id]);
+  async viewStoreDetails(store: Store) {
+    const modal = await this.modalCtrl.create({
+      component: StorePage,
+      componentProps: {
+        storeId: store.id
+      },
+      breakpoints: [0, 0.25, 0.5, 0.75, 1],
+      initialBreakpoint: 0.75,
+      backdropBreakpoint: 0.5,
+      cssClass: 'store-modal',
+      showBackdrop: true,
+      backdropDismiss: true,
+      handle: true,
+      handleBehavior: "cycle"
+    });
+
+    await modal.present();
   }
 
   private detectSystemTheme() {
@@ -432,26 +411,167 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private initLeafletMap() {
-    if (this.leafletMap) {
-      this.leafletMap.remove();
+  private initMap() {
+    if (!mapboxgl || !Mapkick) {
+      console.error('Mapbox or Mapkick not loaded');
+      return;
     }
-    const map = L.map('map').setView([39.469, -0.376], 14);
-    L.tileLayer('https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=nd6CeZ7IspRMBLuVFPiI', {
-      attribution: '&copy; <a href=\"https://www.maptiler.com/copyright/\">MapTiler</a> &copy; OpenStreetMap contributors',
-      maxZoom: 20
-    }).addTo(map);
-    this.leafletMap = map;
-    this.addStoreMarkersToMap();
 
-    setTimeout(() => {
-      this.leafletMap!.invalidateSize();
-    }, 300);
+    try {
+      this.ngZone.runOutsideAngular(() => {
+        mapboxgl.accessToken = "pk.eyJ1IjoicGF5YWFndXN0aW4iLCJhIjoiY21hbnUweWQ0MDAxczJpc2NlZXVsb2hxZiJ9.ZYgOQNUhAST03VstNlgnCA";
+        Mapkick.use(mapboxgl);
+        
+        // Función para obtener los datos del mapa
+        const fetchMapData = async (success: (data: any[]) => void) => {
+          try {
+            const storesData = await this.supabaseService.getStores();
+            const mapData = storesData.map(store => ({
+              id: store.id, // Identificador único para cada tienda
+              latitude: store.latitude || 39.469,
+              longitude: store.longitude || -0.376,
+              tooltip: this.generateTooltipHTML(store),
+              color: this.checkIfStoreIsOpen(store.open_time) ? "#4CAF50" : "#FF5252",
+              time: new Date() // Timestamp actual para tracking
+            }));
+            success(mapData);
+          } catch (error) {
+            console.error('Error fetching stores:', error);
+          }
+        };
+
+        // Set global options for all maps
+        Mapkick.options = {
+          tooltips: {
+            hover: false,
+            html: true
+          },
+          style: "mapbox://styles/mapbox/streets-v12"
+        };
+
+        // Initialize map with live updates
+        this.map = new Mapkick.Map("map", fetchMapData, {
+          accessToken: mapboxgl.accessToken,
+          zoom: 14,
+          center: [-0.376, 39.469],
+          controls: true,
+          markers: {
+            color: "#f84d4d"
+          },
+          refresh: 30, // Actualizar cada 30 segundos
+          trail: {
+            len: 5 // Mantener un histórico de 5 posiciones por tienda
+          }
+        });
+
+        // Add click event listener to map
+        if (this.map.getMapObject()) {
+          this.map.getMapObject().on('click', 'objects', (e: any) => {
+            const feature = e.features[0];
+            if (feature) {
+              const store = this.stores.find(s => 
+                s.coordinates && 
+                s.coordinates[1] === feature.geometry.coordinates[1] && 
+                s.coordinates[0] === feature.geometry.coordinates[0]
+              );
+              if (store) {
+                this.ngZone.run(() => {
+                  this.selectStore(store);
+                });
+              }
+            }
+          });
+
+          // Añadir eventos para interacción con el cursor
+          this.map.getMapObject().on('mouseenter', 'objects', () => {
+            this.map.getMapObject().getCanvas().style.cursor = 'pointer';
+          });
+
+          this.map.getMapObject().on('mouseleave', 'objects', () => {
+            this.map.getMapObject().getCanvas().style.cursor = '';
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
   }
 
-  // Devuelve el offset vertical en píxeles para centrar el marcador por encima del bottom sheet
-  private getMapOffset(): number {
-    // Usa el 30% de la altura de la ventana como offset (ajustable)
-    return window.innerHeight * 0.3;
+  private generateTooltipHTML(store: Store): string {
+    return `
+      <div class="map-tooltip">
+        <div class="tooltip-header">
+          <h3>${store.name}</h3>
+          <span class="status ${store.isOpen ? 'open' : 'closed'}">
+            ${store.isOpen ? 'Abierto' : 'Cerrado'}
+          </span>
+        </div>
+        <div class="tooltip-content">
+          ${store.category ? `<p class="category">${store.category}</p>` : ''}
+          ${store.address ? `<p class="address"><ion-icon name="location-outline"></ion-icon>${store.address}</p>` : ''}
+          ${store.open_time ? `<p class="schedule"><ion-icon name="time-outline"></ion-icon>${store.open_time}</p>` : ''}
+          ${store.rating ? `
+            <div class="rating">
+              <ion-icon name="star"></ion-icon>
+              <span>${store.rating.toFixed(1)}</span>
+            </div>
+          ` : ''}
+        </div>
+        <button class="view-store-btn" onclick="document.dispatchEvent(new CustomEvent('viewStore', {detail: '${store.id}'}))">
+          Ver tienda
+        </button>
+      </div>
+    `;
+  }
+
+  private updateMapMarkers() {
+    if (this.map && this.map.getMapObject()) {
+      const mapData = this.stores.map(store => ({
+        id: store.id,
+        latitude: store.coordinates![1],
+        longitude: store.coordinates![0],
+        tooltip: this.generateTooltipHTML(store),
+        color: store.isOpen ? "#4CAF50" : "#FF5252",
+        time: new Date()
+      }));
+      
+      this.map.getMapObject().getSource('objects').setData({
+        type: 'FeatureCollection',
+        features: mapData.map(point => ({
+          type: 'Feature',
+          id: point.id,
+          geometry: {
+            type: 'Point',
+            coordinates: [point.longitude, point.latitude]
+          },
+          properties: {
+            tooltip: point.tooltip,
+            icon: 'mapkick',
+            color: point.color,
+            time: point.time
+          }
+        }))
+      });
+    }
+  }
+
+  async selectStore(store: Store) {
+    this.selectedStore = store;
+    this.isBottomSheetActive = true;
+    
+    // Load store products
+    await this.loadStoreProducts(store.id!);
+    
+    // Show product sheet
+    this.showProductSheet();
+    
+    // Center map on selected store
+    if (this.map && store.coordinates) {
+      this.map.getMapObject().flyTo({
+        center: store.coordinates,
+        zoom: 16,
+        duration: 1000
+      });
+    }
   }
 }

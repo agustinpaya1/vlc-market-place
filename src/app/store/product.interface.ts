@@ -5,6 +5,11 @@ export interface Product {
     description: string;
     price: number;
     offerPrice?: number;
-    imageUrl: string;
-    inStock: boolean;
+    imageUrl?: string;
+    image_url?: string;
+    inStock?: boolean;
+    stock?: number;
+    store_id?: string;
+    isOffer?: boolean;
+    discount?: number;
 } 

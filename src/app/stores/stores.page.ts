@@ -80,6 +80,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { createWorker } from 'tesseract.js';
 import { VlcoinModalComponent } from '../vlcoin-modal/vlcoin-modal.component';
 import { VlcoinService } from '../services/vlcoin.service';
+import { StorePage } from '../store/store.page';
 
 interface Product {
   id: string;
@@ -139,7 +140,8 @@ interface Store {
     IonFabButton,
     IonPopover,
     IonSegment,
-    IonSegmentButton
+    IonSegmentButton,
+    StorePage
   ]
 })
 export class StoresPage implements OnInit, OnDestroy {
@@ -501,11 +503,23 @@ export class StoresPage implements OnInit, OnDestroy {
   }
 
   async viewStore(storeId: string) {
-    console.log('Navegando a la tienda con ID:', storeId);
-    // Asegurarse de que el popover de notificaciones esté cerrado
-    this.notificationPopoverOpen = false;
-    this.notificationPopoverEvent = null;
-    this.router.navigate(['/tabs/store', storeId]);
+    console.log('Abriendo tienda con ID:', storeId);
+    const modal = await this.modalController.create({
+      component: StorePage,
+      componentProps: {
+        storeId: storeId
+      },
+      breakpoints: [0, 0.25, 0.5, 0.75, 1],
+      initialBreakpoint: 0.75,
+      backdropBreakpoint: 0.5,
+      cssClass: 'store-modal',
+      showBackdrop: true,
+      backdropDismiss: true,
+      handle: true,
+      handleBehavior: "cycle"
+    });
+
+    await modal.present();
   }
 
   toggleSearch() {

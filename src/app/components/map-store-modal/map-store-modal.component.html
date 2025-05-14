@@ -1,0 +1,91 @@
+<p>
+  map-store-modal works!
+</p>
+
+<ion-content class="ion-padding">
+  <div class="store-modal-content">
+    <!-- Cabecera con imagen de la tienda -->
+    <div class="store-header">
+      <img [src]="store.imageUrl" [alt]="store.name" (error)="handleImageError($event)" class="store-image">
+      <ion-button (click)="dismiss()" class="close-button" fill="clear">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+      
+      <!-- Botones superpuestos -->
+      <div class="overlay-buttons">
+        <ion-button (click)="toggleFavorite()" fill="clear" class="favorite-button">
+          <ion-icon name="heart-outline"></ion-icon>
+        </ion-button>
+        <ion-button (click)="shareStore()" fill="clear" class="share-button">
+          <ion-icon name="share"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Información de la tienda -->
+    <div class="store-info">
+      <h2>{{ store.name }}</h2>
+      <p class="description">{{ store.description }}</p>
+      
+      <div class="store-details">
+        <div class="detail-item">
+          <ion-icon name="location"></ion-icon>
+          <span>{{ store.location }}</span>
+        </div>
+        <div class="detail-item">
+          <ion-icon name="time"></ion-icon>
+          <span>{{ store.openTime }}</span>
+        </div>
+        <div class="detail-item" *ngIf="store.rating">
+          <ion-icon name="star"></ion-icon>
+          <span>{{ store.rating }}/5</span>
+        </div>
+        <div class="detail-item" *ngIf="maxDiscount > 0">
+          <ion-icon name="pricetag"></ion-icon>
+          <span>Hasta {{ maxDiscount }}% dto.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de búsqueda -->
+    <div class="search-bar">
+      <ion-searchbar 
+        [(ngModel)]="searchTerm"
+        (ionInput)="filterProducts()"
+        placeholder="Buscar productos"
+        [debounce]="300"
+        class="custom-searchbar">
+      </ion-searchbar>
+    </div>
+
+    <!-- Lista de productos -->
+    <div class="products-grid" *ngIf="!isLoading">
+      <div class="product-card" *ngFor="let product of filteredProducts" (click)="openProductModal(product)">
+        <div class="product-image-container">
+          <img [src]="product.imageUrl" [alt]="product.name" (error)="handleImageError($event)">
+          <div class="discount-badge" *ngIf="product.isOffer && product.offerPrice">
+            -{{ ((product.price - product.offerPrice) / product.price * 100).toFixed(0) }}%
+          </div>
+        </div>
+        <div class="product-info">
+          <h3>{{ product.name }}</h3>
+          <div class="price-container">
+            <span class="current-price">{{ (product.offerPrice || product.price) | currency:'EUR' }}</span>
+            <span class="original-price" *ngIf="product.isOffer">{{ product.price | currency:'EUR' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading spinner -->
+    <div class="loading-container" *ngIf="isLoading">
+      <ion-spinner name="circular"></ion-spinner>
+      <p>Cargando productos...</p>
+    </div>
+
+    <!-- Mensaje de no productos -->
+    <div class="no-products" *ngIf="!isLoading && filteredProducts.length === 0">
+      <p>No se encontraron productos</p>
+    </div>
+  </div>
+</ion-content>

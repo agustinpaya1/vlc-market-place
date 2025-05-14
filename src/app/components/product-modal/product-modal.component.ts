@@ -1,12 +1,11 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, ModalController } from '@ionic/angular';
-import { Product } from '../product.interface';
+import { Product } from '../../store/product.interface';
 import { CartService } from '../../services/cart.service';
+import { CartItem } from '../../services/cart.service';
 import { addIcons } from 'ionicons';
 import { cartOutline, close, arrowBack, add, remove } from 'ionicons/icons';
-import { NotificationService } from '../../services/notification.service';
-import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-product-modal',
@@ -15,15 +14,14 @@ import { take } from 'rxjs/operators';
   standalone: true,
   imports: [IonicModule, CommonModule]
 })
-export class ProductModalComponent {
+export class ProductModalComponent implements OnInit {
   @Input() product!: Product;
   quantity: number = 1;
   isInCart: boolean = false;
 
   constructor(
     private modalCtrl: ModalController,
-    private cartService: CartService,
-    private notificationService: NotificationService
+    private cartService: CartService
   ) {
     addIcons({
       cartOutline,
@@ -36,7 +34,7 @@ export class ProductModalComponent {
 
   ngOnInit() {
     // Comprobar si el producto ya está en el carrito
-    this.cartService.getCartItems().pipe(take(1)).subscribe((cartItems: CartItem[]) => {
+    this.cartService.getCartItems().subscribe((cartItems: CartItem[]) => {
       const cartItem = cartItems.find(item => item.id === this.product.id);
       if (cartItem) {
         this.quantity = cartItem.quantity;
@@ -45,19 +43,25 @@ export class ProductModalComponent {
     });
   }
 
+  handleImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.src = 'assets/products/default-product.jpg';
+    }
+  }
+
+  calculateDiscount(price: number, offerPrice: number): string {
+    if (!price || !offerPrice) return '0';
+    const discount = ((price - offerPrice) / price) * 100;
+    return discount.toFixed(0);
+  }
+
   incrementQuantity() {
     if (this.quantity < 10) this.quantity++;
   }
 
   decrementQuantity() {
     if (this.quantity > 1) this.quantity--;
-  }
-
-  handleImageError(event: Event) {
-    const img = event.target as HTMLImageElement;
-    if (img) {
-      img.src = 'assets/images/default-product.jpg';
-    }
   }
 
   async addToCart() {

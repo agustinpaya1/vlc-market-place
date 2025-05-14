@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { from, Observable, throwError, BehaviorSubject } from 'rxjs';
+import { from, Observable, throwError, BehaviorSubject, Subject } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { v4 as uuidv4 } from 'uuid';
+import { Store } from '../interfaces/store.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -13,9 +14,11 @@ export class SupabaseService {
   private initSubject = new BehaviorSubject<boolean>(false);
   private initObservable$ = this.initSubject.asObservable();
   private bucketName = 'profile-photos';
+  private storesSubject = new Subject<Store[]>();
 
   constructor() {
     this.initializeSupabase();
+    this.initializeStoresSubscription();
   }
 
   private initializeSupabase() {
@@ -456,5 +459,40 @@ export class SupabaseService {
       console.error('Error updating user profile:', error);
       throw error;
     }
+  }
+
+  private async initializeStoresSubscription() {
+    const subscription = this.getClient()
+      .channel('stores')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'stores' 
+        }, 
+        async (payload) => {
+          // Cuando hay un cambio, obtener todas las tiendas actualizadas
+          const { data: stores, error } = await this.getClient()
+            .from('stores')
+            .select('*');
+          
+          if (error) {
+            console.error('Error fetching updated stores:', error);
+          } else {
+            this.storesSubject.next(stores as Store[]);
+          }
+        }
+      )
+      .subscribe();
+  }
+
+  subscribeToStores(): Observable<Store[]> {
+    // Obtener datos iniciales
+    this.getStores().then(stores => {
+      this.storesSubject.next(stores);
+    });
+    
+    // Devolver el observable
+    return this.storesSubject.asObservable();
   }
 }

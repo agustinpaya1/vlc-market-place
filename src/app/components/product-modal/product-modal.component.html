@@ -2,7 +2,7 @@
   <div class="product-modal-content">
     <!-- Imagen del producto -->
     <div class="product-image-container">
-      <img [src]="product.imageUrl" [alt]="product.name" (error)="$event.target.src='assets/products/default-product.jpg'" loading="lazy">
+      <img [src]="product.imageUrl" [alt]="product.name" (error)="handleImageError($event)" loading="lazy">
       <ion-button (click)="dismiss()" class="close-button" fill="clear">
         <ion-icon name="close"></ion-icon>
       </ion-button>
@@ -19,8 +19,8 @@
           <span class="original-price" *ngIf="product.isOffer">{{ product.price | currency:'EUR' }}</span>
           <span class="current-price">{{ (product.offerPrice || product.price) | currency:'EUR' }}</span>
         </div>
-        <div class="discount-badge" *ngIf="product.isOffer">
-          -{{ ((product.price - product.offerPrice) / product.price * 100) | number:'1.0-0' }}%
+        <div class="discount-badge" *ngIf="product.isOffer && product.offerPrice">
+          -{{ calculateDiscount(product.price, product.offerPrice) }}%
         </div>
       </div>
 
@@ -38,16 +38,8 @@
       <!-- Botón de añadir al carrito -->
       <ion-button expand="block" (click)="addToCart()" class="add-to-cart-button">
         <ion-icon name="cart"></ion-icon>
-        Añadir al carrito
+        {{ isInCart ? 'Actualizar carrito' : 'Añadir al carrito' }}
       </ion-button>
     </div>
   </div>
-</ion-content>
-
-<ion-footer>
-  <ion-toolbar>
-    <ion-button *ngIf="isInCart" expand="block" (click)="dismiss()" color="medium">
-      Cerrar
-    </ion-button>
-  </ion-toolbar>
-</ion-footer> 
+</ion-content> 
