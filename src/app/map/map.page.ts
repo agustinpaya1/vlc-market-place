@@ -1,39 +1,48 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Platform } from '@ionic/angular';
 import {
-    IonBadge,
-    IonButton,
-    IonCard,
-    IonCardContent,
-    IonCardHeader,
-    IonCardSubtitle,
-    IonCardTitle,
-    IonContent,
-    IonHeader,
-    IonIcon,
-    IonImg,
-    IonSearchbar,
-    IonSkeletonText,
-    IonSpinner,
-    IonTitle,
-    IonToolbar
+  IonBadge,
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonChip,
+  IonCol,
+  IonContent,
+  IonGrid,
+  IonHeader,
+  IonIcon,
+  IonImg,
+  IonRow,
+  IonSearchbar,
+  IonSkeletonText,
+  IonSpinner,
+  IonTitle,
+  IonToolbar
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
-    arrowForward,
-    callOutline,
-    cartOutline,
-    checkmarkCircle,
-    closeCircle,
-    closeOutline,
-    locationOutline,
-    pricetagOutline,
-    star,
-    storefrontOutline,
-    timeOutline
+  arrowForward,
+  callOutline,
+  cartOutline,
+  cartSharp,
+  checkmarkCircle,
+  chevronBack,
+  closeCircle,
+  closeOutline,
+  locationOutline,
+  locationSharp,
+  pricetagOutline,
+  share,
+  star,
+  storefrontOutline,
+  timeOutline,
+  timeSharp
 } from 'ionicons/icons';
 import * as L from 'leaflet';
 import { Subscription } from 'rxjs';
@@ -86,6 +95,7 @@ interface Store {
   templateUrl: './map.page.html',
   styleUrls: ['./map.page.scss'],
   standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [
     CommonModule,
     FormsModule,
@@ -104,7 +114,11 @@ interface Store {
     IonImg,
     IonSkeletonText,
     IonSpinner,
-    IonBadge
+    IonBadge,
+    IonChip,
+    IonGrid,
+    IonRow,
+    IonCol
   ]
 })
 export class MapPage implements OnInit, OnDestroy, AfterViewInit {
@@ -129,10 +143,10 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   private leafletMarkers: L.Marker[] = [];
 
   private customIcon = L.icon({
-    iconUrl: 'assets/map-icons/custom-marker.png',
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
+    iconUrl: '/assets/map-icons/pingas.png',
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
   });
 
   @HostListener('window:matchMedia')
@@ -152,15 +166,20 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     addIcons({
       locationOutline,
       timeOutline,
-      callOutline,
+      star,
+      storefrontOutline,
       closeOutline,
+      chevronBack,
+      share,
+      cartOutline,
+      callOutline,
       checkmarkCircle,
       closeCircle,
-      storefrontOutline,
-      cartOutline,
       pricetagOutline,
       arrowForward,
-      star
+      time: timeSharp,
+      cart: cartSharp,
+      location: locationSharp
     });
     
     this.subscriptions.push(
@@ -403,48 +422,53 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       this.isDarkTheme = darkModeMediaQuery.matches;
       this.updateThemeClasses();
+      
       const handleThemeChange = (e: MediaQueryListEvent) => {
         this.isDarkTheme = e.matches;
         this.updateThemeClasses();
+        // Reinicializar el mapa cuando cambia el tema
+        this.initLeafletMap();
       };
-      if (darkModeMediaQuery.addEventListener) {
-        darkModeMediaQuery.addEventListener('change', handleThemeChange);
-      } else {
-        darkModeMediaQuery.addListener(handleThemeChange);
-      }
-    } else {
-      this.isDarkTheme = true;
-      this.updateThemeClasses();
+      
+      darkModeMediaQuery.addEventListener('change', handleThemeChange);
     }
   }
 
   private updateThemeClasses() {
-    const content = document.querySelector('ion-content');
-    if (content) {
-      content.classList.toggle('dark-theme', this.isDarkTheme);
-      content.classList.toggle('light-theme', !this.isDarkTheme);
-    }
-    const bottomSheet = document.querySelector('.bottom-sheet');
-    if (bottomSheet) {
-      bottomSheet.classList.toggle('dark-theme', this.isDarkTheme);
-      bottomSheet.classList.toggle('light-theme', !this.isDarkTheme);
-    }
-    const productSheet = document.querySelector('.product-sheet');
-    if (productSheet) {
-      productSheet.classList.toggle('dark-theme', this.isDarkTheme);
-      productSheet.classList.toggle('light-theme', !this.isDarkTheme);
-    }
+    document.body.classList.toggle('dark-theme', this.isDarkTheme);
+    document.body.classList.toggle('light-theme', !this.isDarkTheme);
+    
+    const elements = [
+      'ion-content',
+      '.bottom-sheet',
+      '.product-sheet',
+      '.loading-overlay',
+      '#map'
+    ];
+    
+    elements.forEach(selector => {
+      const element = document.querySelector(selector);
+      if (element) {
+        element.classList.toggle('dark-theme', this.isDarkTheme);
+        element.classList.toggle('light-theme', !this.isDarkTheme);
+      }
+    });
   }
 
   private initLeafletMap() {
     if (this.leafletMap) {
       this.leafletMap.remove();
     }
+
+    // Configurar el estilo del mapa según el tema
+    const mapStyle = this.isDarkTheme ? 'dark-v10' : 'dataviz';
+    
     const map = L.map('map').setView([39.469, -0.376], 14);
-    L.tileLayer('https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=nd6CeZ7IspRMBLuVFPiI', {
+    L.tileLayer(`https://api.maptiler.com/maps/${mapStyle}/{z}/{x}/{y}.png?key=nd6CeZ7IspRMBLuVFPiI`, {
       attribution: '&copy; <a href=\"https://www.maptiler.com/copyright/\">MapTiler</a> &copy; OpenStreetMap contributors',
       maxZoom: 20
     }).addTo(map);
+    
     this.leafletMap = map;
     this.addStoreMarkersToMap();
 
@@ -457,5 +481,20 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   private getMapOffset(): number {
     // Usa el 30% de la altura de la ventana como offset (ajustable)
     return window.innerHeight * 0.3;
+  }
+
+  handleImageError(event: any) {
+    const target = event.target as HTMLImageElement;
+    target.src = 'assets/store-placeholder.jpg';
+  }
+
+  shareStore() {
+    // Implementar compartir tienda
+    console.log('Compartir tienda:', this.selectedStore?.name);
+  }
+
+  goToCart() {
+    // Implementar ir al carrito
+    console.log('Ir al carrito');
   }
 }
