@@ -187,26 +187,31 @@ ion-content {
 
 .search-section {
   padding: 0 16px 12px;
-  background: var(--bottom-sheet-bg);
-  color: var(--bottom-sheet-text);
+  background: var(--ion-card-background);
+  color: var(--ion-text-color);
   position: sticky;
   top: 0;
   z-index: 3;
 
   ion-searchbar {
-    --background: var(--bottom-sheet-bg);
-    --color: var(--bottom-sheet-text);
-    --placeholder-color: var(--color-muted-light);
-    --icon-color: var(--color-accent-light);
+    --background: var(--ion-card-background);
+    --color: var(--ion-text-color);
+    --placeholder-color: var(--ion-color-medium);
+    --icon-color: var(--ion-color-tertiary);
     --border-radius: 8px;
     --box-shadow: none;
     margin: 0;
     transition: all var(--transition-speed) ease;
   }
 }
+
+:host-context(.dark-theme) .search-section {
+  background: var(--color-card-dark);
+}
+
 :host-context(.dark-theme) .search-section ion-searchbar {
-  --background: var(--bottom-sheet-bg);
-  --color: var(--bottom-sheet-text);
+  --background: var(--color-card-dark);
+  --color: var(--color-text-dark);
   --placeholder-color: var(--color-muted-dark);
   --icon-color: var(--color-accent-dark);
 }
@@ -225,8 +230,8 @@ ion-content {
   .store-item {
     display: flex;
     align-items: stretch;
-    background: var(--color-card, #fff) !important;
-    color: var(--color-text, #222) !important;
+    background: var(--ion-card-background) !important;
+    color: var(--ion-text-color) !important;
     border-radius: 12px;
     margin-bottom: 12px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -271,7 +276,7 @@ ion-content {
         font-weight: 600;
         z-index: 1;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        background: var(--color-success-light);
+        background: var(--ion-color-success);
         color: #fff;
       }
     }
@@ -292,7 +297,7 @@ ion-content {
       
       .category {
         font-size: 12px;
-        color: var(--color-accent-light);
+        color: var(--ion-color-tertiary);
         margin: 0 0 8px;
         transition: color var(--transition-speed) ease;
       }
@@ -303,20 +308,20 @@ ion-content {
         gap: 6px;
         margin: 4px 0;
         font-size: 12px;
-        color: var(--color-muted-light);
+        color: var(--ion-color-medium);
         
         ion-icon {
           font-size: 14px;
-          color: var(--color-muted-light);
+          color: var(--ion-color-medium);
           transition: color var(--transition-speed) ease;
         }
         
         &.distance {
-          color: var(--color-text-light);
+          color: var(--ion-text-color);
           font-weight: 500;
           
           ion-icon {
-            color: var(--color-accent-light);
+            color: var(--ion-color-tertiary);
           }
         }
       }
@@ -335,18 +340,18 @@ ion-content {
         span {
           font-weight: 600;
           font-size: 12px;
-          color: var(--color-text-light);
+          color: var(--ion-text-color);
         }
       }
     }
     
     &:hover .store-details {
       h2 {
-        color: var(--color-accent-light);
+        color: var(--ion-color-tertiary);
       }
       
       .distance ion-icon {
-        color: var(--color-accent-light);
+        color: var(--ion-color-tertiary);
       }
     }
   }
@@ -540,7 +545,8 @@ ion-range {
   left: 0;
   width: 100%;
   height: var(--bottom-sheet-height-collapsed);
-  background: var(--color-card) !important;
+  background: var(--ion-card-background) !important;
+  color: var(--ion-text-color) !important;
   border-radius: var(--bottom-sheet-radius) var(--bottom-sheet-radius) 0 0;
   box-shadow: var(--shadow-medium);
   z-index: 2;
@@ -567,11 +573,16 @@ ion-range {
     .handle-bar {
       width: 40px;
       height: 4px;
-      background: var(--color-muted);
+      background: var(--ion-color-medium);
       border-radius: 10px;
       opacity: 0.4;
     }
   }
+}
+
+:host-context(.dark-theme) .bottom-sheet {
+  background: var(--color-card-dark) !important;
+  color: var(--color-text-dark) !important;
 }
 
 // Product sheet y loading overlay (mantener para UI)
@@ -580,7 +591,8 @@ ion-range {
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--color-bg);
+  background: var(--ion-background-color);
+  color: var(--ion-text-color);
   border-radius: var(--bottom-sheet-radius) var(--bottom-sheet-radius) 0 0;
   box-shadow: var(--shadow-large);
   z-index: 1000;
@@ -705,7 +717,7 @@ ion-range {
   .store-details-card {
     margin: -20px 16px 0;
     padding: 16px;
-    background: var(--color-card);
+    background: var(--ion-card-background);
     border-radius: 16px;
     box-shadow: var(--shadow-medium);
     position: relative;
@@ -731,7 +743,7 @@ ion-range {
       span {
         font-size: 14px;
         font-weight: 600;
-        color: var(--color-text);
+        color: var(--ion-text-color);
       }
     }
 
@@ -745,7 +757,7 @@ ion-range {
         height: 24px;
         font-size: 11px;
         --background: rgba(var(--ion-color-tertiary-rgb), 0.1);
-        --color: var(--color-accent);
+        --color: var(--ion-color-tertiary);
       }
     }
 
@@ -762,12 +774,12 @@ ion-range {
       
       ion-icon {
         font-size: 16px;
-        color: var(--color-accent);
+        color: var(--ion-color-tertiary);
       }
       
       span {
         font-size: 14px;
-        color: var(--color-text);
+        color: var(--ion-text-color);
       }
     }
   }
@@ -904,6 +916,21 @@ ion-range {
       margin: 0;
     }
   }
+}
+
+:host-context(.dark-theme) .product-sheet {
+  background: var(--color-bg-dark) !important;
+  color: var(--color-text-dark) !important;
+}
+
+:host-context(.dark-theme) .product-sheet .store-details-card {
+  background: var(--color-card-dark) !important;
+}
+
+:host-context(.dark-theme) .product-sheet .store-details-card .rating span,
+:host-context(.dark-theme) .product-sheet .store-details-card .location-info span,
+:host-context(.dark-theme) .product-sheet .store-details-card .time-info span {
+  color: var(--color-text-dark) !important;
 }
 
 /* Animaciones */

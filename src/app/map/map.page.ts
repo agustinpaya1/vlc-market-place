@@ -4,45 +4,45 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Platform } from '@ionic/angular';
 import {
-  IonBadge,
-  IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonChip,
-  IonCol,
-  IonContent,
-  IonGrid,
-  IonHeader,
-  IonIcon,
-  IonImg,
-  IonRow,
-  IonSearchbar,
-  IonSkeletonText,
-  IonSpinner,
-  IonTitle,
-  IonToolbar
+    IonBadge,
+    IonButton,
+    IonCard,
+    IonCardContent,
+    IonCardHeader,
+    IonCardSubtitle,
+    IonCardTitle,
+    IonChip,
+    IonCol,
+    IonContent,
+    IonGrid,
+    IonHeader,
+    IonIcon,
+    IonImg,
+    IonRow,
+    IonSearchbar,
+    IonSkeletonText,
+    IonSpinner,
+    IonTitle,
+    IonToolbar
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
-  arrowForward,
-  callOutline,
-  cartOutline,
-  cartSharp,
-  checkmarkCircle,
-  chevronBack,
-  closeCircle,
-  closeOutline,
-  locationOutline,
-  locationSharp,
-  pricetagOutline,
-  share,
-  star,
-  storefrontOutline,
-  timeOutline,
-  timeSharp
+    arrowForward,
+    callOutline,
+    cartOutline,
+    cartSharp,
+    checkmarkCircle,
+    chevronBack,
+    closeCircle,
+    closeOutline,
+    locationOutline,
+    locationSharp,
+    pricetagOutline,
+    share,
+    star,
+    storefrontOutline,
+    timeOutline,
+    timeSharp
 } from 'ionicons/icons';
 import * as L from 'leaflet';
 import { Subscription } from 'rxjs';
@@ -149,11 +149,27 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     popupAnchor: [0, -40],
   });
 
+  // Tiles globales para poder acceder a ellos desde cualquier método
+  private lightTileLayer: L.TileLayer | null = null;
+  private darkTileLayer: L.TileLayer | null = null;
+  private currentTileLayer: L.TileLayer | null = null;
+
   @HostListener('window:matchMedia')
   onColorSchemeChange() {
     const newColorScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (this.isDarkTheme !== newColorScheme) {
       this.isDarkTheme = newColorScheme;
+      this.updateThemeClasses();
+      
+      // Actualizar solo el tile layer del mapa
+      this.updateMapTileLayer();
+      
+      // Forzar la actualización de los componentes de interfaz después del cambio de tema
+      setTimeout(() => {
+        if (this.leafletMap) {
+          this.leafletMap.invalidateSize();
+        }
+      }, 300);
     }
   }
 
@@ -426,8 +442,8 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       const handleThemeChange = (e: MediaQueryListEvent) => {
         this.isDarkTheme = e.matches;
         this.updateThemeClasses();
-        // Reinicializar el mapa cuando cambia el tema
-        this.initLeafletMap();
+        // Actualizar solo el tile layer sin reinicializar todo el mapa
+        this.updateMapTileLayer();
       };
       
       darkModeMediaQuery.addEventListener('change', handleThemeChange);
@@ -443,16 +459,35 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       '.bottom-sheet',
       '.product-sheet',
       '.loading-overlay',
-      '#map'
+      '#map',
+      '.store-item',
+      '.store-details-card',
+      '.search-section',
+      '.stores-list',
+      '.product-card'
     ];
     
     elements.forEach(selector => {
-      const element = document.querySelector(selector);
-      if (element) {
+      const elementList = document.querySelectorAll(selector);
+      elementList.forEach(element => {
         element.classList.toggle('dark-theme', this.isDarkTheme);
         element.classList.toggle('light-theme', !this.isDarkTheme);
-      }
+      });
     });
+    
+    // Actualizar las variables CSS del documento
+    document.documentElement.style.setProperty(
+      '--ion-background-color', 
+      this.isDarkTheme ? 'var(--color-bg-dark)' : 'var(--color-bg-light)'
+    );
+    document.documentElement.style.setProperty(
+      '--ion-text-color', 
+      this.isDarkTheme ? 'var(--color-text-dark)' : 'var(--color-text-light)'
+    );
+    document.documentElement.style.setProperty(
+      '--ion-card-background', 
+      this.isDarkTheme ? 'var(--color-card-dark)' : 'var(--color-card-light)'
+    );
   }
 
   private initLeafletMap() {
@@ -460,14 +495,28 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       this.leafletMap.remove();
     }
 
-    // Configurar el estilo del mapa según el tema
-    const mapStyle = this.isDarkTheme ? 'dark-v10' : 'dataviz';
-    
+    // Crear el mapa
     const map = L.map('map').setView([39.469, -0.376], 14);
-    L.tileLayer(`https://api.maptiler.com/maps/${mapStyle}/{z}/{x}/{y}.png?key=nd6CeZ7IspRMBLuVFPiI`, {
+    
+    // Definir ambos tile layers
+    this.lightTileLayer = L.tileLayer(`https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=nd6CeZ7IspRMBLuVFPiI`, {
       attribution: '&copy; <a href=\"https://www.maptiler.com/copyright/\">MapTiler</a> &copy; OpenStreetMap contributors',
       maxZoom: 20
-    }).addTo(map);
+    });
+    
+    this.darkTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '©CartoDB',
+      maxZoom: 20
+    });
+    
+    // Agregar el tile layer adecuado según el tema actual
+    if (this.isDarkTheme) {
+      this.darkTileLayer.addTo(map);
+      this.currentTileLayer = this.darkTileLayer;
+    } else {
+      this.lightTileLayer.addTo(map);
+      this.currentTileLayer = this.lightTileLayer;
+    }
     
     this.leafletMap = map;
     this.addStoreMarkersToMap();
@@ -475,6 +524,26 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     setTimeout(() => {
       this.leafletMap!.invalidateSize();
     }, 300);
+  }
+  
+  private updateMapTileLayer() {
+    if (!this.leafletMap || !this.lightTileLayer || !this.darkTileLayer) {
+      return;
+    }
+    
+    // Si ya hay un tile layer, quitarlo primero
+    if (this.currentTileLayer) {
+      this.leafletMap.removeLayer(this.currentTileLayer);
+    }
+    
+    // Agregar el nuevo tile layer según el tema actual
+    if (this.isDarkTheme) {
+      this.darkTileLayer.addTo(this.leafletMap);
+      this.currentTileLayer = this.darkTileLayer;
+    } else {
+      this.lightTileLayer.addTo(this.leafletMap);
+      this.currentTileLayer = this.lightTileLayer;
+    }
   }
 
   // Devuelve el offset vertical en píxeles para centrar el marcador por encima del bottom sheet
