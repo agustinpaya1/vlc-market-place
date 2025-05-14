@@ -142,13 +142,6 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   private leafletMap: L.Map | null = null;
   private leafletMarkers: L.Marker[] = [];
 
-  private customIcon = L.icon({
-    iconUrl: '/assets/map-icons/pingas.png',
-    iconSize: [40, 40],
-    iconAnchor: [20, 40],
-    popupAnchor: [0, -40],
-  });
-
   // Tiles globales para poder acceder a ellos desde cualquier método
   private lightTileLayer: L.TileLayer | null = null;
   private darkTileLayer: L.TileLayer | null = null;
@@ -161,7 +154,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       this.isDarkTheme = newColorScheme;
       this.updateThemeClasses();
       
-      // Actualizar solo el tile layer del mapa
+      // Actualizar el tile layer del mapa y los marcadores
       this.updateMapTileLayer();
       
       // Forzar la actualización de los componentes de interfaz después del cambio de tema
@@ -225,16 +218,65 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
+  private createCustomMarkerIcon(store: Store): L.DivIcon {
+    // URL de la imagen (usar la imagen de la tienda o una imagen por defecto)
+    const imageUrl = store.imageUrl || store.image_url || 'assets/store-placeholder.jpg';
+    
+    // Color del marcador según si la tienda está abierta o cerrada
+    const markerColor = store.isOpen 
+      ? (this.isDarkTheme ? 'var(--marker-color-open-dark)' : 'var(--marker-color-open-light)') 
+      : (this.isDarkTheme ? 'var(--marker-color-closed-dark)' : 'var(--marker-color-closed-light)');
+    
+    // Crear el HTML para el marcador con SVG e imagen
+    const markerHtml = `
+      <div class="custom-marker ${store.isOpen ? 'open' : 'closed'}">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 82" width="40" height="40">
+          <defs>
+            <clipPath id="marker-clip-${store.id}">
+              <circle cx="30" cy="25" r="17" />
+            </clipPath>
+          </defs>
+          <path 
+            d="M30,3.5c14.1,0,25.5,11.4,25.5,25.5c0,14.1-12.5,28.8-25.5,53.5C17,57.8,4.5,43.1,4.5,29C4.5,14.9,15.9,3.5,30,3.5z" 
+            fill="${markerColor}" 
+            stroke="${this.isDarkTheme ? 'var(--marker-border-color-dark)' : 'var(--marker-border-color-light)'}"
+            stroke-width="2"
+          />
+          <!-- Círculo blanco interior para la imagen -->
+          <circle cx="30" cy="25" r="17" fill="white" />
+          <!-- Imagen de la tienda recortada en círculo -->
+          <foreignObject x="13" y="8" width="34" height="34" clip-path="url(#marker-clip-${store.id})">
+            <div style="width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background-size: cover; background-position: center; background-image: url('${imageUrl}');">
+            </div>
+          </foreignObject>
+        </svg>
+      </div>
+    `;
+    
+    // Crear un div icon con el HTML generado
+    return L.divIcon({
+      html: markerHtml,
+      className: 'custom-marker-icon',
+      iconSize: [40, 40],
+      iconAnchor: [20, 40],
+      popupAnchor: [0, -35]
+    });
+  }
+
   private addStoreMarkersToMap() {
     if (!this.leafletMap) return;
     // Eliminar marcadores previos
     this.leafletMarkers.forEach(marker => marker.remove());
     this.leafletMarkers = [];
+    
     // Añadir un marcador por cada tienda con coordenadas
     this.stores.forEach(store => {
       if (store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
+        // Crear un icono personalizado con la imagen de la tienda
+        const customMarkerIcon = this.createCustomMarkerIcon(store);
+        
         const marker = L.marker([store.coordinates[1], store.coordinates[0]], {
-          icon: this.customIcon,
+          icon: customMarkerIcon,
           title: store.name
         });
         marker.addTo(this.leafletMap!);
@@ -258,7 +300,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
           
           // Centrar el mapa con una animación más rápida
           this.leafletMap?.flyTo(newLatLng, 16, {
-            duration: 0.75, // Reducido de 1.5 a 0.75 segundos
+            duration: 0.75,
             easeLinearity: 0.5
           });
 
@@ -442,7 +484,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       const handleThemeChange = (e: MediaQueryListEvent) => {
         this.isDarkTheme = e.matches;
         this.updateThemeClasses();
-        // Actualizar solo el tile layer sin reinicializar todo el mapa
+        // Actualizar el tile layer y los marcadores
         this.updateMapTileLayer();
       };
       
@@ -543,6 +585,16 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     } else {
       this.lightTileLayer.addTo(this.leafletMap);
       this.currentTileLayer = this.lightTileLayer;
+    }
+    
+    // Actualizar los marcadores para reflejar el cambio de tema
+    this.updateMarkersForTheme();
+  }
+  
+  private updateMarkersForTheme() {
+    // Recrear los marcadores con el nuevo tema
+    if (this.leafletMap && this.stores && this.stores.length > 0) {
+      this.addStoreMarkersToMap();
     }
   }
 
