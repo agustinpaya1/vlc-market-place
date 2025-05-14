@@ -25,6 +25,9 @@ export class AppComponent implements OnInit {
   async ngOnInit() {
     await this.storage.create();
     
+    // Resetear el flag de intro para forzar que se muestre siempre (temporal)
+    await this.resetIntroFlag();
+    
     // Suscribirse al estado de autenticación
     this.authService.user$.subscribe(user => {
       this.isAuthenticated = !!user;
