@@ -732,3 +732,18 @@ ion-fab-button.ai-fab::part(native) {
   border-radius: 50% !important;
   overflow: hidden !important;
 }
+
+/*====================================
+  ESTILOS PARA ICONOS ESPECÍFICOS
+====================================*/
+
+/* Estilo para los iconos de favoritos */
+ion-icon[name="heart"],
+ion-icon[name="heart-outline"] {
+  color: #0288d1 !important;
+}
+
+/* Efecto específico para los botones de favoritos */
+.favorite-button ion-icon {
+  color: #0288d1 !important;
+}

@@ -15,6 +15,10 @@
           <ion-icon name="chevron-back"></ion-icon>
         </ion-button>
         <div class="right-buttons">
+          <ion-button (click)="toggleFavorite()" class="nav-button favorite-button">
+            <ion-icon [name]="isFavorite(store?.id) ? 'heart' : 'heart-outline'" 
+                      [color]="isFavorite(store?.id) ? 'danger' : 'light'"></ion-icon>
+          </ion-button>
           <ion-button (click)="shareStore()" class="nav-button share-button">
             <ion-icon name="share"></ion-icon>
           </ion-button>

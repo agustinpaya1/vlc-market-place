@@ -16,6 +16,7 @@ $spacing-lg: 24px;
 $spacing-xl: 30px;
 $card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 $transition-speed: 0.3s;
+$favorite-color: #0288d1; // Color azul para los favoritos
 
 // Variables para modo oscuro
 $dark-bg: #121212; // Fondo oscuro
@@ -200,6 +201,10 @@ $dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
       margin-right: 16px;
       font-size: 22px;
       transition: transform $transition-speed ease;
+      
+      &[name="heart"] {
+        color: $favorite-color !important;
+      }
     }
     
     &:hover {
@@ -290,6 +295,10 @@ $dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
       
       ion-icon {
         color: $dark-primary;
+        
+        &[name="heart"] {
+          color: $favorite-color !important;
+        }
       }
       
       ion-label {

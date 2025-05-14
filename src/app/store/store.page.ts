@@ -1,27 +1,16 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { LoadingController, ModalController, ToastController, IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ModalController } from '@ionic/angular';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Store } from '../interfaces/store.interface';
+import { SupabaseService } from '../services/supabase.service';
+import { CartService, CartItem } from '../services/cart.service';
+import { FavoritesService } from '../services/favorites.service';
+import { ProductModalComponent } from './product-modal/product-modal.component';
 import { Product } from './product.interface';
 import { addIcons } from 'ionicons';
-import { 
-  star, 
-  location, 
-  time, 
-  pricetag, 
-  cart, 
-  chevronBack,
-  searchOutline,
-  arrowBack,
-  heartOutline,
-  share
-} from 'ionicons/icons';
-import { CartService, CartItem } from '../services/cart.service';
-import { ToastController, LoadingController } from '@ionic/angular';
-import { SupabaseService } from '../services/supabase.service';
-import { ProductModalComponent } from './product-modal/product-modal.component';
+import { chevronBack, heart, heartOutline, share, cart, star, location, time } from 'ionicons/icons';
+import { Store } from '../interfaces/store.interface';
 
 @Component({
   selector: 'app-store',
@@ -49,20 +38,18 @@ export class StorePage implements OnInit {
     private loadingController: LoadingController,
     private toastController: ToastController,
     private cartService: CartService,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private favoritesService: FavoritesService
   ) {
     // Cargar solo los iconos necesarios
-    addIcons({ 
-      star, 
-      location, 
-      time, 
-      pricetag, 
-      cart, 
-      arrowBack,
-      chevronBack,
-      searchOutline,
+    addIcons({
+      cart,
+      heart,
       heartOutline,
-      share
+      share,
+      star,
+      location,
+      time
     });
     
     // Subscribe to cart changes
@@ -289,12 +276,22 @@ export class StorePage implements OnInit {
 
   // Methods for the overlaid buttons
   toggleFavorite() {
-    // Implement favorite functionality
+    if (!this.store) return;
+    
+    const storeId = this.store.id;
+    const storeName = this.store.name;
+    
+    // Llama al servicio de favoritos
+    const isFavorite = this.favoritesService.toggleFavorite(storeId);
+    
+    // Muestra un mensaje de confirmación
     this.toastController.create({
-      message: 'Tienda añadida a favoritos',
+      message: isFavorite ? 
+        `${storeName} añadida a favoritos` : 
+        `${storeName} eliminada de favoritos`,
       duration: 2000,
       position: 'bottom',
-      color: 'success'
+      color: isFavorite ? 'success' : 'medium'
     }).then(toast => toast.present());
   }
 
@@ -315,5 +312,11 @@ export class StorePage implements OnInit {
         color: 'warning'
       }).then(toast => toast.present());
     }
+  }
+
+  // Verifica si una tienda está en favoritos
+  isFavorite(storeId: string | undefined): boolean {
+    if (!storeId) return false;
+    return this.favoritesService.isFavorite(storeId);
   }
 } 

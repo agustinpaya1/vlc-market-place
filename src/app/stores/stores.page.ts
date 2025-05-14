@@ -68,10 +68,13 @@ import {
   pricetag,
   cube,
   calendar,
-  logInOutline
+  logInOutline,
+  heart,
+  heartOutline
 } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
+import { FavoritesService } from '../services/favorites.service';
 import { debounceTime, distinctUntilChanged, takeUntil, take } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { ToastController } from '@ionic/angular/standalone';
@@ -193,6 +196,9 @@ export class StoresPage implements OnInit, OnDestroy {
   isAuthenticated: boolean = false;
   private destroy$ = new Subject<void>();
 
+  // Añadir propiedad para almacenar los favoritos
+  favoriteStores: string[] = [];
+
   constructor(
     private router: Router,
     private supabaseService: SupabaseService,
@@ -203,8 +209,10 @@ export class StoresPage implements OnInit, OnDestroy {
     private loadingController: LoadingController,
     private alertController: AlertController,
     private authService: AuthService,
-    private vlcoinService: VlcoinService
+    private vlcoinService: VlcoinService,
+    private favoritesService: FavoritesService // Inyectar servicio de favoritos
   ) {
+    // Registrar iconos importantes para la aplicación
     addIcons({
       storefront, location, time, arrowForward, star, trendingUp, map, starHalf,
       sunny, moon, notifications, searchOutline, search, locationOutline,
@@ -212,7 +220,9 @@ export class StoresPage implements OnInit, OnDestroy {
       arrowForwardOutline, camera, chatbubbleEllipses, shirtOutline, pizzaOutline,
       fishOutline, basketOutline, wineOutline, leafOutline, restaurantOutline,
       fastFoodOutline, waterOutline, scanOutline, walletOutline, cash, trash,
-      trophy, gift, ribbon, pricetag, cube, calendar, logInOutline
+      trophy, gift, ribbon, pricetag, cube, calendar, logInOutline,
+      // Asegurarnos de que los iconos de corazón estén registrados
+      heart, heartOutline
     });
 
     // Set up search functionality with improved debounce
@@ -236,6 +246,15 @@ export class StoresPage implements OnInit, OnDestroy {
         // Clear notifications if not authenticated
         this.notifications = [];
         this.notificationCount = 0;
+      }
+    });
+
+    // Suscribirse a los cambios en favoritos
+    this.favoritesService.getFavorites().pipe(takeUntil(this.destroy$)).subscribe(favorites => {
+      this.favoriteStores = favorites;
+      // Si hay datos cargados, actualizar la vista
+      if (!this.isLoading && this.filteredStores.length > 0) {
+        this.forceUpdate();
       }
     });
   }
@@ -1109,9 +1128,20 @@ export class StoresPage implements OnInit, OnDestroy {
    */
   private forceUpdate() {
     this.zone.run(() => {
-      // This will trigger change detection
+      console.log('Forzando actualización de la UI');
+      // Esto desencadenará la detección de cambios
       this.changeDetector.detectChanges();
-      console.log('Forced UI update with new filters');
+      
+      // Aplicar una pequeña animación a los botones de favoritos
+      setTimeout(() => {
+        const favoriteButtons = document.querySelectorAll('.favorite-button');
+        favoriteButtons.forEach(button => {
+          button.classList.add('highlight');
+          setTimeout(() => {
+            button.classList.remove('highlight');
+          }, 500);
+        });
+      }, 100);
     });
   }
 
@@ -1324,17 +1354,27 @@ export class StoresPage implements OnInit, OnDestroy {
     }
     
     // Mostrar un toast con un icono que indique el tipo de notificación
-    this.showToastWithIcon('Abriendo detalles...', iconName, color);
+    this.showToastWithIcon(
+      `Abriendo detalles...`, 
+      iconName,
+      color
+    );
   }
   
   // Método para mostrar un toast con icono
   private async showToastWithIcon(message: string, iconName: string, color: string) {
     const toast = await this.toastController.create({
-      message: `<ion-icon name="${iconName}" color="${color}"></ion-icon> ${message}`,
-      duration: 1000,
+      message: message,
+      duration: 2000,
       position: 'bottom',
-      cssClass: 'toast-with-icon',
-      color: 'light'
+      cssClass: `toast-with-icon toast-icon-${color}`,
+      color: 'light',
+      buttons: [
+        {
+          side: 'start',
+          icon: iconName
+        }
+      ]
     });
     
     await toast.present();
@@ -1389,6 +1429,37 @@ export class StoresPage implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // Verificar si una tienda está en favoritos
+  isStoreFavorite(storeId: string): boolean {
+    return this.favoritesService.isFavorite(storeId);
+  }
+
+  // Alternar estado de favorito
+  toggleFavorite(event: Event, storeId: string): void {
+    event.stopPropagation(); // Evitar que el click se propague a la tarjeta de tienda
+    event.preventDefault(); // Evitar cualquier acción por defecto
+    
+    console.log(`Alternando favorito para tienda ${storeId}`);
+    
+    // Obtener el nombre de la tienda para un mensaje más descriptivo
+    const store = this.getStoreById(storeId);
+    const storeName = store ? store.name : 'Tienda';
+    
+    const isFavorite = this.favoritesService.toggleFavorite(storeId);
+    
+    console.log(`La tienda ${storeId} ahora está en favoritos:`, isFavorite);
+    
+    // Usar un mensaje simple para evitar problemas con HTML
+    if (isFavorite) {
+      this.showToast(`${storeName} añadida a favoritos`);
+    } else {
+      this.showToast(`${storeName} eliminada de favoritos`);
+    }
+    
+    // Forzar actualización de la interfaz
+    this.forceUpdate();
   }
 }
 
