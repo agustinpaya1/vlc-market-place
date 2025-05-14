@@ -10,6 +10,12 @@
   <!-- Mapa a pantalla completa -->
   <div id="map"></div>
 
+  <!-- Botón flotante para activar COL -->
+  <div class="col-button" *ngIf="isAuthenticated" [class.active]="modoCOLActivo" (click)="toggleModoCOL()">
+    <ion-icon [name]="modoCOLActivo ? 'close-outline' : 'compass-outline'"></ion-icon>
+    <span>{{ modoCOLActivo ? 'Cazador OFF' : 'Cazador ON' }}</span>
+  </div>
+
   <!-- Loading indicator -->
   <div class="loading-overlay" *ngIf="isLoading">
     <div class="loading-container">
@@ -157,6 +163,45 @@
       </ng-template>
     </div>
   </div>
+
+  <!-- Pop-up de recompensa COL -->
+  <div class="col-reward-popup" *ngIf="recompensaSeleccionada" [class.active]="recompensaSeleccionada">
+    <div class="col-reward-content">
+      <div class="col-reward-header">
+        <h2>¡Tesoro encontrado!</h2>
+        <ion-button fill="clear" class="close-button" (click)="cerrarPopupRecompensa()">
+          <ion-icon name="close-outline"></ion-icon>
+        </ion-button>
+      </div>
+      <div class="col-reward-body">
+        <div class="col-reward-image">
+          <img src="assets/col-icons/treasure-chest.svg" alt="Tesoro">
+        </div>
+        <h3>{{ recompensaSeleccionada?.titulo }}</h3>
+        <p class="col-reward-coins">+{{ recompensaSeleccionada?.coins }} VLCoin</p>
+        <p class="col-reward-store" *ngIf="recompensaSeleccionada?.tienda">En {{ recompensaSeleccionada?.tienda }}</p>
+        
+        <!-- Información de distancia -->
+        <div class="col-reward-distance" *ngIf="recompensaSeleccionada && recompensaSeleccionada.distanciaAlUsuario !== undefined">
+          <div class="distance-indicator" 
+               [class.near]="recompensaSeleccionada && recompensaSeleccionada.distanciaAlUsuario <= 50" 
+               [class.far]="recompensaSeleccionada && recompensaSeleccionada.distanciaAlUsuario > 50">
+            <ion-icon [name]="recompensaSeleccionada && recompensaSeleccionada.distanciaAlUsuario <= 50 ? 'checkmarkCircleOutline' : 'alertCircleOutline'"></ion-icon>
+            <span>{{ recompensaSeleccionada?.distanciaAlUsuario }} metros</span>
+          </div>
+          <p class="distance-message" *ngIf="recompensaSeleccionada && recompensaSeleccionada.distanciaAlUsuario > 50">
+            Debes acercarte a menos de 50 metros para canjear
+          </p>
+        </div>
+        
+        <ion-button expand="block" class="col-reward-button" (click)="canjearRecompensa(recompensaSeleccionada)"
+                    [disabled]="recompensaSeleccionada && recompensaSeleccionada.distanciaAlUsuario !== undefined && recompensaSeleccionada.distanciaAlUsuario > 50">
+          Canjear ahora
+        </ion-button>
+      </div>
+    </div>
+  </div>
+  
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
   crossorigin=""></script>

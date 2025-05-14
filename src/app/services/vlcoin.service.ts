@@ -48,6 +48,7 @@ export class VlcoinService {
         if (error.code === 'PGRST116') {
           // If no record found, create one with zero balance
           await this.createVlcoinRecord(userId);
+          // Important: Update the BehaviorSubject
           this.vlcoinBalance.next(0);
           return 0;
         }
@@ -55,20 +56,31 @@ export class VlcoinService {
       }
 
       const balance = data?.balance || 0;
+      // Make sure to update the BehaviorSubject
       this.vlcoinBalance.next(balance);
+      console.log('Updated VLCoin balance:', balance);
       return balance;
     } catch (error) {
       console.error('Error getting VLCoin balance:', error);
       // Fallback to profile vlcoin_balance if there's an issue
-      const { data: profile } = await this.supabaseService.getClient()
-        .from('profiles')
-        .select('vlcoin_balance')
-        .eq('id', userId)
-        .single();
-        
-      const fallbackBalance = profile?.vlcoin_balance || 0;
-      this.vlcoinBalance.next(fallbackBalance);
-      return fallbackBalance;
+      try {
+        const { data: profile } = await this.supabaseService.getClient()
+          .from('profiles')
+          .select('vlcoin_balance')
+          .eq('id', userId)
+          .single();
+          
+        const fallbackBalance = profile?.vlcoin_balance || 0;
+        // Important: Update the BehaviorSubject with fallback value
+        this.vlcoinBalance.next(fallbackBalance);
+        console.log('Using fallback VLCoin balance:', fallbackBalance);
+        return fallbackBalance;
+      } catch (fallbackError) {
+        console.error('Error getting fallback VLCoin balance:', fallbackError);
+        // If all else fails, reset to 0
+        this.vlcoinBalance.next(0);
+        return 0;
+      }
     }
   }
 
@@ -116,7 +128,7 @@ export class VlcoinService {
         .update({ vlcoin_balance: amount })
         .eq('id', userId);
         
-      // Update the local subject
+      // Update the local subject with the new balance
       this.vlcoinBalance.next(amount);
       return true;
     } catch (error) {
@@ -133,9 +145,19 @@ export class VlcoinService {
    */
   async addVlcoins(userId: string, amount: number): Promise<boolean> {
     try {
+      // First get the current balance to ensure we have the latest value
       const currentBalance = await this.getVlcoinBalance(userId);
       const newBalance = currentBalance + amount;
-      return await this.updateVlcoinBalance(userId, newBalance);
+      
+      // Update with the new balance and ensure UI is updated
+      const success = await this.updateVlcoinBalance(userId, newBalance);
+      
+      // Make sure the behavior subject is updated
+      if (success) {
+        this.vlcoinBalance.next(newBalance);
+      }
+      
+      return success;
     } catch (error) {
       console.error('Error adding VLCoins:', error);
       return false;
@@ -150,6 +172,7 @@ export class VlcoinService {
    */
   async subtractVlcoins(userId: string, amount: number): Promise<boolean> {
     try {
+      // First get the current balance to ensure we have the latest value
       const currentBalance = await this.getVlcoinBalance(userId);
       if (currentBalance < amount) {
         console.error('Insufficient VLCoins');
@@ -157,7 +180,16 @@ export class VlcoinService {
       }
       
       const newBalance = currentBalance - amount;
-      return await this.updateVlcoinBalance(userId, newBalance);
+      
+      // Update with the new balance and ensure UI is updated
+      const success = await this.updateVlcoinBalance(userId, newBalance);
+      
+      // Make sure the behavior subject is updated
+      if (success) {
+        this.vlcoinBalance.next(newBalance);
+      }
+      
+      return success;
     } catch (error) {
       console.error('Error subtracting VLCoins:', error);
       return false;
