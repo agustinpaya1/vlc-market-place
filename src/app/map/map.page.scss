@@ -1190,18 +1190,44 @@ ion-fab {
   
   .custom-marker {
     width: 40px;
-    height: 40px;
+    height: 50px;
+    position: relative;
     transform-origin: center bottom;
     transition: transform var(--transition-speed) ease-out;
-    filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
     
     &:hover {
       transform: scale(1.15);
-      filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.4));
+      z-index: 1000;
     }
     
-    svg {
-      overflow: visible;
+    .marker-base {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      
+      .marker-bg {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
+      }
+    }
+    
+    .marker-image {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
     }
   }
 }
@@ -1227,10 +1253,7 @@ ion-fab {
   }
 }
 
-// Ajustar el tamaño de visualización de SVG
-.leaflet-marker-icon svg {
-  width: 40px !important;
-  height: 40px !important;
-  margin-left: -20px !important;
-  margin-top: -40px !important;
+.custom-marker.closed .marker-image {
+  // Aplicar un filtro gris a las imágenes de tiendas cerradas
+  filter: grayscale(0.5) brightness(0.9);
 } 

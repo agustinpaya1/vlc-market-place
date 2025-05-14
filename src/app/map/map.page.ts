@@ -218,34 +218,19 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     // URL de la imagen (usar la imagen de la tienda o una imagen por defecto)
     const imageUrl = store.imageUrl || store.image_url || 'assets/store-placeholder.jpg';
     
-    // Color del marcador según si la tienda está abierta o cerrada
-    const markerColor = store.isOpen 
-      ? (this.isDarkTheme ? 'var(--marker-color-open-dark)' : 'var(--marker-color-open-light)') 
-      : (this.isDarkTheme ? 'var(--marker-color-closed-dark)' : 'var(--marker-color-closed-light)');
+    // Color de filtro según si la tienda está abierta o cerrada
+    const colorFilter = store.isOpen 
+      ? (this.isDarkTheme ? 'filter: hue-rotate(140deg) brightness(1.2);' : 'filter: hue-rotate(120deg);') 
+      : (this.isDarkTheme ? 'filter: hue-rotate(330deg) brightness(1.2);' : 'filter: hue-rotate(300deg);');
     
-    // Crear el HTML para el marcador con SVG e imagen
+    // Crear el HTML para el marcador con la imagen pingas.png como base y la imagen de la tienda en el centro
     const markerHtml = `
       <div class="custom-marker ${store.isOpen ? 'open' : 'closed'}">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 82" width="40" height="40">
-          <defs>
-            <clipPath id="marker-clip-${store.id}">
-              <circle cx="30" cy="25" r="17" />
-            </clipPath>
-          </defs>
-          <path 
-            d="M30,3.5c14.1,0,25.5,11.4,25.5,25.5c0,14.1-12.5,28.8-25.5,53.5C17,57.8,4.5,43.1,4.5,29C4.5,14.9,15.9,3.5,30,3.5z" 
-            fill="${markerColor}" 
-            stroke="${this.isDarkTheme ? 'var(--marker-border-color-dark)' : 'var(--marker-border-color-light)'}"
-            stroke-width="2"
-          />
-          <!-- Círculo blanco interior para la imagen -->
-          <circle cx="30" cy="25" r="17" fill="white" />
-          <!-- Imagen de la tienda recortada en círculo -->
-          <foreignObject x="13" y="8" width="34" height="34" clip-path="url(#marker-clip-${store.id})">
-            <div style="width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background-size: cover; background-position: center; background-image: url('${imageUrl}');">
-            </div>
-          </foreignObject>
-        </svg>
+        <div class="marker-base" style="${colorFilter}">
+          <img src="/assets/map-icons/pingas.png" alt="Marcador" class="marker-bg" />
+        </div>
+        <div class="marker-image" style="background-image: url('${imageUrl}');">
+        </div>
       </div>
     `;
     
@@ -253,9 +238,9 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     return L.divIcon({
       html: markerHtml,
       className: 'custom-marker-icon',
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-      popupAnchor: [0, -35]
+      iconSize: [40, 50],
+      iconAnchor: [20, 50],
+      popupAnchor: [0, -45]
     });
   }
 
@@ -590,6 +575,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   private updateMarkersForTheme() {
     // Recrear los marcadores con el nuevo tema
     if (this.leafletMap && this.stores && this.stores.length > 0) {
+      console.log('Actualizando marcadores para el nuevo tema:', this.isDarkTheme ? 'oscuro' : 'claro');
       this.addStoreMarkersToMap();
     }
   }
