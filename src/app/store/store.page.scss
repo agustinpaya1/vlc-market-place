@@ -12,33 +12,6 @@ $transition-speed: 0.3s;
   --card-border-radius: 12px;
   --transition-speed: 0.3s;
   --background-color: #f8f9fa;
-  ion-content {
-    --padding-top: 20px;
-    --padding-bottom: 20px;
-    --background: var(--ion-background-color);
-  }
-
-  .store-container {
-    padding: 0 16px;
-    height: 100%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch; // Mejora el deslizamiento en iOS
-  }
-
-  .store-header-image-container {
-    position: relative;
-    width: 100%;
-    height: 200px;
-    margin-bottom: 16px;
-    border-radius: 12px;
-    overflow: hidden;
-
-    .store-header-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  }
 }
 
 /* Animaciones */
@@ -783,41 +756,5 @@ ion-content {
   
   .loading-container p {
     color: #aaa;
-  }
-}
-
-// Estilos específicos para el modal
-:host-context(.store-modal) {
-  ion-content {
-    --padding-top: 0;
-  }
-
-  .store-container {
-    padding-top: 16px;
-  }
-
-  .header-buttons {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: 16px;
-    display: flex;
-    justify-content: space-between;
-    z-index: 10;
-  }
-
-  .nav-button {
-    --padding-start: 8px;
-    --padding-end: 8px;
-    --border-radius: 50%;
-    --background: rgba(var(--ion-color-light-rgb), 0.8);
-    --backdrop-filter: blur(4px);
-    margin: 0;
-    
-    ion-icon {
-      font-size: 24px;
-      color: var(--ion-color-dark);
-    }
   }
 } 

@@ -1,8 +1,8 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, ModalController } from '@ionic/angular';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '../interfaces/store.interface';
 import { Product } from './product.interface';
 import { addIcons } from 'ionicons';
@@ -16,28 +16,21 @@ import {
   searchOutline,
   arrowBack,
   heartOutline,
-  share,
-  close
+  share
 } from 'ionicons/icons';
 import { CartService, CartItem } from '../services/cart.service';
 import { ToastController, LoadingController } from '@ionic/angular';
 import { SupabaseService } from '../services/supabase.service';
-import { ProductModalComponent } from '../components/product-modal/product-modal.component';
+import { ProductModalComponent } from './product-modal/product-modal.component';
 
 @Component({
   selector: 'app-store',
   templateUrl: './store.page.html',
   styleUrls: ['./store.page.scss'],
   standalone: true,
-  imports: [
-    IonicModule, 
-    CommonModule, 
-    FormsModule,
-    ProductModalComponent
-  ]
+  imports: [IonicModule, CommonModule, FormsModule]
 })
 export class StorePage implements OnInit {
-  @Input() storeId?: string;
   store: Store | undefined;
   products: Product[] = [];
   filteredProducts: Product[] = [];
@@ -50,6 +43,7 @@ export class StorePage implements OnInit {
   cartItems: CartItem[] = [];
 
   constructor(
+    private route: ActivatedRoute,
     private supabaseService: SupabaseService,
     private router: Router,
     private loadingController: LoadingController,
@@ -68,8 +62,7 @@ export class StorePage implements OnInit {
       chevronBack,
       searchOutline,
       heartOutline,
-      share,
-      close
+      share
     });
     
     // Subscribe to cart changes
@@ -79,9 +72,10 @@ export class StorePage implements OnInit {
   }
 
   async ngOnInit() {
-    if (this.storeId) {
+    const storeId = this.route.snapshot.paramMap.get('id');
+    if (storeId) {
       // Cargar los datos de la tienda y los productos de forma paralela
-      this.loadStoreAndProductsParallel(this.storeId);
+      this.loadStoreAndProductsParallel(storeId);
     }
 
     this.cartService.getCartItems().subscribe((items: CartItem[]) => {
@@ -142,28 +136,20 @@ export class StorePage implements OnInit {
 
       // Procesar datos de productos
       if (productsData && productsData.length > 0) {
-        // Calcular el mayor descuento y validar productos con ofertas
+        // Calcular el mayor descuento
         let maxDiscount = 0;
-        const validatedProducts = productsData.map(product => {
-          // Asegurarse de que los productos con ofertas tengan todos los datos necesarios
-          if (product.isOffer && (!product.price || !product.offerPrice)) {
-            product.isOffer = false; // Deshabilitar la oferta si faltan datos
-            console.warn('Producto con oferta incompleta:', product);
-          }
-          
-          if (product.isOffer && product.price && product.offerPrice) {
+        for (const product of productsData) {
+          if (product.offerPrice && product.price) {
             const discount = Math.round(100 - (product.offerPrice / product.price) * 100);
             if (discount > maxDiscount) {
               maxDiscount = discount;
             }
           }
-          return product;
-        });
-        
+        }
         this.maxDiscount = maxDiscount;
         // Procesar los productos en lotes para mejorar el rendimiento
         setTimeout(() => {
-          this.products = validatedProducts || [];
+          this.products = productsData || [];
           this.filteredProducts = [...this.products];
           this.loadedProductsData = true;
         }, 100);
@@ -266,7 +252,7 @@ export class StorePage implements OnInit {
   }
 
   goBack() {
-    this.modalCtrl.dismiss();
+    this.router.navigate(['/tabs/stores']);
   }
 
   async openProductModal(product: Product) {
@@ -313,6 +299,7 @@ export class StorePage implements OnInit {
   }
 
   shareStore() {
+    // Implement share functionality
     if (navigator.share) {
       navigator.share({
         title: this.store?.name,

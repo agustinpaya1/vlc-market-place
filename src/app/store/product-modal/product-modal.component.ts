@@ -1,8 +1,7 @@
-import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, OnInit } from '@angular/core';
 import { IonicModule, ModalController } from '@ionic/angular';
-import { Product } from '../product.interface';
-import { CartService } from '../../services/cart.service';
+import { CommonModule } from '@angular/common';
+import { CartService, CartItem } from '../../services/cart.service';
 import { addIcons } from 'ionicons';
 import { cartOutline, close, arrowBack, add, remove } from 'ionicons/icons';
 import { NotificationService } from '../../services/notification.service';
@@ -15,9 +14,9 @@ import { take } from 'rxjs/operators';
   standalone: true,
   imports: [IonicModule, CommonModule]
 })
-export class ProductModalComponent {
-  @Input() product!: Product;
-  quantity: number = 1;
+export class ProductModalComponent implements OnInit {
+  @Input() product: any;
+  quantity: number = 0;
   isInCart: boolean = false;
 
   constructor(
@@ -46,11 +45,13 @@ export class ProductModalComponent {
   }
 
   incrementQuantity() {
-    if (this.quantity < 10) this.quantity++;
+    this.quantity++;
   }
 
   decrementQuantity() {
-    if (this.quantity > 1) this.quantity--;
+    if (this.quantity > 0) {
+      this.quantity--;
+    }
   }
 
   handleImageError(event: Event) {
@@ -60,20 +61,29 @@ export class ProductModalComponent {
     }
   }
 
-  async addToCart() {
-    await this.cartService.addToCart({
-      id: this.product.id,
-      name: this.product.name,
-      price: this.product.offerPrice || this.product.price,
-      quantity: this.quantity,
-      imageUrl: this.product.imageUrl
-    });
-    this.dismiss(true);
+  addToCart() {
+    if (this.quantity > 0) {
+      this.cartService.addToCart({
+        id: this.product.id,
+        name: this.product.name,
+        price: this.product.offerPrice || this.product.price,
+        quantity: this.quantity,
+        imageUrl: this.product.imageUrl
+      });
+      
+      // Mostrar notificación (opcional)
+      this.notificationService.showSuccess('Producto añadido al carrito');
+      
+      // Cerrar el modal y pasar datos
+      this.modalCtrl.dismiss({
+        added: true,
+        productId: this.product.id,
+        quantity: this.quantity
+      });
+    }
   }
 
-  dismiss(added: boolean = false) {
-    this.modalCtrl.dismiss({
-      added: added
-    });
+  dismiss() {
+    this.modalCtrl.dismiss();
   }
 } 

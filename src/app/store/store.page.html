@@ -12,7 +12,7 @@
       <!-- Navigation elements overlaid on image -->
       <div class="header-buttons">
         <ion-button (click)="goBack()" class="nav-button back-button">
-          <ion-icon name="close"></ion-icon>
+          <ion-icon name="chevron-back"></ion-icon>
         </ion-button>
         <div class="right-buttons">
           <ion-button (click)="shareStore()" class="nav-button share-button">
@@ -65,42 +65,47 @@
                     class="products-searchbar">
       </ion-searchbar>
 
-      <!-- Product cards -->
-      <div *ngIf="filteredProducts.length > 0; else noProducts">
-        <ion-card *ngFor="let product of filteredProducts; trackBy: trackProduct; let i = index" 
-                  class="product-card"
-                  [style.--item-index]="i"
-                  (click)="openProductModal(product)">
-          <ion-card-header>
-            <img [src]="product.imageUrl" 
-                 [alt]="product.name" 
-                 (error)="handleImageError($event)"
-                 loading="lazy">
-            <div class="discount-badge" *ngIf="product.isOffer && product.price && product.offerPrice">
-              -{{ ((product.price - product.offerPrice) / product.price * 100) | number:'1.0-0' }}%
-            </div>
-          </ion-card-header>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="6" size-md="4" size-lg="3" *ngFor="let product of filteredProducts; trackBy: trackProduct">
+            <ion-card class="product-card" (click)="openProductModal(product)">
+              <ion-card-header>
+                <img [src]="product.imageUrl" 
+                     (error)="handleImageError($event)" 
+                     [alt]="product.name" 
+                     loading="lazy" 
+                     width="100%" 
+                     height="140">
+                <div *ngIf="product.offerPrice && product.price" class="discount-badge">
+                  -{{ ((100 - (product.offerPrice / product.price) * 100) | number:'1.0-0') }}%
+                </div>
+              </ion-card-header>
 
-          <ion-card-content>
-            <h4>{{ product.name }}</h4>
-            <p class="category">{{ product.category }}</p>
-            <p class="description">{{ product.description }}</p>
-            <div class="price-container">
-              <span class="price" [class.has-offer]="product.isOffer">{{ product.price | currency:'EUR' }}</span>
-              <span class="offer-price" *ngIf="product.isOffer">{{ product.offerPrice | currency:'EUR' }}</span>
-            </div>
-          </ion-card-content>
-        </ion-card>
+              <ion-card-content>
+                <h4>{{ product.name }}</h4>
+                <div class="category">{{ product.category }}</div>
+                <div class="description">{{ product.description }}</div>
+                <div class="price-container">
+                  <ng-container *ngIf="product.offerPrice; else regularPrice">
+                    <span class="price has-offer">{{ product.price | currency:'EUR' }}</span>
+                    <span class="offer-price">{{ product.offerPrice | currency:'EUR' }}</span>
+                  </ng-container>
+                  <ng-template #regularPrice>
+                    <span class="price">{{ product.price | currency:'EUR' }}</span>
+                  </ng-template>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+
+      <div class="empty-products" *ngIf="loadedProductsData && filteredProducts.length === 0">
+        <ion-icon name="basket-outline" size="large"></ion-icon>
+        <h4>No hay productos disponibles</h4>
+        <p *ngIf="searchTerm">No se encontraron productos con "{{ searchTerm }}"</p>
+        <p *ngIf="!searchTerm">Esta tienda aún no tiene productos</p>
       </div>
-
-      <!-- No products template -->
-      <ng-template #noProducts>
-        <div class="empty-products">
-          <ion-icon name="cart"></ion-icon>
-          <h4>No hay productos disponibles</h4>
-          <p>Esta tienda no tiene productos en este momento</p>
-        </div>
-      </ng-template>
     </div>
   </div>
 </ion-content> 
