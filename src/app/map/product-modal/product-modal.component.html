@@ -7,7 +7,7 @@
         <ion-icon name="close"></ion-icon>
       </ion-button>
     </div>
-    <ion-img [src]="product.imageUrl" [alt]="product.name" (error)="handleImageError($event)"></ion-img>
+    <ion-img [src]="product.imageUrl || product.image_url" [alt]="product.name" (error)="handleImageError($event)"></ion-img>
   </div>
 
   <div class="product-details">
@@ -44,16 +44,10 @@
       </ion-button>
     </div>
 
-    <div class="action-row">
-      <ion-button expand="block" (click)="addToCart()">
-        <ion-icon name="cart" slot="start"></ion-icon>
-        {{ isInCart ? 'Actualizar carrito' : 'Añadir al carrito' }}
-      </ion-button>
-      <button class="favorite-btn-modal" (click)="toggleFavorite()">
-        <ion-icon [name]="isFavorite ? 'heart' : 'heart-outline'" color="danger"></ion-icon>
-        <span style="font-size:12px; color:#d00;">Fav</span>
-      </button>
-    </div>
+    <ion-button expand="block" (click)="addToCart()" [disabled]="quantity === 0">
+      <ion-icon name="cart" slot="start"></ion-icon>
+      {{ isInCart ? 'Actualizar carrito' : 'Añadir al carrito' }}
+    </ion-button>
   </div>
 </ion-content>
 

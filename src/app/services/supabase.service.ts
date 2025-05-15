@@ -466,4 +466,38 @@ export class SupabaseService {
       throw error;
     }
   }
+
+  // FAVORITES: Añadir a favoritos (producto o tienda)
+  async addFavorite(userId: string, id: string, type: 'product' | 'store') {
+    const insertObj: any = { user_id: userId };
+    if (type === 'product') insertObj.product_id = id;
+    if (type === 'store') insertObj.store_id = id;
+    const { data, error } = await this.getClient()
+      .from('favorites')
+      .insert(insertObj);
+    if (error) throw error;
+    return data;
+  }
+
+  // FAVORITES: Quitar de favoritos (producto o tienda)
+  async removeFavorite(userId: string, id: string, type: 'product' | 'store') {
+    let query = this.getClient().from('favorites').delete().eq('user_id', userId);
+    if (type === 'product') query = query.eq('product_id', id);
+    if (type === 'store') query = query.eq('store_id', id);
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+  }
+
+  // FAVORITES: Obtener favoritos del usuario (productos o tiendas)
+  async getFavorites(userId: string, type: 'product' | 'store') {
+    let selectField = type === 'product' ? 'product_id' : 'store_id';
+    const { data, error } = await this.getClient()
+      .from('favorites')
+      .select(selectField)
+      .eq('user_id', userId)
+      .not(selectField, 'is', null);
+    if (error) throw error;
+    return data;
+  }
 }

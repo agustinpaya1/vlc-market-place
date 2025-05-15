@@ -4,50 +4,52 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Platform, ToastController } from '@ionic/angular';
 import {
-    IonBadge,
-    IonButton,
-    IonCard,
-    IonCardContent,
-    IonCardHeader,
-    IonCardSubtitle,
-    IonCardTitle,
-    IonChip,
-    IonCol,
-    IonContent,
-    IonGrid,
-    IonHeader,
-    IonIcon,
-    IonImg,
-    IonRow,
-    IonSearchbar,
-    IonSkeletonText,
-    IonSpinner
+  IonBadge,
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonChip,
+  IonCol,
+  IonContent,
+  IonGrid,
+  IonHeader,
+  IonIcon,
+  IonImg,
+  IonRow,
+  IonSearchbar,
+  IonSkeletonText,
+  IonSpinner
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
-    arrowForward,
-    callOutline,
-    cartOutline,
-    cartSharp,
-    checkmarkCircle,
-    chevronBack,
-    closeCircle,
-    closeOutline,
-    compassOutline,
-    locationOutline,
-    locationSharp,
-    pricetagOutline,
-    share,
-    star,
-    storefrontOutline,
-    timeOutline,
-    timeSharp,
-    checkmarkCircleOutline,
-    alertCircleOutline
+  add,
+  alertCircleOutline,
+  arrowForward,
+  basketOutline,
+  callOutline,
+  cartOutline,
+  cartSharp,
+  checkmarkCircle,
+  checkmarkCircleOutline,
+  chevronBack,
+  closeCircle,
+  closeOutline,
+  compassOutline,
+  locationOutline,
+  locationSharp,
+  pricetagOutline,
+  remove,
+  share,
+  star,
+  storefrontOutline,
+  timeOutline,
+  timeSharp
 } from 'ionicons/icons';
 import * as L from 'leaflet';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { CartItem, CartService } from '../services/cart.service';
 import { SupabaseService } from '../services/supabase.service';
 import { VlcoinService } from '../services/vlcoin.service';
 
@@ -119,8 +121,6 @@ interface Recompensa {
     IonContent,
     IonCard,
     IonCardHeader,
-    IonCardTitle,
-    IonCardSubtitle,
     IonCardContent,
     IonButton,
     IonIcon,
@@ -177,6 +177,11 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     className: 'treasure-marker'
   });
 
+  // Variables para el carrito
+  private cartItems: CartItem[] = [];
+  private cartSubscription: Subscription | null = null;
+  cartItemsCount = 0;
+
   @HostListener('window:matchMedia')
   onColorSchemeChange() {
     const newColorScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -202,18 +207,25 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     private router: Router,
     private supabaseService: SupabaseService,
     private vlcoinService: VlcoinService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private cartService: CartService
   ) {
+    // Añadimos solo los iconos importados explícitamente
     addIcons({
       locationOutline,
       timeOutline,
-      timeSharp,
       star,
       storefrontOutline,
+      cartOutline,
       closeOutline,
       chevronBack,
       share,
-      cartOutline,
+      remove,
+      add,
+      basketOutline,
+      locationSharp,
+      timeSharp,
+      cartSharp,
       callOutline,
       checkmarkCircle,
       closeCircle,
@@ -221,10 +233,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       arrowForward,
       compassOutline,
       checkmarkCircleOutline,
-      alertCircleOutline,
-      location: locationSharp,
-      cart: cartSharp,
-      time: timeSharp
+      alertCircleOutline
     });
     
     this.subscriptions.push(
@@ -247,6 +256,12 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
 
     // Inicializar recompensas
     this.inicializarRecompensas();
+
+    // Suscribirse a los cambios en el carrito
+    this.cartSubscription = this.cartService.getCartItems().subscribe((items) => {
+      this.cartItems = items;
+      this.cartItemsCount = this.cartService.getTotalItems();
+    });
   }
 
   async ngOnInit() {
@@ -262,6 +277,9 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
+    if (this.cartSubscription) {
+      this.cartSubscription.unsubscribe();
+    }
   }
 
   // Métodos para el Cazador de Oportunidades Locales
@@ -520,27 +538,21 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // Crear icono de marcador personalizado con la imagen de la tienda
-  private createCustomMarkerIcon(store: Store): L.DivIcon {
-    // URL de la imagen (usar la imagen de la tienda o una imagen por defecto)
-    const imageUrl = store.image_url || 'assets/icons/store-default.png';
+  private createCustomMarkerIcon(store: Store): L.Icon {
+    // Determinar si la tienda está abierta
     const isOpen = this.checkIfStoreIsOpen(store.open_time);
     
-    // Crear el HTML para el marcador personalizado
-    const html = `
-      <div class="custom-marker ${isOpen ? 'open' : 'closed'}">
-        <div class="marker-base">
-          <img src="assets/icons/pingas.png" class="marker-bg" alt="Marker" />
-        </div>
-        <div class="marker-image" style="background-image: url('${imageUrl}')"></div>
-      </div>
-    `;
+    // Usar diferentes iconos según el estado de la tienda
+    const iconUrl = isOpen 
+      ? 'assets/map-icons/store-marker.svg'
+      : 'assets/map-icons/map-pin.svg';
     
-    return L.divIcon({
-      html: html,
-      className: 'custom-marker-icon',
+    return L.icon({
+      iconUrl: iconUrl,
       iconSize: [40, 50],
       iconAnchor: [20, 50],
-      popupAnchor: [0, -50]
+      popupAnchor: [0, -50],
+      className: `store-marker-icon ${isOpen ? 'open' : 'closed'}`
     });
   }
 
@@ -553,88 +565,148 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     
     // Añadir un marcador por cada tienda con coordenadas
     this.stores.forEach(store => {
-      if (store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
-        // Crear un marcador con icono personalizado
-        const customIcon = this.createCustomMarkerIcon(store);
-        const marker = L.marker([store.coordinates[1], store.coordinates[0]], {
-          icon: customIcon,
-          title: store.name
-        });
-        
-        marker.addTo(this.leafletMap!);
-        
-        // Crear el popup pero no vincularlo todavía
-        const isOpen = this.checkIfStoreIsOpen(store.open_time);
-        const popup = L.popup().setContent(
-          `<div class="marker-popup">
-            <div class="marker-popup-header">
-              <h3>${store.name}</h3>
-              <span class="status-badge ${isOpen ? 'open' : 'closed'}">
-                ${isOpen ? 'Abierto' : 'Cerrado'}
-              </span>
+      if (!store.latitude || !store.longitude) return;
+      
+      // Crear un marcador con icono personalizado
+      const customIcon = this.createCustomMarkerIcon(store);
+      const marker = L.marker([store.latitude, store.longitude], {
+        icon: customIcon,
+        title: store.name,
+        alt: `Tienda: ${store.name}`
+      });
+      
+      marker.addTo(this.leafletMap!);
+      
+      // Crear el popup con diseño moderno
+      const isOpen = this.checkIfStoreIsOpen(store.open_time);
+      const imageUrl = store.image_url || store.imageUrl || 'assets/store-placeholder.jpg';
+      const popupContent = `
+        <div class="marker-popup">
+          <div class="marker-popup-image">
+            <img src="${imageUrl}" alt="${store.name}" onerror="this.src='assets/store-placeholder.jpg'">
+            <div class="marker-popup-overlay">
+              <div class="marker-popup-header">
+                <h3>${store.name}</h3>
+                <span class="status-badge ${isOpen ? 'open' : 'closed'}">
+                  ${isOpen ? '🟢 Abierto' : '🔴 Cerrado'}
+                </span>
+              </div>
+              <div class="marker-popup-info">
+                <p>${store.category || 'Tienda local'}</p>
+                <p>${store.distance ? `<i class="icon">📍</i> ${store.distance} km` : ''}</p>
+                <p>${store.open_time ? `<i class="icon">🕒</i> ${store.open_time}` : ''}</p>
+              </div>
             </div>
-            <p>${store.category || 'Tienda local'}</p>
-            ${store.address ? `<p><ion-icon name="location-outline"></ion-icon> ${store.address}</p>` : ''}
-            <button class='leaflet-popup-btn' data-store-id='${store.id}'>Ver tienda</button>
-          </div>`
-        );
+          </div>
+          <div class="marker-popup-actions">
+            <button class='leaflet-popup-btn view-store' data-store-id='${store.id}'>Ver tienda</button>
+          </div>
+        </div>
+      `;
+      
+      // Crear y vincular el popup al marcador
+      const popup = L.popup({
+        closeButton: true,
+        autoClose: true,
+        className: 'store-popup modern-fullimage',
+        maxWidth: 320
+      }).setContent(popupContent);
 
-        // Manejar el clic en el marcador
-        marker.on('click', () => {
-          // Calcular la posición centrada con offset
-          const offsetY = this.isBottomSheetActive ? this.getMapOffset() : 0;
-          const targetLatLng = marker.getLatLng();
-          const targetPoint = this.leafletMap!.project(targetLatLng, this.leafletMap!.getZoom()).subtract([0, offsetY/2]);
-          const newLatLng = this.leafletMap!.unproject(targetPoint, this.leafletMap!.getZoom());
-          
-          // Centrar el mapa con una animación más rápida
-          this.leafletMap?.flyTo(newLatLng, 16, {
-            duration: 0.75,
-            easeLinearity: 0.5
-          });
+      // Variable para evitar múltiples clics
+      let isAnimating = false;
 
-          // Abrir el popup inmediatamente
-          marker.bindPopup(popup).openPopup();
-          
-          // Configurar el botón del popup después de abrirlo
-          setTimeout(() => {
-            const btn = document.querySelector(`button[data-store-id="${store.id}"]`);
-            if (btn) {
-              btn.addEventListener('click', () => this.selectStoreFromMap(store));
-            }
-          }, 0);
+      // Manejar el clic en el marcador
+      marker.on('click', () => {
+        // Evitar múltiples clics mientras se está animando
+        if (isAnimating) return;
+        isAnimating = true;
+
+        // Calcular la posición centrada con offset
+        const offsetY = this.isBottomSheetActive ? this.getMapOffset() : 0;
+        const targetLatLng = marker.getLatLng();
+        
+        // Primero muestra el popup
+        marker.bindPopup(popup).openPopup();
+        
+        // Luego centra el mapa - reducimos duración para que sea más rápido
+        this.leafletMap?.flyTo(targetLatLng, 16, {
+          duration: 0.5, // Más rápido
+          easeLinearity: 0.25, // Más suave
+          noMoveStart: true, // Evita eventos de inicio de movimiento para reducir parpadeos
+          animate: true
         });
+        
+        // Aplicar offset solo después de que termine la animación principal
+        setTimeout(() => {
+          if (offsetY > 0 && this.leafletMap) {
+            const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY/2]);
+            const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
+            
+            this.leafletMap.panTo(newLatLng, {
+              duration: 0.3,
+              easeLinearity: 0.5,
+              noMoveStart: true
+            });
+          }
+          
+          // Configurar los botones del popup
+          const viewBtn = document.querySelector(`button.view-store[data-store-id="${store.id}"]`);
+          if (viewBtn) {
+            viewBtn.addEventListener('click', () => this.selectStoreFromMap(store));
+          }
+          
+          // Permitir nuevos clics después de un tiempo para evitar múltiples activaciones
+          setTimeout(() => {
+            isAnimating = false;
+          }, 500);
+        }, 500); // Esperar a que termine la animación principal
+      });
 
-        this.leafletMarkers.push(marker);
-      }
+      this.leafletMarkers.push(marker);
     });
   }
 
-  // Actualizar también los métodos de selección para usar la misma velocidad
+  // Actualizar también los métodos de selección para usar la misma velocidad y transición
   private selectStoreFromMap(store: Store) {
     this.selectedStore = store;
     this.loadStoreProducts(store.id);
     this.showProductSheet();
     this.isBottomSheetActive = true;
     
-    if (this.leafletMap && store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
-      const offsetY = this.isBottomSheetActive ? this.getMapOffset() : 0;
-      const targetLatLng = L.latLng(store.coordinates[1], store.coordinates[0]);
-      const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY/2]);
-      const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
+    if (this.leafletMap && store.latitude && store.longitude) {
+      const targetLatLng = L.latLng(store.latitude, store.longitude);
       
-      this.leafletMap.flyTo(newLatLng, 16, {
-        duration: 0.75,
-        easeLinearity: 0.5
+      // Primero centrar el mapa con animación más rápida
+      this.leafletMap.flyTo(targetLatLng, 16, {
+        duration: 0.5,
+        easeLinearity: 0.25,
+        noMoveStart: true
       });
       
-      const marker = this.leafletMarkers.find(m => {
-        const latlng = m.getLatLng();
-        return latlng.lat === store.coordinates![1] && latlng.lng === store.coordinates![0];
-      });
-      if (marker) {
-        marker.openPopup();
-      }
+      // Luego, después de la animación principal, aplicar el offset si es necesario
+      setTimeout(() => {
+        if (this.isBottomSheetActive && this.leafletMap) {
+          const offsetY = this.getMapOffset();
+          const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY/2]);
+          const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
+          
+          this.leafletMap.panTo(newLatLng, {
+            duration: 0.3,
+            easeLinearity: 0.5,
+            noMoveStart: true
+          });
+        }
+        
+        // Encuentra y abre el popup
+        const marker = this.leafletMarkers.find(m => {
+          const latlng = m.getLatLng();
+          return latlng.lat === store.latitude && latlng.lng === store.longitude;
+        });
+        
+        if (marker) {
+          marker.openPopup();
+        }
+      }, 500);
     }
   }
 
@@ -644,24 +716,40 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     this.showProductSheet();
     this.isBottomSheetActive = true;
     
-    if (this.leafletMap && store.coordinates && Array.isArray(store.coordinates) && store.coordinates.length === 2) {
-      const offsetY = this.isBottomSheetActive ? this.getMapOffset() : 0;
-      const targetLatLng = L.latLng(store.coordinates[1], store.coordinates[0]);
-      const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY/2]);
-      const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
+    if (this.leafletMap && store.latitude && store.longitude) {
+      const targetLatLng = L.latLng(store.latitude, store.longitude);
       
-      this.leafletMap.flyTo(newLatLng, 16, {
-        duration: 0.75,
-        easeLinearity: 0.5
+      // Primero centrar el mapa con animación más rápida
+      this.leafletMap.flyTo(targetLatLng, 16, {
+        duration: 0.5,
+        easeLinearity: 0.25,
+        noMoveStart: true
       });
       
-      const marker = this.leafletMarkers.find(m => {
-        const latlng = m.getLatLng();
-        return latlng.lat === store.coordinates![1] && latlng.lng === store.coordinates![0];
-      });
-      if (marker) {
-        marker.openPopup();
-      }
+      // Luego, después de la animación principal, aplicar el offset si es necesario
+      setTimeout(() => {
+        if (this.isBottomSheetActive && this.leafletMap) {
+          const offsetY = this.getMapOffset();
+          const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY/2]);
+          const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
+          
+          this.leafletMap.panTo(newLatLng, {
+            duration: 0.3,
+            easeLinearity: 0.5,
+            noMoveStart: true
+          });
+        }
+        
+        // Encuentra y abre el popup
+        const marker = this.leafletMarkers.find(m => {
+          const latlng = m.getLatLng();
+          return latlng.lat === store.latitude && latlng.lng === store.longitude;
+        });
+        
+        if (marker) {
+          marker.openPopup();
+        }
+      }, 500);
     }
   }
 
@@ -673,7 +761,6 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
         const isOpenNow = this.checkIfStoreIsOpen(store.open_time);
         return {
           ...store,
-          coordinates: store.latitude && store.longitude ? [store.longitude, store.latitude] : [-0.376, 39.469],
           isOpen: isOpenNow,
           phone: store.contact_phone,
           distance: this.calculateRandomDistance()
@@ -973,7 +1060,61 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   }
 
   goToCart() {
-    // Implementar ir al carrito
-    console.log('Ir al carrito');
+    this.router.navigate(['/tabs/cart']);
+  }
+
+  // Métodos para el manejo del carrito
+  getProductQuantity(productId: string): number {
+    const item = this.cartItems.find(item => item.id === productId);
+    return item ? item.quantity : 0;
+  }
+  
+  incrementQuantity(product: Product) {
+    const currentQuantity = this.getProductQuantity(product.id);
+    if (currentQuantity > 0) {
+      this.cartService.updateQuantity(product.id, currentQuantity + 1);
+    } else {
+      this.addToCart(product);
+    }
+  }
+  
+  decrementQuantity(product: Product) {
+    const currentQuantity = this.getProductQuantity(product.id);
+    if (currentQuantity > 1) {
+      this.cartService.updateQuantity(product.id, currentQuantity - 1);
+    } else if (currentQuantity === 1) {
+      this.cartService.removeFromCart(product.id);
+    }
+  }
+  
+  async addToCart(product: Product) {
+    try {
+      await this.cartService.addToCart({
+        id: product.id,
+        name: product.name,
+        price: product.offerPrice || product.price,
+        quantity: 1,
+        imageUrl: product.imageUrl || product.image_url
+      });
+      
+      // Mostrar notificación
+      const toast = await this.toastController.create({
+        message: `${product.name} añadido al carrito`,
+        duration: 2000,
+        position: 'bottom',
+        color: 'success',
+        buttons: [
+          {
+            text: 'Ver carrito',
+            handler: () => {
+              this.goToCart();
+            }
+          }
+        ]
+      });
+      await toast.present();
+    } catch (error) {
+      console.error('Error al añadir producto al carrito:', error);
+    }
   }
 }
