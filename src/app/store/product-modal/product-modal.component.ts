@@ -6,6 +6,8 @@ import { addIcons } from 'ionicons';
 import { cartOutline, close, arrowBack, add, remove } from 'ionicons/icons';
 import { NotificationService } from '../../services/notification.service';
 import { take } from 'rxjs/operators';
+import { SupabaseService } from '../../services/supabase.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-product-modal',
@@ -18,11 +20,14 @@ export class ProductModalComponent implements OnInit {
   @Input() product: any;
   quantity: number = 0;
   isInCart: boolean = false;
+  isFavorite: boolean = false;
 
   constructor(
     private modalCtrl: ModalController,
     private cartService: CartService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private supabaseService: SupabaseService,
+    private authService: AuthService
   ) {
     addIcons({
       cartOutline,
@@ -33,7 +38,7 @@ export class ProductModalComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     // Comprobar si el producto ya está en el carrito
     this.cartService.getCartItems().pipe(take(1)).subscribe((cartItems: CartItem[]) => {
       const cartItem = cartItems.find(item => item.id === this.product.id);
@@ -42,6 +47,12 @@ export class ProductModalComponent implements OnInit {
         this.isInCart = true;
       }
     });
+    // Comprobar si el producto está en favoritos
+    const user = await this.authService.getCurrentUser();
+    if (user) {
+      const favs = await this.supabaseService.getFavorites(user.id, 'product');
+      this.isFavorite = favs.some((f: any) => f.product_id === this.product.id);
+    }
   }
 
   incrementQuantity() {
@@ -85,5 +96,22 @@ export class ProductModalComponent implements OnInit {
 
   dismiss() {
     this.modalCtrl.dismiss();
+  }
+
+  async toggleFavorite() {
+    const user = await this.authService.getCurrentUser();
+    if (!user) {
+      this.notificationService.show({ message: 'Debes iniciar sesión para usar favoritos' });
+      return;
+    }
+    if (this.isFavorite) {
+      await this.supabaseService.removeFavorite(user.id, this.product.id, 'product');
+      this.isFavorite = false;
+      this.notificationService.show({ message: 'Eliminado de favoritos' });
+    } else {
+      await this.supabaseService.addFavorite(user.id, this.product.id, 'product');
+      this.isFavorite = true;
+      this.notificationService.show({ message: 'Añadido a favoritos' });
+    }
   }
 } 

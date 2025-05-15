@@ -7,4 +7,7 @@ export interface Product {
     offerPrice?: number;
     imageUrl: string;
     inStock: boolean;
+    finalPrice?: number;
+    hasDiscount?: boolean;
+    discount?: number;
 } 

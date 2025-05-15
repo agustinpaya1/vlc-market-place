@@ -140,6 +140,21 @@ interface Store {
     IonPopover,
     IonSegment,
     IonSegmentButton
+  ],
+  styles: [
+    `
+    .subtle-toast {
+      --background: rgba(40, 167, 69, 0.95); /* verde sutil */
+      --color: #fff;
+      --border-radius: 12px;
+      --box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      font-size: 0.98em;
+      min-width: 120px;
+      max-width: 80vw;
+      text-align: center;
+      margin-top: 8px;
+    }
+    `
   ]
 })
 export class StoresPage implements OnInit, OnDestroy {
@@ -192,6 +207,8 @@ export class StoresPage implements OnInit, OnDestroy {
   // Add property for authentication state
   isAuthenticated: boolean = false;
   private destroy$ = new Subject<void>();
+
+  userFavorites: string[] = [];
 
   constructor(
     private router: Router,
@@ -255,6 +272,20 @@ export class StoresPage implements OnInit, OnDestroy {
     this.authService.user$.subscribe(async user => {
       if (user && user.id) {
         await this.vlcoinService.getVlcoinBalance(user.id);
+      }
+    });
+    
+    // Cargar favoritos del usuario si está autenticado
+    this.authService.user$.subscribe(async user => {
+      if (user && user.id) {
+        try {
+          const favStores = await this.supabaseService.getFavorites(user.id, 'store');
+          this.userFavorites = favStores.map((f: any) => f.store_id);
+        } catch (e) {
+          this.userFavorites = [];
+        }
+      } else {
+        this.userFavorites = [];
       }
     });
     
@@ -872,8 +903,10 @@ export class StoresPage implements OnInit, OnDestroy {
   private async showToast(message: string) {
     const toast = await this.toastController.create({
       message,
-      duration: 2000,
-      position: 'bottom'
+      duration: 1200,
+      position: 'top',
+      color: 'success',
+      cssClass: 'subtle-toast'
     });
     await toast.present();
   }
@@ -1389,6 +1422,29 @@ export class StoresPage implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  isFavorite(storeId: string): boolean {
+    return this.userFavorites.includes(storeId);
+  }
+
+  async toggleFavorite(store: any, event: Event) {
+    event.stopPropagation();
+    const user = await this.authService.getCurrentUser();
+    if (!user) {
+      this.showLoginRequiredToast('favoritos');
+      return;
+    }
+    const storeId = store.id;
+    if (this.isFavorite(storeId)) {
+      await this.supabaseService.removeFavorite(user.id, storeId, 'store');
+      this.userFavorites = this.userFavorites.filter(id => id !== storeId);
+      this.showToast('Eliminado de favoritos');
+    } else {
+      await this.supabaseService.addFavorite(user.id, storeId, 'store');
+      this.userFavorites.push(storeId);
+      this.showToast('Añadido a favoritos');
+    }
   }
 }
 
