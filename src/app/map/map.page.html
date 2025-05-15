@@ -87,9 +87,15 @@
   <div class="product-sheet" [ngClass]="isDarkTheme ? 'dark-theme' : 'light-theme'" [class.active]="isProductSheetActive" #productBottomSheet>
     <div class="product-sheet-handle">
       <div class="handle-bar"></div>
-      <ion-button fill="clear" class="close-button" (click)="hideProductSheet()">
-        <ion-icon name="close-outline"></ion-icon>
-      </ion-button>
+      <div class="product-sheet-actions">
+        <button class="cart-button" *ngIf="cartItemsCount > 0" (click)="goToCart()" title="Ver carrito" aria-label="Ver carrito">
+          <ion-icon name="cart-outline"></ion-icon>
+          <span class="cart-count">{{ cartItemsCount }}</span>
+        </button>
+        <button class="close-button" (click)="hideProductSheet()" title="Cerrar" aria-label="Cerrar">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
     </div>
 
     <div class="product-sheet-content">
@@ -156,7 +162,8 @@
                   <ion-card-header>
                     <img [src]="product.imageUrl || product.image_url" 
                          (error)="handleImageError($event)" 
-                         [alt]="product.name" 
+                         alt="Imagen de producto" 
+                         title="{{product.name}}"
                          loading="lazy" 
                          width="100%" 
                          height="140">
@@ -178,6 +185,22 @@
                         <span class="price">{{ product.price | currency:'EUR' }}</span>
                       </ng-template>
                     </div>
+                    
+                    <div class="product-actions">
+                      <div class="quantity-controls" *ngIf="getProductQuantity(product.id) > 0">
+                        <button class="qty-btn minus" (click)="decrementQuantity(product)" title="Disminuir cantidad" aria-label="Disminuir cantidad">
+                          <ion-icon name="remove"></ion-icon>
+                        </button>
+                        <span class="qty-value">{{ getProductQuantity(product.id) }}</span>
+                        <button class="qty-btn plus" (click)="incrementQuantity(product)" title="Aumentar cantidad" aria-label="Aumentar cantidad">
+                          <ion-icon name="add"></ion-icon>
+                        </button>
+                      </div>
+                      <button class="add-to-cart-btn" *ngIf="getProductQuantity(product.id) === 0" (click)="addToCart(product)" title="Añadir al carrito" aria-label="Añadir al carrito">
+                        <ion-icon name="cart-outline"></ion-icon>
+                        Añadir
+                      </button>
+                    </div>
                   </ion-card-content>
                 </ion-card>
               </ion-col>
@@ -185,7 +208,7 @@
           </ion-grid>
 
           <div class="empty-products" *ngIf="!isLoading && (!storeProducts || storeProducts.length === 0)">
-            <ion-icon name="cart-outline" size="large"></ion-icon>
+            <ion-icon name="basket-outline" size="large"></ion-icon>
             <h4>No hay productos disponibles</h4>
             <p>Esta tienda aún no ha añadido productos.</p>
           </div>
@@ -212,19 +235,19 @@
         <div class="col-reward-image">
           <img src="assets/col-icons/treasure-chest.svg" alt="Tesoro">
         </div>
-        <h3>{{ recompensaSeleccionada?.titulo }}</h3>
-        <p class="col-reward-coins">+{{ recompensaSeleccionada?.coins }} VLCoin</p>
-        <p class="col-reward-store" *ngIf="recompensaSeleccionada?.tienda">En {{ recompensaSeleccionada?.tienda }}</p>
+        <h3>{{ recompensaSeleccionada.titulo }}</h3>
+        <p class="col-reward-coins">+{{ recompensaSeleccionada.coins }} VLCoin</p>
+        <p class="col-reward-store" *ngIf="recompensaSeleccionada.tienda">En {{ recompensaSeleccionada.tienda }}</p>
         
         <!-- Información de distancia -->
         <div class="col-reward-distance" *ngIf="recompensaSeleccionada && recompensaSeleccionada.distanciaAlUsuario !== undefined">
           <div class="distance-indicator" 
-               [class.near]="recompensaSeleccionada && recompensaSeleccionada.distanciaAlUsuario <= 50" 
-               [class.far]="recompensaSeleccionada && recompensaSeleccionada.distanciaAlUsuario > 50">
-            <ion-icon [name]="recompensaSeleccionada && recompensaSeleccionada.distanciaAlUsuario <= 50 ? 'checkmarkCircleOutline' : 'alertCircleOutline'"></ion-icon>
-            <span>{{ recompensaSeleccionada?.distanciaAlUsuario }} metros</span>
+               [class.near]="recompensaSeleccionada.distanciaAlUsuario <= 50" 
+               [class.far]="recompensaSeleccionada.distanciaAlUsuario > 50">
+            <ion-icon [name]="recompensaSeleccionada.distanciaAlUsuario <= 50 ? 'checkmarkCircleOutline' : 'alertCircleOutline'"></ion-icon>
+            <span>{{ recompensaSeleccionada.distanciaAlUsuario }} metros</span>
           </div>
-          <p class="distance-message" *ngIf="recompensaSeleccionada && recompensaSeleccionada.distanciaAlUsuario > 50">
+          <p class="distance-message" *ngIf="recompensaSeleccionada.distanciaAlUsuario > 50">
             Debes acercarte a menos de 50 metros para canjear
           </p>
         </div>
