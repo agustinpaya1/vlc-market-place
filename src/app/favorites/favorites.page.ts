@@ -62,6 +62,11 @@ import { CartService } from '../services/cart.service';
       <div *ngIf="favoriteStores.length > 0" class="horizontal-scroll">
         <div class="card-list">
           <div class="mini-card" *ngFor="let store of favoriteStores">
+            <div class="corner-fav-btn">
+              <ion-button size="small" fill="clear" (click)="toggleFavorite(store, 'store')">
+                <ion-icon [name]="isFavorite(store.id, 'store') ? 'heart' : 'heart-outline'" color="danger" slot="icon-only"></ion-icon>
+              </ion-button>
+            </div>
             <img [src]="store.imageUrl" [alt]="store.name" (error)="handleImageError($event, 'store')">
             <div class="mini-card-header">
               <span class="mini-card-title clickable" (click)="goToStore(store.id)">{{ store.name }}</span>
@@ -70,9 +75,6 @@ import { CartService } from '../services/cart.service';
             <div class="mini-card-content">
               <p>{{ store.description }}</p>
               <ion-chip color="success" *ngIf="store.hasOffers">Ofertas</ion-chip>
-              <ion-button size="small" fill="clear" (click)="toggleFavorite(store, 'store')">
-                <ion-icon [name]="isFavorite(store.id, 'store') ? 'heart' : 'heart-outline'" color="danger" slot="start"></ion-icon>
-              </ion-button>
             </div>
           </div>
         </div>
@@ -149,6 +151,7 @@ import { CartService } from '../services/cart.service';
       padding: 10px 10px 12px 10px;
       transition: box-shadow 0.2s;
       margin-right: 12px;
+      position: relative;
     }
     .mini-card:last-child {
       margin-right: 0;
@@ -250,6 +253,40 @@ import { CartService } from '../services/cart.service';
       margin-right: 4px;
       font-size: 0.85em;
       height: 22px;
+    }
+    .subtle-toast {
+      --background: rgba(40, 40, 40, 0.92);
+      --color: #fff;
+      --border-radius: 12px;
+      --box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      font-size: 0.98em;
+      min-width: 120px;
+      max-width: 80vw;
+      text-align: center;
+      margin-top: 8px;
+    }
+    .corner-fav-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 2;
+    }
+    .corner-fav-btn ion-button {
+      --background: transparent;
+      --box-shadow: none;
+      --color: inherit;
+      min-width: 32px;
+      min-height: 32px;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .corner-fav-btn ion-icon {
+      font-size: 1.7em;
+      margin: 0;
     }
     `
   ],
@@ -372,7 +409,16 @@ export class FavoritesPage implements OnInit, ViewWillEnter {
 
   async toggleFavorite(item: Product | Store, type: 'product' | 'store') {
     const user = await this.authService.getCurrentUser();
-    if (!user) return;
+    if (!user) {
+      this.toastController.create({
+        message: 'Debes de estar registrado para añadir a favoritos',
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
+      }).then(toast => toast.present());
+      return;
+    }
     const id = item.id;
     if (this.isFavorite(id, type)) {
       await this.supabaseService.removeFavorite(user.id, id, type);
@@ -385,45 +431,40 @@ export class FavoritesPage implements OnInit, ViewWillEnter {
       }
       this.toastController.create({
         message: 'Eliminado de favoritos',
-        duration: 2000,
-        position: 'bottom',
-        color: 'danger'
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
       }).then(toast => toast.present());
     } else {
       await this.supabaseService.addFavorite(user.id, id, type);
       if (type === 'product') {
-        this.favoriteProductIds.push(id);
-        this.favoriteProducts.push(item as Product);
+        if (!this.favoriteProductIds.includes(id)) this.favoriteProductIds.push(id);
+        if (!this.favoriteProducts.some(p => p.id === id)) this.favoriteProducts.push(item as Product);
       } else {
-        this.favoriteStoreIds.push(id);
-        this.favoriteStores.push(item as Store);
+        if (!this.favoriteStoreIds.includes(id)) this.favoriteStoreIds.push(id);
+        if (!this.favoriteStores.some(s => s.id === id)) this.favoriteStores.push(item as Store);
       }
       this.toastController.create({
         message: 'Añadido a favoritos',
-        duration: 2000,
-        position: 'bottom',
-        color: 'success'
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
       }).then(toast => toast.present());
     }
   }
 
   async addToCart(item: Product) {
     // Añade el producto al carrito usando el servicio
-    const added = await this.cartService.addToCart({
+    await this.cartService.addToCart({
       id: item.id,
       name: item.name,
       price: item.finalPrice || item.price,
       quantity: 1,
       imageUrl: item.imageUrl
     });
-    if (added) {
-      this.toastController.create({
-        message: `${item.name} añadido al carrito`,
-        duration: 2000,
-        position: 'bottom',
-        color: 'success'
-      }).then(toast => toast.present());
-    }
+    // El toast lo muestra el CartService (NotificationService), no aquí
   }
 
   goToStoreFromProduct(product: Product) {

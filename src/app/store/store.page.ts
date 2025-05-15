@@ -200,9 +200,10 @@ export class StorePage implements OnInit {
   private async showNoProductsMessage() {
     const toast = await this.toastController.create({
       message: 'Esta tienda no tiene productos disponibles en este momento',
-      duration: 3000,
-      position: 'bottom',
-      color: 'warning'
+      duration: 1200,
+      position: 'top',
+      color: 'success',
+      cssClass: 'subtle-toast'
     });
     await toast.present();
   }
@@ -210,9 +211,10 @@ export class StorePage implements OnInit {
   private async showStoreNotFoundMessage() {
     const toast = await this.toastController.create({
       message: 'Tienda no encontrada',
-      duration: 3000,
-      position: 'bottom',
-      color: 'danger'
+      duration: 1200,
+      position: 'top',
+      color: 'success',
+      cssClass: 'subtle-toast'
     });
     await toast.present();
   }
@@ -220,9 +222,10 @@ export class StorePage implements OnInit {
   private async showErrorMessage() {
     const toast = await this.toastController.create({
       message: 'Error al cargar la tienda. Inténtalo de nuevo más tarde.',
-      duration: 3000,
-      position: 'bottom',
-      color: 'danger'
+      duration: 1200,
+      position: 'top',
+      color: 'success',
+      cssClass: 'subtle-toast'
     });
     await toast.present();
   }
@@ -265,9 +268,10 @@ export class StorePage implements OnInit {
     if (added) {
       const toast = await this.toastController.create({
         message: `${product.name} añadido al carrito`,
-        duration: 2000,
-        position: 'bottom',
-        color: 'success'
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
       });
       await toast.present();
     }
@@ -301,9 +305,10 @@ export class StorePage implements OnInit {
     if (data?.added) {
       const toast = await this.toastController.create({
         message: 'Producto añadido al carrito',
-        duration: 2000,
-        position: 'bottom',
-        color: 'success'
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
       });
       await toast.present();
     }
@@ -319,9 +324,10 @@ export class StorePage implements OnInit {
     if (!user) {
       this.toastController.create({
         message: 'Debes iniciar sesión para usar favoritos',
-        duration: 2000,
-        position: 'bottom',
-        color: 'warning'
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
       }).then(toast => toast.present());
       return;
     }
@@ -331,18 +337,20 @@ export class StorePage implements OnInit {
       this.userFavorites = this.userFavorites.filter(id => id !== product.id);
       this.toastController.create({
         message: 'Eliminado de favoritos',
-        duration: 2000,
-        position: 'bottom',
-        color: 'danger'
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
       }).then(toast => toast.present());
     } else {
       await this.supabaseService.addFavorite(user.id, product.id, 'product');
       this.userFavorites = [...this.userFavorites, product.id];
       this.toastController.create({
         message: 'Añadido a favoritos',
-        duration: 2000,
-        position: 'bottom',
-        color: 'success'
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
       }).then(toast => toast.present());
     }
   }
@@ -375,9 +383,10 @@ export class StorePage implements OnInit {
     if (!user || !this.store) {
       this.toastController.create({
         message: 'Debes iniciar sesión para usar favoritos',
-        duration: 2000,
-        position: 'bottom',
-        color: 'warning'
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
       }).then(toast => toast.present());
       return;
     }
@@ -386,18 +395,20 @@ export class StorePage implements OnInit {
       this.userFavoriteStore = false;
       this.toastController.create({
         message: 'Tienda eliminada de favoritos',
-        duration: 2000,
-        position: 'bottom',
-        color: 'danger'
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
       }).then(toast => toast.present());
     } else {
       await this.supabaseService.addFavorite(user.id, this.store.id, 'store');
       this.userFavoriteStore = true;
       this.toastController.create({
         message: 'Tienda añadida a favoritos',
-        duration: 2000,
-        position: 'bottom',
-        color: 'success'
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
       }).then(toast => toast.present());
     }
   }

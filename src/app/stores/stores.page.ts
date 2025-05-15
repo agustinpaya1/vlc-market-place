@@ -140,6 +140,21 @@ interface Store {
     IonPopover,
     IonSegment,
     IonSegmentButton
+  ],
+  styles: [
+    `
+    .subtle-toast {
+      --background: rgba(40, 167, 69, 0.95); /* verde sutil */
+      --color: #fff;
+      --border-radius: 12px;
+      --box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      font-size: 0.98em;
+      min-width: 120px;
+      max-width: 80vw;
+      text-align: center;
+      margin-top: 8px;
+    }
+    `
   ]
 })
 export class StoresPage implements OnInit, OnDestroy {
@@ -888,8 +903,10 @@ export class StoresPage implements OnInit, OnDestroy {
   private async showToast(message: string) {
     const toast = await this.toastController.create({
       message,
-      duration: 2000,
-      position: 'bottom'
+      duration: 1200,
+      position: 'top',
+      color: 'success',
+      cssClass: 'subtle-toast'
     });
     await toast.present();
   }
