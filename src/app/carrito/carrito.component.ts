@@ -23,12 +23,13 @@ import {
   IonButtons,
   IonCardSubtitle,
   IonSpinner,
-  ModalController
+  ModalController,
+  IonThumbnail
 } from '@ionic/angular/standalone';
 import { CartService, CartItem } from '../services/cart.service';
 import { ProductService } from '../services/product.service';
 import { addIcons } from 'ionicons';
-import { trash, arrowBack, add, remove, checkmarkCircle, home } from 'ionicons/icons';
+import { trash, arrowBack, add, remove, checkmarkCircle, home, cartOutline } from 'ionicons/icons';
 import { PaymentModalComponent } from '../payment-modal/payment-modal.component';
 
 @Component({
@@ -58,7 +59,8 @@ import { PaymentModalComponent } from '../payment-modal/payment-modal.component'
     IonImg,
     IonButtons,
     IonCardSubtitle,
-    IonSpinner
+    IonSpinner,
+    IonThumbnail
   ]
 })
 export class CarritoComponent implements OnInit {
@@ -74,7 +76,7 @@ export class CarritoComponent implements OnInit {
     private router: Router,
     private modalCtrl: ModalController
   ) {
-    addIcons({ trash, arrowBack, add, remove, checkmarkCircle, home });
+    addIcons({ trash, arrowBack, add, remove, checkmarkCircle, home, cartOutline });
   }
 
   ngOnInit() {
