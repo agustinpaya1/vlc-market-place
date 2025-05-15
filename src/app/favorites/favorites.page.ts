@@ -3,6 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
+import { SupabaseService } from '../services/supabase.service';
+import { AuthService } from '../services/auth.service';
+import { Product } from '../store/product.interface';
+import { ToastController } from '@ionic/angular';
+import { ViewWillEnter } from '@ionic/angular';
 
 @Component({
   selector: 'app-favorites',
@@ -116,20 +121,72 @@ import { RouterModule } from '@angular/router';
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule, RouterModule]
 })
-export class FavoritesPage implements OnInit {
-  favorites: any[] = []; // Aquí deberías definir una interfaz para los productos favoritos
+export class FavoritesPage implements OnInit, ViewWillEnter {
+  favorites: Product[] = [];
 
-  constructor() { }
+  constructor(
+    private supabaseService: SupabaseService,
+    private authService: AuthService,
+    private toastController: ToastController
+  ) { }
 
-  ngOnInit() {
-    // Aquí deberías cargar los favoritos del usuario
+  async ngOnInit() {
+    await this.loadFavorites();
   }
 
-  addToCart(item: any) {
-    // Implementar lógica para añadir al carrito
+  async ionViewWillEnter() {
+    await this.loadFavorites();
   }
 
-  removeFromFavorites(item: any) {
-    // Implementar lógica para eliminar de favoritos
+  private async loadFavorites() {
+    const user = await this.authService.getCurrentUser();
+    if (!user) {
+      this.favorites = [];
+      return;
+    }
+    // Obtener los IDs de productos favoritos
+    const favs = await this.supabaseService.getFavorites(user.id, 'product');
+    const productIds = favs.map((f: any) => f.product_id);
+    if (productIds.length === 0) {
+      this.favorites = [];
+      return;
+    }
+    // Obtener los productos favoritos por sus IDs
+    const { data: products, error } = await this.supabaseService.getClient()
+      .from('products')
+      .select('*')
+      .in('id', productIds);
+    if (error) {
+      this.favorites = [];
+      return;
+    }
+    // Mapear las imágenes públicas
+    this.favorites = (products || []).map((product: any) => ({
+      ...product,
+      imageUrl: this.supabaseService.getPublicImageUrl(product.image_url)
+    }));
+  }
+
+  async addToCart(item: Product) {
+    // Aquí puedes implementar la lógica para añadir al carrito
+    this.toastController.create({
+      message: `${item.name} añadido al carrito`,
+      duration: 2000,
+      position: 'bottom',
+      color: 'success'
+    }).then(toast => toast.present());
+  }
+
+  async removeFromFavorites(item: Product) {
+    const user = await this.authService.getCurrentUser();
+    if (!user) return;
+    await this.supabaseService.removeFavorite(user.id, item.id, 'product');
+    await this.loadFavorites();
+    this.toastController.create({
+      message: 'Eliminado de favoritos',
+      duration: 2000,
+      position: 'bottom',
+      color: 'danger'
+    }).then(toast => toast.present());
   }
 } 

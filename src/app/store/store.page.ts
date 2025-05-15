@@ -22,6 +22,7 @@ import { CartService, CartItem } from '../services/cart.service';
 import { ToastController, LoadingController } from '@ionic/angular';
 import { SupabaseService } from '../services/supabase.service';
 import { ProductModalComponent } from './product-modal/product-modal.component';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-store',
@@ -41,6 +42,8 @@ export class StorePage implements OnInit {
   loadedProductsData = false;
   maxDiscount: number = 0;
   cartItems: CartItem[] = [];
+  userFavorites: string[] = [];
+  userFavoriteStore: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -49,7 +52,8 @@ export class StorePage implements OnInit {
     private loadingController: LoadingController,
     private toastController: ToastController,
     private cartService: CartService,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private authService: AuthService
   ) {
     // Cargar solo los iconos necesarios
     addIcons({ 
@@ -81,6 +85,28 @@ export class StorePage implements OnInit {
     this.cartService.getCartItems().subscribe((items: CartItem[]) => {
       this.cartItems = items;
       this.updateCartStatus();
+    });
+
+    // Cargar favoritos del usuario si está autenticado
+    this.authService.user$.subscribe(async user => {
+      if (user && user.id) {
+        try {
+          const favProducts = await this.supabaseService.getFavorites(user.id, 'product');
+          this.userFavorites = favProducts.map((f: any) => f.product_id);
+          // Favorito de tienda
+          const storeId = this.route.snapshot.paramMap.get('id');
+          if (storeId) {
+            const favStores = await this.supabaseService.getFavorites(user.id, 'store');
+            this.userFavoriteStore = favStores.some((f: any) => f.store_id === storeId);
+          }
+        } catch (e) {
+          this.userFavorites = [];
+          this.userFavoriteStore = false;
+        }
+      } else {
+        this.userFavorites = [];
+        this.userFavoriteStore = false;
+      }
     });
   }
 
@@ -288,14 +314,37 @@ export class StorePage implements OnInit {
   }
 
   // Methods for the overlaid buttons
-  toggleFavorite() {
-    // Implement favorite functionality
-    this.toastController.create({
-      message: 'Tienda añadida a favoritos',
-      duration: 2000,
-      position: 'bottom',
-      color: 'success'
-    }).then(toast => toast.present());
+  async toggleFavorite(product: Product) {
+    const user = await this.authService.getCurrentUser();
+    if (!user) {
+      this.toastController.create({
+        message: 'Debes iniciar sesión para usar favoritos',
+        duration: 2000,
+        position: 'bottom',
+        color: 'warning'
+      }).then(toast => toast.present());
+      return;
+    }
+
+    if (this.isFavorite(product.id)) {
+      await this.supabaseService.removeFavorite(user.id, product.id, 'product');
+      this.userFavorites = this.userFavorites.filter(id => id !== product.id);
+      this.toastController.create({
+        message: 'Eliminado de favoritos',
+        duration: 2000,
+        position: 'bottom',
+        color: 'danger'
+      }).then(toast => toast.present());
+    } else {
+      await this.supabaseService.addFavorite(user.id, product.id, 'product');
+      this.userFavorites = [...this.userFavorites, product.id];
+      this.toastController.create({
+        message: 'Añadido a favoritos',
+        duration: 2000,
+        position: 'bottom',
+        color: 'success'
+      }).then(toast => toast.present());
+    }
   }
 
   shareStore() {
@@ -313,6 +362,42 @@ export class StorePage implements OnInit {
         duration: 2000,
         position: 'bottom',
         color: 'warning'
+      }).then(toast => toast.present());
+    }
+  }
+
+  isFavorite(productId: string): boolean {
+    return this.userFavorites && this.userFavorites.includes(productId);
+  }
+
+  async toggleFavoriteStore() {
+    const user = await this.authService.getCurrentUser();
+    if (!user || !this.store) {
+      this.toastController.create({
+        message: 'Debes iniciar sesión para usar favoritos',
+        duration: 2000,
+        position: 'bottom',
+        color: 'warning'
+      }).then(toast => toast.present());
+      return;
+    }
+    if (this.userFavoriteStore) {
+      await this.supabaseService.removeFavorite(user.id, this.store.id, 'store');
+      this.userFavoriteStore = false;
+      this.toastController.create({
+        message: 'Tienda eliminada de favoritos',
+        duration: 2000,
+        position: 'bottom',
+        color: 'danger'
+      }).then(toast => toast.present());
+    } else {
+      await this.supabaseService.addFavorite(user.id, this.store.id, 'store');
+      this.userFavoriteStore = true;
+      this.toastController.create({
+        message: 'Tienda añadida a favoritos',
+        duration: 2000,
+        position: 'bottom',
+        color: 'success'
       }).then(toast => toast.present());
     }
   }
