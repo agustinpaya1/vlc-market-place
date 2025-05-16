@@ -84,6 +84,16 @@
         <ion-col size="12" size-md="6" size-lg="4" *ngFor="let store of filteredStores">
           <ion-card class="store-card" (click)="viewStore(store.id)">
             <img [src]="store.imageUrl" [alt]="store.name" class="store-image" (error)="handleImageError($event)" loading="lazy" width="100%" height="180px">
+            
+            <!-- Botón de favorito - Mejorado para visibilidad -->
+            <button class="favorite-button" (click)="toggleFavorite(store, $event)">
+              <ion-icon 
+                [name]="isFavorite(store.id) ? 'heart' : 'heart-outline'" 
+                [color]="isFavorite(store.id) ? 'danger' : 'light'"
+                size="large">
+              </ion-icon>
+            </button>
+            
             <ion-card-header>
               <ion-card-subtitle>
                 <ion-chip *ngFor="let category of store.categories" class="store-category-chip">
@@ -227,14 +237,5 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    
-    ion-button.wallet-button {
-      <ion-button fill="clear" class="wallet-button" (click)="showVLCoinsInfo()">
-        <div class="balance-amount">
-          <img src="assets/icons/vlcoins.png" alt="Monedas VL" class="vl-coin-icon">
-          <span class="balance-text">{{ vlcoinBalance }}</span>
-        </div>
-      </ion-button>
-    }
   }
 </style> 

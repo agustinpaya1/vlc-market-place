@@ -16,6 +16,7 @@ $spacing-lg: 24px;
 $spacing-xl: 30px;
 $card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 $transition-speed: 0.3s;
+$favorite-color: #0288d1; // Color azul para los favoritos
 
 // Variables para modo oscuro
 $dark-bg: #121212; // Fondo oscuro
@@ -24,7 +25,6 @@ $dark-primary: #02c4b4; // Verde azulado más brillante para modo oscuro
 $dark-text: #E0E0E0; // Texto claro para modo oscuro
 $dark-secondary-text: #9E9E9E; // Texto secundario para modo oscuro
 $dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
-$dark-card-bg: #2d2d2d; // Fondo de tarjeta para modo oscuro
 
 // Importando el módulo color de sass
 @use "sass:color";
@@ -34,8 +34,6 @@ $dark-card-bg: #2d2d2d; // Fondo de tarjeta para modo oscuro
   ion-content {
     --background: linear-gradient(170deg, #{$color-primary} 40%, #{$color-bg} 40%);
     --color: #{$color-text};
-    --padding-start: 0;
-    --padding-end: 0;
     font-family: $font-family;
     
     &::part(scroll) {
@@ -172,41 +170,27 @@ $dark-card-bg: #2d2d2d; // Fondo de tarjeta para modo oscuro
   margin-bottom: 20px;
   border-radius: $border-radius-medium;
   overflow: hidden;
+  box-shadow: $card-shadow;
   background: transparent;
   padding: 8px 0;
   
   ion-item {
-    --background: white;
-    --border-radius: 12px;
+    --background: #F8F9FA;
+    --border-radius: 25px;
     --padding-start: 16px;
     --padding-end: 16px;
-    --padding-top: 14px;
-    --padding-bottom: 14px;
-    --min-height: 65px;
-    margin-bottom: 12px;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    --min-height: 55px;
+    margin-bottom: 16px;
     --border-width: 0;
     --highlight-color-focused: #{$color-primary};
     --inner-padding-end: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    border-radius: 25px;
     margin-left: 8px;
     margin-right: 8px;
-    transition: all 0.2s ease;
-    border-left: 4px solid $color-primary;
-    position: relative;
-    overflow: hidden;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 40px;
-      height: 40px;
-      background-color: $color-primary;
-      opacity: 0.2;
-      clip-path: polygon(100% 0, 0 0, 100% 100%);
-    }
+    transition: transform $transition-speed ease;
     
     &:last-child {
       margin-bottom: 0;
@@ -216,41 +200,20 @@ $dark-card-bg: #2d2d2d; // Fondo de tarjeta para modo oscuro
       color: $color-primary;
       margin-right: 16px;
       font-size: 22px;
-      transition: transform 0.2s ease;
-    }
-    
-    ion-label {
-      font-weight: 500;
-      color: $color-text;
+      transition: transform $transition-speed ease;
       
-      &::after {
-        content: '';
-        display: block;
-        width: 100%;
-        height: 1px;
-        margin-top: 5px;
-        background: repeating-linear-gradient(
-          to right,
-          $color-primary,
-          $color-primary 4px,
-          transparent 4px,
-          transparent 10px
-        );
-        opacity: 0;
-        transition: opacity 0.2s ease;
+      &[name="heart"] {
+        color: $favorite-color !important;
       }
     }
     
-    &:hover, &:active {
+    &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(2, 163, 150, 0.2);
+      --background: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
       
       ion-icon {
         transform: translateX(4px);
-      }
-      
-      ion-label::after {
-        opacity: 0.5;
       }
     }
   }
@@ -332,6 +295,10 @@ $dark-card-bg: #2d2d2d; // Fondo de tarjeta para modo oscuro
       
       ion-icon {
         color: $dark-primary;
+        
+        &[name="heart"] {
+          color: $favorite-color !important;
+        }
       }
       
       ion-label {
@@ -354,38 +321,6 @@ $dark-card-bg: #2d2d2d; // Fondo de tarjeta para modo oscuro
     .logout-button {
       --background: #{$dark-danger};
     }
-  }
-  
-  // Estilos para el modo oscuro en la sección de login
-  .login-prompt-card {
-    background-color: $dark-card-bg;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
-    
-    h2 {
-      color: $dark-primary;
-    }
-    
-    p {
-      color: $dark-secondary-text;
-    }
-    
-    ion-button {
-      --background: #{$dark-primary};
-      --background-activated: #{color.adjust($dark-primary, $lightness: -10%)};
-      --box-shadow: 0 4px 8px rgba(2, 163, 150, 0.4);
-    }
-    
-    .register-prompt {
-      color: $dark-secondary-text;
-      
-      a {
-        color: $dark-primary;
-      }
-    }
-  }
-  
-  .large-profile-icon {
-    color: $dark-primary;
   }
 }
 
@@ -413,12 +348,10 @@ $dark-card-bg: #2d2d2d; // Fondo de tarjeta para modo oscuro
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   height: 100%;
   text-align: center;
-  padding: 20px;
-  background: transparent;
-  width: 100%;
+  padding-top: 80px;
 }
 
 .app-logo {
@@ -426,30 +359,15 @@ $dark-card-bg: #2d2d2d; // Fondo de tarjeta para modo oscuro
   flex-direction: column;
   align-items: center;
   margin-bottom: 40px;
-  background: transparent;
-  
-  .logo-container {
-    background-color: white;
-    border-radius: 50%;
-    padding: 0;
-    width: 110px;
-    height: 110px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    margin-bottom: 20px;
-    overflow: hidden;
-    position: relative;
-    z-index: 10;
-  }
   
   img {
-    width: 100px;
-    height: 100px;
+    width: 180px;
+    height: 180px;
     object-fit: contain;
+    margin-bottom: 20px;
     background: transparent;
-    display: block;
+    border-radius: 0;
+    box-shadow: none;
   }
   
   h1 {
@@ -464,12 +382,12 @@ $dark-card-bg: #2d2d2d; // Fondo de tarjeta para modo oscuro
 .login-prompt-card {
   background-color: white;
   border-radius: 16px;
-  padding: 30px 25px;
+  padding: 25px 20px;
   text-align: center;
   max-width: 320px;
-  width: 90%;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  margin: 0 auto;
+  width: 100%;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin: var(--spacing-md);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -548,11 +466,6 @@ $dark-card-bg: #2d2d2d; // Fondo de tarjeta para modo oscuro
 
 .transparent-logo {
   background-color: transparent !important;
-  max-width: 90%;
-  width: 90px !important;
-  height: 90px !important;
-  object-fit: contain !important;
-  border: none !important;
-  padding: 0 !important;
-  display: block !important;
+  max-width: 100%;
+  mix-blend-mode: normal;
 } 
