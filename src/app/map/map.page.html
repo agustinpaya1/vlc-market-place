@@ -32,12 +32,16 @@
     
     <!-- Barra de búsqueda -->
     <div class="search-section">
-      <ion-searchbar placeholder="Buscar mercados y tiendas..." 
-                     mode="ios" 
-                     [debounce]="300" 
-                     (ionInput)="onSearchInput($event)"
-                     [value]="searchQuery"
-                     animated></ion-searchbar>
+      <div class="custom-searchbar">
+        <ion-icon name="search-outline"></ion-icon>
+        <input
+          type="search"
+          placeholder="Buscar mercados y tiendas..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearchInput($event)"
+          aria-label="Buscar mercados y tiendas"
+        />
+      </div>
     </div>
 
     <!-- Lista de tiendas -->
@@ -85,18 +89,7 @@
 
   <!-- Bottom Sheet de productos -->
   <div class="product-sheet" [ngClass]="isDarkTheme ? 'dark-theme' : 'light-theme'" [class.active]="isProductSheetActive" #productBottomSheet>
-    <div class="product-sheet-handle">
-      <div class="handle-bar"></div>
-      <div class="product-sheet-actions">
-        <button class="cart-button" *ngIf="cartItemsCount > 0" (click)="goToCart()" title="Ver carrito" aria-label="Ver carrito">
-          <ion-icon name="cart-outline"></ion-icon>
-          <span class="cart-count">{{ cartItemsCount }}</span>
-        </button>
-        <button class="close-button" (click)="hideProductSheet()" title="Cerrar" aria-label="Cerrar">
-          <ion-icon name="close-outline"></ion-icon>
-        </button>
-      </div>
-    </div>
+    
 
     <div class="product-sheet-content">
       <div class="store-container" *ngIf="selectedStore">
