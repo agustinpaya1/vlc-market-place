@@ -211,6 +211,7 @@ export class StoresPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   userFavorites: string[] = [];
+  favoriteStores: any[] = []; // Array para almacenar tiendas favoritas completas
 
   constructor(
     private router: Router,
