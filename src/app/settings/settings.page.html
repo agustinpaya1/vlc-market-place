@@ -30,52 +30,6 @@
       </div>
     </div>
     
-    <!-- Configuración General -->
-    <div class="section-container">
-      <div class="section-header">
-        <h2>General</h2>
-      </div>
-      
-      <div class="settings-card">
-        <div class="setting-item">
-          <div class="setting-info">
-            <ion-icon name="moon-outline"></ion-icon>
-            <div class="setting-text">
-              <h3>Modo oscuro</h3>
-              <p>Cambiar apariencia de la app</p>
-            </div>
-          </div>
-          <ion-toggle [(ngModel)]="settings.darkMode" (ionChange)="toggleDarkMode()"></ion-toggle>
-        </div>
-        
-        <div class="divider"></div>
-        
-        <div class="setting-item">
-          <div class="setting-info">
-            <ion-icon name="notifications-outline"></ion-icon>
-            <div class="setting-text">
-              <h3>Notificaciones</h3>
-              <p>Recibe alertas de tus pedidos</p>
-            </div>
-          </div>
-          <ion-toggle [(ngModel)]="settings.notifications" (ionChange)="toggleNotifications()"></ion-toggle>
-        </div>
-        
-        <div class="divider"></div>
-        
-        <div class="setting-item" (click)="openLanguageSelector()">
-          <div class="setting-info">
-            <ion-icon name="language-outline"></ion-icon>
-            <div class="setting-text">
-              <h3>Idioma</h3>
-              <p>{{ getLanguageName(settings.language) }}</p>
-            </div>
-          </div>
-          <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
-        </div>
-      </div>
-    </div>
-    
     <!-- Soporte y Ayuda -->
     <div class="section-container">
       <div class="section-header">
@@ -96,12 +50,12 @@
         
         <div class="divider"></div>
         
-        <div class="setting-item" (click)="clearCache()">
+        <div class="setting-item" (click)="showAppInfo()">
           <div class="setting-info">
-            <ion-icon name="trash-outline"></ion-icon>
+            <ion-icon name="information-circle-outline"></ion-icon>
             <div class="setting-text">
-              <h3>Limpiar caché</h3>
-              <p>Liberar espacio</p>
+              <h3>Acerca de</h3>
+              <p>Información sobre la app</p>
             </div>
           </div>
           <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>

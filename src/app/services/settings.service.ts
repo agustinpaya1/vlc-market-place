@@ -32,7 +32,11 @@ export class SettingsService {
       if (!['es', 'en', 'ca'].includes(parsed.language)) {
         parsed.language = 'es';
       }
-      this.settings.next(parsed);
+      this.settings.next({
+        darkMode: parsed.darkMode ?? false,
+        notifications: parsed.notifications ?? true,
+        language: parsed.language ?? 'es'
+      });
       this.applySettings(this.settings.value);
     }
   }
@@ -46,7 +50,7 @@ export class SettingsService {
   private applySettings(settings: Settings) {
     // Apply dark mode to documentElement
     document.documentElement.classList.toggle('dark-theme', settings.darkMode);
-    document.documentElement.classList.toggle('dark', settings.darkMode); // Mantener por compatibilidad
+    document.documentElement.classList.toggle('dark', settings.darkMode);
     
     // Apply language
     document.documentElement.lang = settings.language;
@@ -58,9 +62,6 @@ export class SettingsService {
       ...currentSettings,
       darkMode: enabled
     });
-    this.notificationService.showSuccess(
-      enabled ? 'Modo oscuro activado' : 'Modo oscuro desactivado'
-    );
   }
 
   setNotifications(enabled: boolean) {
@@ -69,9 +70,6 @@ export class SettingsService {
       ...currentSettings,
       notifications: enabled
     });
-    this.notificationService.showSuccess(
-      enabled ? 'Notificaciones activadas' : 'Notificaciones desactivadas'
-    );
   }
 
   setLanguage(language: LanguageCode) {
@@ -80,7 +78,6 @@ export class SettingsService {
       ...currentSettings,
       language
     });
-    this.notificationService.showSuccess('Idioma actualizado');
   }
 
   async clearCache() {
@@ -91,9 +88,9 @@ export class SettingsService {
         await Promise.all(
           cacheNames.map(cacheName => caches.delete(cacheName))
         );
-        this.notificationService.showSuccess('Caché limpiado correctamente');
+        // Optionally, can use NotificationService here but now we handle it in the component
       } catch (error) {
-        this.notificationService.showError('Error al limpiar el caché');
+        console.error('Error al limpiar el caché', error);
       }
     }
     

@@ -1,24 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { NotificationService } from '../services/notification.service';
-import { SettingsService, Settings } from '../services/settings.service';
 import { addIcons } from 'ionicons';
 import { 
-  moonOutline, 
-  notificationsOutline, 
-  languageOutline, 
   helpCircleOutline,
   logOutOutline,
   chevronForward,
-  trashOutline,
-  settingsOutline
+  settingsOutline,
+  informationCircleOutline
 } from 'ionicons/icons';
-
-type LanguageCode = 'es' | 'en' | 'ca';
 
 @Component({
   selector: 'app-settings',
@@ -28,68 +21,67 @@ type LanguageCode = 'es' | 'en' | 'ca';
   imports: [IonicModule, CommonModule, FormsModule]
 })
 export class SettingsPage implements OnInit {
-  settings: Settings = {
-    darkMode: false,
-    notifications: true,
-    language: 'es' as LanguageCode
-  };
-
-  private readonly languages: { [key in LanguageCode]: string } = {
-    es: 'Español',
-    en: 'English',
-    ca: 'Català'
-  };
-
   constructor(
-    private settingsService: SettingsService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private alertController: AlertController
   ) {
     addIcons({
-      moonOutline,
-      notificationsOutline,
-      languageOutline,
       helpCircleOutline,
       logOutOutline,
       chevronForward,
-      trashOutline,
-      settingsOutline
+      settingsOutline,
+      informationCircleOutline
     });
   }
 
   ngOnInit() {
-    this.settingsService.getSettings().subscribe(settings => {
-      this.settings = settings;
+    // Inicialización simple
+  }
+
+  async openHelp() {
+    const alert = await this.alertController.create({
+      header: 'Ayuda',
+      subHeader: 'Preguntas frecuentes',
+      message: '¿Cómo realizar un pedido?\nSelecciona productos y completa tu compra en el carrito.\n\n¿Cómo ver mis pedidos?\nVisita la sección de Pedidos en tu perfil.\n\n¿Problemas con la app?\nContacta con soporte@mercau.com',
+      buttons: ['Entendido']
     });
+
+    await alert.present();
   }
 
-  toggleDarkMode() {
-    this.settingsService.setDarkMode(!this.settings.darkMode);
-  }
+  async showAppInfo() {
+    const alert = await this.alertController.create({
+      header: 'Acerca de MercAU',
+      subHeader: 'Versión 1.0.0',
+      message: 'MercAU: Tu app Artemis para comprar en mercados locales de manera sencilla.\n\nDesarrollada con ♥ por estudiantes de la UPV.\n\n© 2025 - Todos los derechos reservados.',
+      buttons: ['Cerrar']
+    });
 
-  toggleNotifications() {
-    this.settingsService.setNotifications(!this.settings.notifications);
-  }
-
-  openLanguageSelector() {
-    // TODO: Implement language selector
-  }
-
-  getLanguageName(code: LanguageCode): string {
-    return this.languages[code];
-  }
-
-  async clearCache() {
-    await this.settingsService.clearCache();
-  }
-
-  openHelp() {
-    // TODO: Implement help page navigation
+    await alert.present();
   }
 
   async logout() {
-    await this.authService.logout();
-    this.router.navigate(['/tabs/stores']);
+    const alert = await this.alertController.create({
+      header: '¿Cerrar sesión?',
+      message: '¿Estás seguro de que deseas cerrar la sesión?',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Cerrar sesión',
+          role: 'confirm',
+          handler: async () => {
+            await this.authService.logout();
+            this.router.navigate(['/tabs/stores']);
+          }
+        }
+      ]
+    });
+
+    await alert.present();
   }
   
   handleImageError(event: any) {
