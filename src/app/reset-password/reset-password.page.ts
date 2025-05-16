@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AlertController, LoadingController } from '@ionic/angular';
@@ -21,6 +21,8 @@ import { addIcons } from 'ionicons';
 import { warningOutline, arrowBackOutline, lockClosedOutline, checkmarkCircleOutline, informationCircleOutline } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
+import { SettingsService } from '../services/settings.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-reset-password',
@@ -45,7 +47,7 @@ import { AuthService } from '../services/auth.service';
   ],
   standalone: true
 })
-export class ResetPasswordPage implements OnInit {
+export class ResetPasswordPage implements OnInit, OnDestroy {
   newPassword: string = '';
   confirmPassword: string = '';
   isLoading: boolean = false;
@@ -54,14 +56,18 @@ export class ResetPasswordPage implements OnInit {
   pageState: 'loading' | 'error' | 'form' | 'success' = 'loading';
   errorMessage: string = 'El enlace de restablecimiento es inválido o ha expirado.';
   accessToken: string | null = null;
+  private themeSubscription: Subscription | null = null;
 
   constructor(
     private supabaseService: SupabaseService,
     private authService: AuthService,
+    private settingsService: SettingsService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private alertController: AlertController,
-    private loadingController: LoadingController
+    private loadingController: LoadingController,
+    private ngZone: NgZone,
+    private changeDetector: ChangeDetectorRef
   ) {
     addIcons({
       warningOutline, 
@@ -109,9 +115,26 @@ export class ResetPasswordPage implements OnInit {
         isValidResetLink: this.isValidResetLink
       });
     }
+    
+    // Suscribirse a cambios en la configuración de tema
+    this.themeSubscription = this.settingsService.getSettings().subscribe(settings => {
+      // Forzar detección de cambios cuando cambia el tema
+      this.ngZone.run(() => {
+        console.log('ResetPasswordPage - Theme settings changed:', settings.darkMode ? 'dark' : 'light');
+        this.changeDetector.detectChanges();
+      });
+    });
+  }
+  
+  ngOnDestroy() {
+    if (this.themeSubscription) {
+      this.themeSubscription.unsubscribe();
+    }
   }
 
   private async extractTokenFromUrl() {
+    console.log('ResetPasswordPage - extractTokenFromUrl - Analizando URL:', window.location.href);
+    
     // Extraer token del hash si existe
     if (window.location.hash) {
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -122,22 +145,42 @@ export class ResetPasswordPage implements OnInit {
     // Extraer token de los parámetros de consulta
     if (!this.accessToken && window.location.search) {
       const queryParams = new URLSearchParams(window.location.search);
-      this.accessToken = queryParams.get('token') || queryParams.get('access_token');
-      console.log('Token extraído de query params:', this.accessToken ? 'Encontrado' : 'No encontrado');
+      const possibleTokens = ['token', 'access_token', 't'];
+      
+      for (const param of possibleTokens) {
+        const token = queryParams.get(param);
+        if (token) {
+          this.accessToken = token;
+          console.log(`Token encontrado en parámetro ${param}`);
+          break;
+        }
+      }
+    }
+
+    // Verificar si el token se recuperó correctamente
+    if (!this.accessToken) {
+      console.log('No se encontró ningún token en la URL');
+      return;
     }
 
     // Si encontramos un token, intentar establecer la sesión
-    if (this.accessToken) {
-      try {
-        console.log('Intentando establecer sesión con token encontrado');
-        await this.supabaseService.getClient().auth.setSession({
-          access_token: this.accessToken,
-          refresh_token: ''
-        });
-        console.log('Sesión establecida correctamente con el token');
-      } catch (error) {
+    try {
+      console.log('Intentando establecer sesión con token:', this.accessToken.substring(0, 10) + '...');
+      
+      const { data, error } = await this.supabaseService.getClient().auth.setSession({
+        access_token: this.accessToken,
+        refresh_token: ''
+      });
+      
+      if (error) {
         console.error('Error al establecer sesión con token:', error);
+        throw error;
       }
+      
+      console.log('Sesión establecida correctamente con el token');
+    } catch (error) {
+      console.error('Error completo al establecer sesión con token:', error);
+      throw error;
     }
   }
 
@@ -169,19 +212,27 @@ export class ResetPasswordPage implements OnInit {
     await loading.present();
 
     try {
-      // Llamar directamente a la API de Supabase de la forma más simple posible
-      const { error } = await this.supabaseService.getClient().auth.updateUser({
-        password: this.newPassword
-      });
+      // Verificar si tenemos una sesión activa
+      const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
       
-      // Siempre cerrar el loading controller
+      if (!session) {
+        console.error('No hay una sesión activa para actualizar la contraseña');
+        throw new Error('No se encontró una sesión activa. Por favor, utiliza el enlace de restablecimiento de contraseña desde tu correo electrónico.');
+      }
+      
+      console.log('Sesión activa detectada, procediendo a actualizar la contraseña');
+      
+      // Llamar al servicio de Auth para actualizar la contraseña
+      const success = await this.authService.resetPassword(this.newPassword);
+      
+      // Cerrar el loading controller
       await loading.dismiss();
       
-      if (error) {
+      if (!success) {
         // Si hay error, mostrar mensaje y cambiar estado
-        console.error('Error al actualizar contraseña:', error);
+        console.error('Error al actualizar contraseña');
         this.pageState = 'error';
-        this.errorMessage = error.message || 'No se pudo actualizar la contraseña';
+        this.errorMessage = 'No se pudo actualizar la contraseña. Por favor, solicita un nuevo enlace de restablecimiento.';
         await this.showAlert('Error', this.errorMessage);
       } else {
         // Éxito, mostrar estado de éxito
@@ -192,7 +243,7 @@ export class ResetPasswordPage implements OnInit {
         setTimeout(() => {
           // Cerrar sesión
           this.supabaseService.getClient().auth.signOut();
-          sessionStorage.removeItem('activeSession');
+          
           // Redireccionar
           this.router.navigate(['/login'], { replaceUrl: true });
         }, 2000);
@@ -201,9 +252,9 @@ export class ResetPasswordPage implements OnInit {
       // En caso de excepción, también cerrar el loading controller
       await loading.dismiss();
       
-      console.error('Error en la actualización de contraseña:', error);
+      console.error('Error detallado en la actualización de contraseña:', error);
       this.pageState = 'error';
-      this.errorMessage = error.message || 'Ocurrió un error inesperado';
+      this.errorMessage = error.message || 'Ocurrió un error inesperado. Por favor, solicita un nuevo enlace de restablecimiento.';
       await this.showAlert('Error', this.errorMessage);
     } finally {
       // Siempre marcar como no cargando

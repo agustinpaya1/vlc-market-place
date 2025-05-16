@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
@@ -15,6 +15,7 @@ import {
     IonSegmentButton
 } from '@ionic/angular/standalone';
 import { AuthService, BusinessProfile } from '../services/auth.service';
+import { SettingsService } from '../services/settings.service';
 import { CommonModule } from '@angular/common';
 import { addIcons } from 'ionicons';
 import { 
@@ -26,6 +27,7 @@ import {
   personOutline,
   briefcaseOutline
 } from 'ionicons/icons';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-register',
@@ -47,16 +49,20 @@ import {
   ],
   standalone: true
 })
-export class RegisterPage {
+export class RegisterPage implements OnInit, OnDestroy {
   registerForm: FormGroup;
   showBusinessFields = false;
   showPassword = false;
+  private themeSubscription: Subscription | null = null;
 
   constructor(
     private formBuilder: FormBuilder,
     private authService: AuthService,
+    private settingsService: SettingsService,
     private router: Router,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private ngZone: NgZone,
+    private changeDetector: ChangeDetectorRef
   ) {
     addIcons({
       eyeOutline, 
@@ -84,6 +90,23 @@ export class RegisterPage {
       this.showBusinessFields = value === 'business';
       this.updateValidators();
     });
+  }
+
+  ngOnInit() {
+    // Suscribirse a cambios en la configuración de tema
+    this.themeSubscription = this.settingsService.getSettings().subscribe(settings => {
+      // Forzar detección de cambios cuando cambia el tema
+      this.ngZone.run(() => {
+        console.log('RegisterPage - Theme settings changed:', settings.darkMode ? 'dark' : 'light');
+        this.changeDetector.detectChanges();
+      });
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.themeSubscription) {
+      this.themeSubscription.unsubscribe();
+    }
   }
 
   private updateValidators() {

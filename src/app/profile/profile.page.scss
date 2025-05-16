@@ -24,6 +24,7 @@ $dark-primary: #02c4b4; // Verde azulado más brillante para modo oscuro
 $dark-text: #E0E0E0; // Texto claro para modo oscuro
 $dark-secondary-text: #9E9E9E; // Texto secundario para modo oscuro
 $dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
+$dark-card-bg: #2d2d2d; // Fondo de tarjeta para modo oscuro
 
 // Importando el módulo color de sass
 @use "sass:color";
@@ -315,6 +316,38 @@ $dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
       --background: #{$dark-danger};
     }
   }
+  
+  // Estilos para el modo oscuro en la sección de login
+  .login-prompt-card {
+    background-color: $dark-card-bg;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    
+    h2 {
+      color: $dark-primary;
+    }
+    
+    p {
+      color: $dark-secondary-text;
+    }
+    
+    ion-button {
+      --background: #{$dark-primary};
+      --background-activated: #{color.adjust($dark-primary, $lightness: -10%)};
+      --box-shadow: 0 4px 8px rgba(2, 163, 150, 0.4);
+    }
+    
+    .register-prompt {
+      color: $dark-secondary-text;
+      
+      a {
+        color: $dark-primary;
+      }
+    }
+  }
+  
+  .large-profile-icon {
+    color: $dark-primary;
+  }
 }
 
 // Responsive adjustments
@@ -341,15 +374,12 @@ $dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   height: 100%;
   text-align: center;
-  padding-top: 80px;
+  padding: 20px;
   background: transparent;
-  --padding-start: 0;
-  --padding-end: 0;
-  padding-left: 0;
-  padding-right: 0;
+  width: 100%;
 }
 
 .app-logo {
@@ -395,12 +425,12 @@ $dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
 .login-prompt-card {
   background-color: white;
   border-radius: 16px;
-  padding: 25px 20px;
+  padding: 30px 25px;
   text-align: center;
   max-width: 320px;
-  width: 100%;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  margin: var(--spacing-md);
+  width: 90%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;

@@ -5,6 +5,7 @@ import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AuthService, User } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
+import { SettingsService } from '../services/settings.service';
 import { addIcons } from 'ionicons';
 import { 
   personCircle, 
@@ -56,6 +57,7 @@ export class ProfilePage implements OnInit, OnDestroy {
   isAuthenticated = false;
   logoUrl: string = 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/logoapp//logo.png';
   private authSubscription: Subscription | null = null;
+  private themeSubscription: Subscription | null = null;
   private resizeListener: () => void;
   private animationFrameId: number | null = null;
 
@@ -70,6 +72,7 @@ export class ProfilePage implements OnInit, OnDestroy {
     private router: Router,
     private authService: AuthService,
     private supabaseService: SupabaseService,
+    private settingsService: SettingsService,
     private toastController: ToastController,
     private platform: Platform,
     private ngZone: NgZone,
@@ -118,12 +121,25 @@ export class ProfilePage implements OnInit, OnDestroy {
     });
     
     this.checkAuthStatus();
+    
+    // Suscribirse a cambios en la configuración de tema
+    this.themeSubscription = this.settingsService.getSettings().subscribe(settings => {
+      // Forzar detección de cambios cuando cambia el tema
+      this.ngZone.run(() => {
+        console.log('ProfilePage - Theme settings changed:', settings.darkMode ? 'dark' : 'light');
+        this.changeDetector.detectChanges();
+      });
+    });
   }
 
   ngOnDestroy() {
     console.log('ProfilePage - ngOnDestroy');
     if (this.authSubscription) {
       this.authSubscription.unsubscribe();
+    }
+    
+    if (this.themeSubscription) {
+      this.themeSubscription.unsubscribe();
     }
     
     // Limpiar recursos

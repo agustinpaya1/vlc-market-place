@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
@@ -14,6 +14,8 @@ import { addIcons } from 'ionicons';
 import { arrowBackOutline, eyeOffOutline, eyeOutline, logoGoogle, logoFacebook, logoApple } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
+import { SettingsService } from '../services/settings.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -30,22 +32,41 @@ import { SupabaseService } from '../services/supabase.service';
   ],
   standalone: true
 })
-export class LoginPage {
+export class LoginPage implements OnInit, OnDestroy {
   email: string = '';
   password: string = '';
   showPassword: boolean = false;
   isLoading: boolean = false;
+  private themeSubscription: Subscription | null = null;
 
   constructor(
     private router: Router,
     private alertController: AlertController,
     private authService: AuthService,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private settingsService: SettingsService,
+    private ngZone: NgZone,
+    private changeDetector: ChangeDetectorRef
   ) {
     addIcons({logoFacebook,logoApple,logoGoogle,eyeOutline,eyeOffOutline,arrowBackOutline});
   }
 
+  ngOnInit() {
+    // Suscribirse a cambios en la configuración de tema
+    this.themeSubscription = this.settingsService.getSettings().subscribe(settings => {
+      // Forzar detección de cambios cuando cambia el tema
+      this.ngZone.run(() => {
+        console.log('LoginPage - Theme settings changed:', settings.darkMode ? 'dark' : 'light');
+        this.changeDetector.detectChanges();
+      });
+    });
+  }
 
+  ngOnDestroy() {
+    if (this.themeSubscription) {
+      this.themeSubscription.unsubscribe();
+    }
+  }
 
   togglePassword() {
     this.showPassword = !this.showPassword;
@@ -155,7 +176,7 @@ export class LoginPage {
                   console.log('Enlace enviado exitosamente');
                   this.showAlert(
                     'Éxito',
-                    'Se ha enviado un enlace de recuperación a tu correo electrónico. Por favor revisa tu bandeja de entrada.'
+                    'Se ha enviado un enlace de recuperación a tu correo electrónico. Por favor revisa tu bandeja de entrada y sigue las instrucciones.'
                   );
                 }
               } catch (error) {

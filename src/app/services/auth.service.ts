@@ -409,57 +409,91 @@ export class AuthService {
       const { data: sessionData } = await this.supabaseService.getClient().auth.getSession();
       console.log('AuthService: Estado de sesión actual:', sessionData.session ? 'Activa' : 'No hay sesión');
       
-      // Si no hay sesión, intentar obtener parámetros de la URL
-      if (!sessionData.session) {
-        console.log('AuthService: No hay sesión activa, verificando URL');
+      if (sessionData.session) {
+        console.log('AuthService: Se encontró una sesión activa, procediendo a actualizar contraseña');
         
-        // Intentar extraer el token de la URL
-        let accessToken = null;
-        const url = window.location.href;
-        
-        // Verificar si hay un token en el hash
-        if (window.location.hash && window.location.hash.length > 1) {
-          const hashParams = new URLSearchParams(window.location.hash.substring(1));
-          accessToken = hashParams.get('access_token');
+        // Intentar actualizar la contraseña con la sesión activa
+        const { error } = await this.supabaseService.getClient().auth.updateUser({
+          password: newPassword
+        });
+
+        if (error) {
+          console.error('AuthService: Error al actualizar contraseña con sesión activa:', error);
+          await this.notificationService.showError('No se pudo actualizar la contraseña: ' + error.message);
+          return false;
         }
         
-        // Verificar si hay un token en los parámetros de consulta
-        if (!accessToken && window.location.search) {
-          const queryParams = new URLSearchParams(window.location.search);
-          accessToken = queryParams.get('token') || queryParams.get('access_token');
-        }
-        
+        console.log('AuthService: Contraseña actualizada exitosamente con sesión activa');
+        await this.notificationService.showSuccess('Contraseña actualizada correctamente');
+        return true;
+      } 
+      
+      // Si no hay sesión, intentamos usar el token de la URL
+      console.log('AuthService: No se encontró sesión activa, analizando URL para tokens');
+      
+      // Buscar tokens en múltiples ubicaciones
+      const url = window.location.href;
+      console.log('URL actual:', url);
+      
+      let accessToken = null;
+      
+      // Verificar si hay un token en el hash
+      if (window.location.hash && window.location.hash.length > 1) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        accessToken = hashParams.get('access_token');
         if (accessToken) {
-          console.log('AuthService: Token encontrado en URL, intentando establecer sesión');
-          
-          // Intenta establecer una sesión utilizando el token
-          const { error: sessionError } = await this.supabaseService.getClient().auth.setSession({
-            access_token: accessToken,
-            refresh_token: '' // No tenemos refresh token
-          });
-          
-          if (sessionError) {
-            console.error('AuthService: Error al establecer sesión con token:', sessionError);
-          } else {
-            console.log('AuthService: Sesión establecida correctamente con el token de la URL');
-          }
+          console.log('Token encontrado en hash');
         }
       }
       
-      // Intentar actualizar la contraseña
-      const { error } = await this.supabaseService.getClient().auth.updateUser({
+      // Verificar si hay un token en los parámetros de consulta
+      if (!accessToken && window.location.search) {
+        const queryParams = new URLSearchParams(window.location.search);
+        accessToken = queryParams.get('token') || queryParams.get('access_token') || queryParams.get('t');
+        if (accessToken) {
+          console.log('Token encontrado en parámetros de consulta');
+        }
+      }
+      
+      if (!accessToken) {
+        console.error('AuthService: No se encontró token en la URL');
+        await this.notificationService.showError('No se encontró el token de restablecimiento en la URL');
+        return false;
+      }
+      
+      console.log('AuthService: Token encontrado, intentando establecer sesión');
+      
+      // Intentar establecer una sesión con el token
+      const { error: sessionError } = await this.supabaseService.getClient().auth.setSession({
+        access_token: accessToken,
+        refresh_token: ''
+      });
+      
+      if (sessionError) {
+        console.error('AuthService: Error al establecer sesión con token:', sessionError);
+        await this.notificationService.showError('Error al procesar el token de restablecimiento');
+        return false;
+      }
+      
+      console.log('AuthService: Sesión establecida correctamente con el token, actualizando contraseña');
+      
+      // Ahora que tenemos una sesión, actualizar la contraseña
+      const { error: updateError } = await this.supabaseService.getClient().auth.updateUser({
         password: newPassword
       });
 
-      if (error) {
-        console.error('AuthService: Error al actualizar contraseña:', error);
-        throw error;
+      if (updateError) {
+        console.error('AuthService: Error al actualizar contraseña con token:', updateError);
+        await this.notificationService.showError('No se pudo actualizar la contraseña: ' + updateError.message);
+        return false;
       }
       
-      console.log('AuthService: Contraseña actualizada exitosamente');
+      console.log('AuthService: Contraseña actualizada exitosamente con token');
+      await this.notificationService.showSuccess('Contraseña actualizada correctamente');
       return true;
     } catch (error) {
-      console.error('AuthService: Error en resetPassword:', error);
+      console.error('AuthService: Error completo en resetPassword:', error);
+      await this.notificationService.showError('Error inesperado al restablecer la contraseña');
       return false;
     }
   }
