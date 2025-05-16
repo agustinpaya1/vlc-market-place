@@ -3,18 +3,16 @@
     <div class="location-wrapper">
       <span class="location-label">Ubicación</span>
       <div class="location-container">
-        <ion-icon name="location-outline"></ion-icon>
+        <img src="assets/map-icons/map-pin.svg" alt="Ubicación" class="location-icon">
         <span class="location-text">{{ userLocation }}</span>
         <ion-icon name="chevron-down-outline" class="chevron-icon"></ion-icon>
       </div>
     </div>
     <div class="header-actions">
       <ion-button fill="clear" class="wallet-button" (click)="showVLCoinsInfo()">
-        <div>
-          <div class="balance-amount">
-            <img src="assets/icons/vlcoins.png" alt="Monedas VL" class="vl-coin-icon">
-            <span class="balance-text">{{ vlcoinBalance }}</span>
-          </div>
+        <div class="balance-amount">
+          <img src="assets/icons/vlcoins.png" alt="Monedas VL" class="vl-coin-icon">
+          <span class="balance-text">{{ vlcoinBalance }}</span>
         </div>
       </ion-button>
       <ion-button *ngIf="isAuthenticated" fill="clear" class="notification-button" (click)="openNotificationPopover($event)">
@@ -96,7 +94,7 @@
             </ion-card-header>
             <div class="store-info">
               <div class="info-item">
-                <ion-icon name="location"></ion-icon>
+                <img src="assets/map-icons/map-pin.svg" alt="Ubicación" class="location-icon">
                 <ion-label>{{ store.location }} ({{ store.distance }}km)</ion-label>
               </div>
               <div class="info-item">
@@ -223,4 +221,19 @@
   font-size: 1.7em;
   margin: 0;
 }
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    ion-button.wallet-button {
+      <ion-button fill="clear" class="wallet-button" (click)="showVLCoinsInfo()">
+        <div class="balance-amount">
+          <img src="assets/icons/vlcoins.png" alt="Monedas VL" class="vl-coin-icon">
+          <span class="balance-text">{{ vlcoinBalance }}</span>
+        </div>
+      </ion-button>
+    }
+  }
 </style> 
