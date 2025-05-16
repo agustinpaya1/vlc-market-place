@@ -75,6 +75,7 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   private isDevelopment = true;
 
   private trackerInterval: any;
+  private trackerTimeouts: any[] = [];
 
   constructor(
     private modalCtrl: ModalController,
@@ -170,6 +171,9 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.trackerInterval) {
       clearInterval(this.trackerInterval);
     }
+    // Limpiar timeouts
+    this.trackerTimeouts.forEach(t => clearTimeout(t));
+    this.trackerTimeouts = [];
     this.paymentService.destroyCardElement();
   }
 
@@ -358,39 +362,47 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
     this.currentLocation = 'Tienda';
     this.showOrderTracker = true;
 
-    // Simulación de los 4 pasos en 1 minuto (15s por paso)
-    let step = 0;
+    // Simulación de los 4 pasos en 1 minuto
+    // Paso 0: recibido (0s)
+    // Paso 1: preparación (10s)
+    // Paso 2: en camino (25s)
+    // Paso 3: entregado (25s)
+    const steps = [0, 10000, 25000, 25000]; // Duración de cada paso en ms
+    let accumulated = 0;
     const totalSteps = this.deliverySteps.length;
-    const stepDuration = 15000; // 15 segundos por paso
 
-    this.trackerInterval = setInterval(() => {
-      if (step < totalSteps) {
-        this.deliverySteps[step].completed = true;
-        this.deliveryProgress = ((step + 1) / totalSteps) * 100;
-        // Actualizar estado y ubicación
-        switch (step) {
-          case 0:
-            this.orderStatus = 'pending';
-            this.currentLocation = 'Tienda';
-            break;
-          case 1:
-            this.orderStatus = 'processing';
-            this.currentLocation = 'Preparación';
-            break;
-          case 2:
-            this.orderStatus = 'shipped';
-            this.currentLocation = 'En camino';
-            break;
-          case 3:
-            this.orderStatus = 'delivered';
-            this.currentLocation = 'Entregado';
-            break;
-        }
-        step++;
-      } else {
-        clearInterval(this.trackerInterval);
-      }
-    }, stepDuration);
+    // Paso 0: recibido (inmediato)
+    this.deliverySteps[0].completed = true;
+    this.deliveryProgress = 25;
+    this.orderStatus = 'pending';
+    this.currentLocation = 'Tienda';
+
+    // Paso 1: preparación (a los 10s)
+    accumulated += steps[1];
+    this.trackerTimeouts.push(setTimeout(() => {
+      this.deliverySteps[1].completed = true;
+      this.deliveryProgress = 50;
+      this.orderStatus = 'processing';
+      this.currentLocation = 'Preparación';
+    }, accumulated));
+
+    // Paso 2: en camino (a los 35s)
+    accumulated += steps[2];
+    this.trackerTimeouts.push(setTimeout(() => {
+      this.deliverySteps[2].completed = true;
+      this.deliveryProgress = 75;
+      this.orderStatus = 'shipped';
+      this.currentLocation = 'En camino';
+    }, accumulated));
+
+    // Paso 3: entregado (a los 60s)
+    accumulated += steps[3];
+    this.trackerTimeouts.push(setTimeout(() => {
+      this.deliverySteps[3].completed = true;
+      this.deliveryProgress = 100;
+      this.orderStatus = 'delivered';
+      this.currentLocation = 'Entregado';
+    }, accumulated));
 
     // Establecer tiempo estimado de entrega a 1 minuto desde ahora
     const now = new Date();
