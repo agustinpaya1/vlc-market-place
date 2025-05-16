@@ -5,6 +5,7 @@ import { NotificationService } from './notification.service';
 export type LanguageCode = 'es' | 'en' | 'ca';
 
 export interface Settings {
+  darkMode: boolean;
   notifications: boolean;
   language: LanguageCode;
 }
@@ -14,6 +15,7 @@ export interface Settings {
 })
 export class SettingsService {
   private settings = new BehaviorSubject<Settings>({
+    darkMode: false,
     notifications: true,
     language: 'es'
   });
@@ -31,6 +33,7 @@ export class SettingsService {
         parsed.language = 'es';
       }
       this.settings.next({
+        darkMode: parsed.darkMode ?? false,
         notifications: parsed.notifications ?? true,
         language: parsed.language ?? 'es'
       });
@@ -45,8 +48,20 @@ export class SettingsService {
   }
 
   private applySettings(settings: Settings) {
+    // Apply dark mode to documentElement
+    document.documentElement.classList.toggle('dark-theme', settings.darkMode);
+    document.documentElement.classList.toggle('dark', settings.darkMode);
+    
     // Apply language
     document.documentElement.lang = settings.language;
+  }
+
+  setDarkMode(enabled: boolean) {
+    const currentSettings = this.settings.value;
+    this.saveSettings({
+      ...currentSettings,
+      darkMode: enabled
+    });
   }
 
   setNotifications(enabled: boolean) {
