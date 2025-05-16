@@ -14,7 +14,7 @@ export class PaymentService {
   private elements: StripeElements | null = null;
   private cardElement: StripeCardElement | null = null;
   
-  // For testing mode
+  // Siempre usar modo de simulación
   private useMockApi = true;
 
   constructor(private http: HttpClient) {
@@ -27,7 +27,7 @@ export class PaymentService {
   }
 
   async createPaymentIntent(cartItems: CartItem[], totalAmount: number) {
-    // Use mock implementation for testing
+    // En modo simulación, siempre retornar un cliente secreto falso
     if (this.useMockApi) {
       console.log('Using mock payment intent for testing');
       // Generate a mock client secret
@@ -77,7 +77,6 @@ export class PaymentService {
             iconColor: '#fa755a'
           }
         },
-        // For testing - only allow test cards
         hidePostalCode: true
       });
       
@@ -94,9 +93,9 @@ export class PaymentService {
     }
 
     try {
-      // For testing, show successful transaction with mock client secret
-      if (this.useMockApi && clientSecret.startsWith('pi_')) {
-        console.log('Using mock payment processing for testing');
+      // Siempre simular un pago exitoso en modo de prueba
+      if (this.useMockApi) {
+        console.log('Procesando pago simulado...');
         // Artificial delay to simulate payment processing
         await new Promise(resolve => setTimeout(resolve, 1500));
         
