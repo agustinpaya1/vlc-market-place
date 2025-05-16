@@ -94,7 +94,7 @@ interface DeliveryStep {
   templateUrl: './order-tracking.component.html',
   styleUrls: ['./order-tracking.component.scss']
 })
-export class OrderTrackingComponent implements OnInit, OnDestroy {
+export class OrderTrackingComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('mapElement') mapElement!: ElementRef;
   
   @Input() orderId: string = '';

@@ -42,8 +42,7 @@ export class StorePage implements OnInit {
     private toastController: ToastController,
     private cartService: CartService,
     private modalCtrl: ModalController,
-    private authService: AuthService
-    private modalCtrl: ModalController,
+    private authService: AuthService,
     private favoritesService: FavoritesService
   ) {
     // Cargar solo los iconos necesarios
@@ -307,7 +306,7 @@ export class StorePage implements OnInit {
   }
 
   // Methods for the overlaid buttons
-  async toggleFavorite(product: Product, event?: Event) {
+  async toggleFavoriteProduct(product: Product, event?: Event) {
     if (event) {
       event.stopPropagation();
     }
@@ -323,7 +322,7 @@ export class StorePage implements OnInit {
       return;
     }
 
-    if (this.isFavorite(product.id)) {
+    if (this.isProductFavorite(product.id)) {
       await this.supabaseService.removeFavorite(user.id, product.id, 'product');
       this.userFavorites = this.userFavorites.filter(id => id !== product.id);
       this.toastController.create({
@@ -344,24 +343,6 @@ export class StorePage implements OnInit {
         cssClass: 'subtle-toast'
       }).then(toast => toast.present());
     }
-  toggleFavorite() {
-    if (!this.store) return;
-    
-    const storeId = this.store.id;
-    const storeName = this.store.name;
-    
-    // Llama al servicio de favoritos
-    const isFavorite = this.favoritesService.toggleFavorite(storeId);
-    
-    // Muestra un mensaje de confirmación
-    this.toastController.create({
-      message: isFavorite ? 
-        `${storeName} añadida a favoritos` : 
-        `${storeName} eliminada de favoritos`,
-      duration: 2000,
-      position: 'bottom',
-      color: isFavorite ? 'success' : 'medium'
-    }).then(toast => toast.present());
   }
 
   shareStore() {
@@ -383,7 +364,7 @@ export class StorePage implements OnInit {
     }
   }
 
-  isFavorite(productId: string): boolean {
+  isProductFavorite(productId: string): boolean {
     return this.userFavorites && this.userFavorites.includes(productId);
   }
 
@@ -423,7 +404,7 @@ export class StorePage implements OnInit {
   }
 
   // Verifica si una tienda está en favoritos
-  isFavorite(storeId: string | undefined): boolean {
+  isStoreFavorite(storeId: string | undefined): boolean {
     if (!storeId) return false;
     return this.favoritesService.isFavorite(storeId);
   }

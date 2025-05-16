@@ -456,7 +456,23 @@ export class InvoicesPage implements OnInit {
   }
 
   ngOnInit() {
-    // Aquí deberías cargar las facturas del usuario
+    // Inicializar datos de ejemplo
+    this.invoices = [
+      {
+        id: 'INV-2023-001',
+        date: new Date(2023, 10, 15),
+        description: 'Compra en Mercado Central',
+        total: 58.75,
+        items: 8
+      },
+      {
+        id: 'INV-2023-002',
+        date: new Date(2023, 11, 3),
+        description: 'Compra en Tienda Local',
+        total: 32.50,
+        items: 4
+      }
+    ];
   }
 
   handleImageError(event: any) {
