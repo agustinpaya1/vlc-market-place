@@ -194,12 +194,16 @@ ion-content {
 }
 
 .search-section {
- 
   background: var(--ion-card-background);
   color: var(--ion-text-color);
   position: sticky;
   top: 0;
   z-index: 3;
+  padding: 10px;
+  width: 100%;
+  flex-shrink: 0;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 
   .custom-searchbar {
     display: flex;
@@ -225,6 +229,7 @@ ion-content {
       color: var(--ion-text-color);
       flex: 1;
       padding: 8px 0;
+      -webkit-appearance: none; /* Mejorar la apariencia en iOS */
     }
   }
 }
@@ -245,6 +250,18 @@ ion-content {
   overflow-y: auto;
   padding: calc(var(--page-padding) / 2) 0;
   background: transparent;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  will-change: scroll-position;
+  position: relative;
+  height: auto;
+  min-height: 200px;
+  max-height: calc(var(--bottom-sheet-height-expanded) - var(--bottom-sheet-handle-height) - 60px);
+
+  & > * {
+    pointer-events: auto;
+  }
 
   ion-list {
     background: transparent;
@@ -262,6 +279,8 @@ ion-content {
     overflow: hidden;
     cursor: pointer;
     transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    touch-action: manipulation;
 
     &:active {
       transform: scale(0.98);
@@ -499,7 +518,54 @@ ion-content {
   }
 }
 
-
+// Ajustes adicionales para dispositivos móviles
+@media (max-width: 576px) {
+  :host {
+    --bottom-sheet-height-expanded: 80vh;
+    --product-sheet-height-expanded: 85vh;
+  }
+  
+  .stores-list {
+    -ms-overflow-style: none; /* IE y Edge */
+    scrollbar-width: none; /* Firefox */
+    max-height: calc(80vh - var(--bottom-sheet-handle-height) - 60px); /* Ajuste para móviles */
+    
+    &::-webkit-scrollbar {
+      display: none; /* Ocultar scrollbar en Chrome, Safari y Opera */
+    }
+    
+    .store-item {
+      margin-bottom: 10px; /* Reducir el margen en dispositivos pequeños */
+      
+      /* Aumentar área táctil para mejor interacción */
+      &::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        z-index: -1;
+      }
+    }
+  }
+  
+  .bottom-sheet.active {
+    /* Asegurar que el contenido no exceda los límites de la pantalla */
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Mejorar interacción táctil del controlador del bottom sheet */
+  .bottom-sheet-handle {
+    padding: 12px 0; /* Área táctil más grande */
+    
+    .handle-bar {
+      width: 60px; /* Barra más ancha para mejor interacción */
+    }
+  }
+}
 
 // Scrollbar personalizado
 ::-webkit-scrollbar {
@@ -576,9 +642,15 @@ ion-range {
   z-index: 2;
   transition: height var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 
   &.active {
     height: var(--bottom-sheet-height-expanded);
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   &.reduced {
@@ -593,6 +665,8 @@ ion-range {
     align-items: center;
     padding: 8px 0;
     cursor: pointer;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
 
     .handle-bar {
       width: 40px;
@@ -1213,14 +1287,6 @@ ion-fab {
 
   ion-icon {
     font-size: 16px;
-  }
-}
-
-// Respuesta en pantallas más pequeñas
-@media (max-width: 576px) {
-  :host {
-    --bottom-sheet-height-expanded: 80vh;
-    --product-sheet-height-expanded: 85vh;
   }
 }
 
