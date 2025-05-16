@@ -2,115 +2,182 @@
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-button (click)="goBack()">
-        <ion-icon name="arrowBack" slot="icon-only"></ion-icon>
+        <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>Mi Carrito</ion-title>
+    <div class="header-content">
+      <img src="https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/logoapp//logo.png" alt="Logo" class="header-logo" (error)="handleImageError($event)">
+      <ion-title>Carrito</ion-title>
+    </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-  <div class="cart-container">
-    <!-- Success message after payment -->
-    <div *ngIf="paymentSuccess" class="payment-success">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title class="success-title">
-            <ion-icon name="checkmarkCircle"></ion-icon>
-            ¡Pago Exitoso!
-          </ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <p>Tu pago ha sido procesado correctamente.</p>
-          <p>ID de la transacción: {{ paymentId }}</p>
-          <div class="redirect-message">
-            <p>Serás redirigido a la página de tiendas en unos segundos...</p>
-            <ion-spinner name="dots"></ion-spinner>
+<ion-content class="ion-padding">
+  <div class="cart-header">
+    <div class="cart-icon-container">
+      <img src="https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/logoapp//logo.png" alt="Logo VLC" class="cart-logo" (error)="handleImageError($event)">
+      <ion-button fill="clear" class="back-button" (click)="goBack()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </ion-button>
+    </div>
+    <p *ngIf="cartItems.length > 0" class="cart-info">{{ totalItems }} artículos · Total: {{ totalPrice | currency:'EUR' }}</p>
+    <p *ngIf="cartItems.length === 0" class="cart-info">Tu carrito está vacío</p>
+  </div>
+
+  <!-- Success message after payment -->
+  <div *ngIf="paymentSuccess" class="payment-success">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title class="success-title">
+          <ion-icon name="checkmark-circle"></ion-icon>
+          ¡Pago Exitoso!
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>Tu pago ha sido procesado correctamente.</p>
+        <p>ID de la transacción: {{ paymentId }}</p>
+        <div class="redirect-message">
+          <p>Serás redirigido a la página de tiendas en unos segundos...</p>
+          <ion-spinner name="dots"></ion-spinner>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <div *ngIf="cartItems.length === 0 && !paymentSuccess" class="empty-cart">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="storefront" class="card-title-icon"></ion-icon>
+          Tiendas Disponibles
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <!-- Lista de tiendas disponibles -->
+        <div class="stores-container">
+          <!-- Loading indicator -->
+          <div class="loading-overlay" *ngIf="isLoading">
+            <div class="loading-container">
+              <ion-spinner name="circular"></ion-spinner>
+              <span>Cargando tiendas...</span>
+            </div>
           </div>
-        </ion-card-content>
-      </ion-card>
-    </div>
-
-    <div *ngIf="cartItems.length === 0 && !paymentSuccess" class="empty-cart">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Tu carrito está vacío</ion-card-title>
-          <ion-card-subtitle>Agrega productos para comenzar a comprar</ion-card-subtitle>
-        </ion-card-header>
-      </ion-card>
-    </div>
-
-    <ion-list *ngIf="cartItems.length > 0">
-      <ion-item *ngFor="let item of cartItems">
-        <ion-grid>
-          <ion-row class="ion-align-items-center">
-            <ion-col size="3">
-              <ion-img [src]="item.imageUrl" [alt]="item.name"></ion-img>
-            </ion-col>
-            <ion-col size="6">
-              <ion-label>
-                <h2>{{ item.name }}</h2>
-                <div *ngIf="item.offerPrice; else regularCartPrice">
-                  <div class="cart-unit-prices">
-                    <span class="cart-price-new has-discount">{{ item.offerPrice | currency:'EUR' }}</span>
-                    <span class="cart-unit-label">/ unidad</span>
-                  </div>
-                  <div class="cart-unit-prices">
-                    <span class="cart-price-old">{{ item.price | currency:'EUR' }}</span>
-                    <span class="cart-unit-label">precio sin descuento</span>
-                  </div>
-                  <div class="cart-total-prices">
-                    <span class="cart-price-new has-discount">{{ (item.offerPrice * item.quantity) | currency:'EUR' }}</span>
-                    <span class="cart-unit-label">total</span>
-                  </div>
-                  <div class="cart-total-prices">
-                    <span class="cart-price-old">{{ (item.price * item.quantity) | currency:'EUR' }}</span>
-                    <span class="cart-unit-label">total sin descuento</span>
-                  </div>
+          
+          <div class="stores-list" *ngIf="!isLoading">
+            <div *ngIf="stores.length === 0" class="empty-stores">
+              <ion-icon name="alert-circle-outline" size="large"></ion-icon>
+              <h3>No hay tiendas disponibles</h3>
+              <p>No se encontraron tiendas en este momento</p>
+            </div>
+            
+            <div *ngFor="let store of stores" class="store-card" (click)="navigateToStore(store)">
+              <div class="store-image">
+                <img [src]="store.imageUrl || 'assets/logo-placeholder.png'" (error)="handleImageError($event)" alt="Imagen de tienda">
+                <ion-badge [color]="store.isOpen ? 'success' : 'medium'" class="store-status">
+                  {{store.isOpen ? 'Abierto' : 'Cerrado'}}
+                </ion-badge>
+              </div>
+              <div class="store-content">
+                <h4>{{store.name}}</h4>
+                <p class="store-category">{{store.category || 'Tienda local'}}</p>
+                <div class="store-info-row">
+                  <span class="store-distance">
+                    <ion-icon name="locationSharp"></ion-icon>
+                    {{store.distance}} km
+                  </span>
+                  <span class="store-rating" *ngIf="store.rating">
+                    <ion-icon name="star"></ion-icon>
+                    {{store.rating | number:'1.1-1'}}
+                  </span>
                 </div>
-                <ng-template #regularCartPrice>
-                  <div class="cart-unit-prices">
-                    <span class="cart-price-new">{{ item.price | currency:'EUR' }}</span>
-                    <span class="cart-unit-label">/ unidad</span>
-                  </div>
-                  <div class="cart-total-prices">
-                    <span class="cart-price-new">{{ (item.price * item.quantity) | currency:'EUR' }}</span>
-                    <span class="cart-unit-label">total</span>
-                  </div>
-                </ng-template>
-              </ion-label>
-            </ion-col>
-            <ion-col size="3">
-              <div class="quantity-controls">
-                <ion-button fill="clear" (click)="updateQuantity(item, -1)">
-                  <ion-icon name="remove"></ion-icon>
-                </ion-button>
-                <ion-label>{{ item.quantity }}</ion-label>
-                <ion-button fill="clear" (click)="updateQuantity(item, 1)">
-                  <ion-icon name="add"></ion-icon>
+                <p class="store-address" *ngIf="store.address">
+                  <ion-icon name="home-outline"></ion-icon>
+                  {{store.address}}
+                </p>
+                <p class="store-schedule" *ngIf="store.open_time">
+                  <ion-icon name="time-outline"></ion-icon>
+                  {{store.open_time}}
+                </p>
+                <ion-button expand="block" color="primary" size="small" class="view-store-btn" (click)="navigateToStore(store); $event.stopPropagation()">
+                  Ver Productos
+                  <ion-icon name="chevron-forward" slot="end"></ion-icon>
                 </ion-button>
               </div>
-            </ion-col>
-          </ion-row>
-        </ion-grid>
-        <ion-button fill="clear" slot="end" (click)="removeItem(item.id)">
-          <ion-icon name="trash" color="danger"></ion-icon>
-        </ion-button>
-      </ion-item>
-    </ion-list>
-
-    <div *ngIf="cartItems.length > 0" class="cart-total">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Resumen del Pedido</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <p class="total">Total: {{ totalPrice | currency:'EUR' }}</p>
-          <ion-button expand="block" color="primary" (click)="proceedToCheckout()">
-            Proceder al Pago
-          </ion-button>
-        </ion-card-content>
-      </ion-card>
-    </div>
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
   </div>
+
+  <!-- Lista de ítems del carrito más compacta -->
+  <ion-list lines="full" class="cart-items-list" *ngIf="cartItems.length > 0">
+    <ion-item *ngFor="let item of cartItems" class="cart-item">
+      <ion-thumbnail slot="start">
+        <ion-img [src]="item.imageUrl" [alt]="item.name"></ion-img>
+      </ion-thumbnail>
+      <ion-label>
+        <h2>{{ item.name }}</h2>
+        <div *ngIf="item.offerPrice; else regularCartPrice">
+          <div class="cart-unit-prices">
+            <span class="cart-price-new has-discount">{{ item.offerPrice | currency:'EUR' }}</span>
+            <span class="cart-unit-label">/ unidad</span>
+          </div>
+          <div class="cart-unit-prices">
+            <span class="cart-price-old">{{ item.price | currency:'EUR' }}</span>
+          </div>
+        </div>
+        <ng-template #regularCartPrice>
+          <div class="cart-unit-prices">
+            <span class="cart-price-new">{{ item.price | currency:'EUR' }}</span>
+          </div>
+        </ng-template>
+      </ion-label>
+      <div class="item-end-actions">
+        <div class="quantity-controls">
+          <ion-button fill="clear" color="medium" (click)="updateQuantity(item, -1)">
+            <ion-icon name="remove"></ion-icon>
+          </ion-button>
+          <ion-label>{{ item.quantity }}</ion-label>
+          <ion-button fill="clear" color="primary" (click)="updateQuantity(item, 1)">
+            <ion-icon name="add"></ion-icon>
+          </ion-button>
+        </div>
+        <ion-button fill="clear" color="danger" class="delete-button" (click)="removeItem(item.id)">
+          <ion-icon name="trash"></ion-icon>
+        </ion-button>
+      </div>
+    </ion-item>
+  </ion-list>
+
+  <!-- Resumen de compra y botón de pago -->
+  <div *ngIf="cartItems.length > 0" class="cart-action-card">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Resumen del Pedido</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="cart-summary">
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span>{{ totalPrice | currency:'EUR' }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Envío</span>
+            <span>Gratis</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total</span>
+            <span>{{ totalPrice | currency:'EUR' }}</span>
+          </div>
+        </div>
+        <ion-button expand="block" color="primary" class="checkout-button" (click)="proceedToCheckout()">
+          Proceder al Pago
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+  
+  <!-- Espacio adicional para evitar superposición con pestañas -->
+  <div class="bottom-space"></div>
 </ion-content> 
