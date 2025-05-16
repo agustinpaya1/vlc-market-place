@@ -26,7 +26,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 
-  <!-- Initial dark mode script -->
+  <!-- Initial dark mode script - modificado para no usar preferencias del sistema -->
   <script>
     (function() {
       // Check localStorage first
@@ -37,14 +37,16 @@
           document.documentElement.classList.add('dark');
           document.documentElement.classList.add('dark-theme');
         }
-      } else {
-        // Check system preference
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-        if (prefersDark.matches) {
-          document.documentElement.classList.add('dark');
-          document.documentElement.classList.add('dark-theme');
-        }
       }
+      // Eliminamos la detección automática por preferencias del sistema
+      // else {
+      //   // Check system preference
+      //   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+      //   if (prefersDark.matches) {
+      //     document.documentElement.classList.add('dark');
+      //     document.documentElement.classList.add('dark-theme');
+      //   }
+      // }
     })();
   </script>
 </head>
