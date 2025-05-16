@@ -2,7 +2,7 @@
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-button (click)="goBack()">
-        <ion-icon name="arrowBack" slot="icon-only"></ion-icon>
+        <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
     <div class="header-content">
@@ -17,7 +17,7 @@
     <div class="cart-icon-container">
       <img src="assets/vlc-logo.svg" alt="Logo VLC" class="cart-logo">
       <ion-button fill="clear" class="back-button" (click)="goBack()">
-        <ion-icon name="arrowBack"></ion-icon>
+        <ion-icon name="arrow-back"></ion-icon>
       </ion-button>
     </div>
     <p *ngIf="cartItems.length > 0" class="cart-info">{{ totalItems }} artículos · Total: {{ totalPrice | currency:'EUR' }}</p>

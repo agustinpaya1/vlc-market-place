@@ -49,7 +49,7 @@ export class SupabaseService {
     }
 
     try {
-      // Use localStorage instead of memory storage to persist sessions across page refreshes
+      // Restauramos la configuración original para que funcione correctamente la autenticación
       this.supabaseInstance = createClient(
         environment.supabase.url, 
         environment.supabase.key, 

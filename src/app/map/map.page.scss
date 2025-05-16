@@ -1,4 +1,9 @@
-:host {
+// Original (causa error 406)
+const { data, error } = await this.supabaseService.getClient()
+  .from('vlcoin')
+  .select('balance')
+  .eq('user_id', user.id)
+  .single();:host {
   --page-padding: 16px;
   --marker-size: 44px;
   --ion-background-color: #121212;

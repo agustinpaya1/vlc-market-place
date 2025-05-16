@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, NavigationExtras } from '@angular/router';
+import { navigateToOrderTracking } from '../navigate-helper';
 import { 
   IonContent,
   IonHeader,
@@ -358,18 +359,59 @@ export class CarritoComponent implements OnInit, OnDestroy {
       // Clear the cart after successful payment
       this.cartService.clearCart();
       
-      // Use a timer to show success message for 3 seconds before redirecting
-      console.log('Payment successful, will redirect to stores in 3 seconds');
-      
-      setTimeout(() => {
-        console.log('Redirecting to stores now...');
-        // Use the correct path according to your router configuration
-        this.router.navigateByUrl('/tabs/stores').then(() => {
-          console.log('Navigation complete');
-        }).catch(err => {
-          console.error('Navigation error:', err);
-        });
-      }, 3000); // Increased to 3 seconds for better user experience
+      try {
+        // Comprobar si tenemos un orderId para redirigir al seguimiento
+        if (data.redirectToTracking && data.orderId) {
+          console.log('Redirigiendo al seguimiento del pedido:', data.orderId);
+          
+          // Guardar el ID del pedido en sessionStorage para uso potencial de recuperación
+          sessionStorage.setItem('lastOrderId', data.orderId);
+          sessionStorage.setItem('forceOrderTracking', 'true');
+          
+          // Navegación de emergencia - forzar apertura en una nueva pestaña
+          const orderId = data.orderId;
+          
+          // Primero intentamos con Angular Router con queryParams para forzar navegación
+          const navigationExtras: NavigationExtras = {
+            queryParams: { 
+              timestamp: new Date().getTime(), // Forzar nueva navegación
+              forceLoad: true
+            }
+          };
+          
+          // Intentar con múltiples métodos de navegación
+          setTimeout(() => {
+            // 1. Intento: navegación Angular con navigationExtras
+            this.router.navigate(['/tabs/order-tracking', orderId], navigationExtras)
+              .then(success => {
+                if (!success) {
+                  // 2. Intento: usando el helper de navegación
+                  navigateToOrderTracking(orderId);
+                }
+              })
+              .catch(() => {
+                // 3. Intento: navegación directa forzada
+                const baseUrl = window.location.origin;
+                const fullUrl = `${baseUrl}/tabs/order-tracking/${orderId}?force=true&t=${new Date().getTime()}`;
+                window.location.href = fullUrl;
+              });
+          }, 500);
+        } else {
+          // Si no hay orderId, redirigir a la página de tiendas como antes
+          console.log('Payment successful, will redirect to stores');
+          
+          setTimeout(() => {
+            window.location.href = '/tabs/stores';
+          }, 2000);
+        }
+      } catch (error) {
+        console.error('Error en la redirección:', error);
+        // Plan B: redirección de emergencia si todo falla
+        alert('Pago procesado. Redirigiendo al inicio...');
+        setTimeout(() => {
+          window.location.href = '/tabs/stores';
+        }, 1000);
+      }
     }
   }
 
