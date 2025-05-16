@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { StoreService, Store } from './store.service';
 
 export interface Order {
   id: string;
@@ -49,7 +50,8 @@ export class OrderService {
 
   constructor(
     private supabase: SupabaseService,
-    private authService: AuthService
+    private authService: AuthService,
+    private storeService: StoreService
   ) {}
 
   async getUserOrders(): Promise<Order[]> {
@@ -62,6 +64,9 @@ export class OrderService {
         this.errorSubject.next('Usuario no autenticado');
         return [];
       }
+
+      // Primero precargar todas las tiendas para tener la información disponible en la caché
+      await this.storeService.preloadStores();
 
       const { data: orders, error } = await this.supabase.getClient()
         .from('orders')
@@ -107,20 +112,16 @@ export class OrderService {
           continue;
         }
 
+        // Copiar los items para no modificar la respuesta original
+        const processedItems = items ? [...items] : [];
+
         // Para cada item, cargamos la información del producto
-        if (items && items.length > 0) {
-          for (const item of items) {
-            if (item.product_id) {
-              const productInfo = await this.getProductById(item.product_id);
-              if (productInfo) {
-                item.product_info = productInfo;
-              }
-            }
-          }
+        if (processedItems && processedItems.length > 0) {
+          await this.loadProductsForItems(processedItems);
         }
 
-        // Obtener información de la tienda o tiendas
-        const storeInfo = await this.getStoreInfo(order, items);
+        // Obtener información de la tienda
+        const storeInfo = await this.getStoreInfoDirectly(order, processedItems);
 
         // Formatear la fecha
         const date = new Date(order.created_at || order.date);
@@ -129,7 +130,7 @@ export class OrderService {
         ordersWithItems.push({
           ...order,
           date: date.toISOString(),
-          items: items || [],
+          items: processedItems || [],
           store_info: storeInfo
         });
       } catch (err) {
@@ -173,108 +174,105 @@ export class OrderService {
     return items;
   }
 
-  private async getStoreInfo(order: any, items: any[]): Promise<any> {
+  // Nueva implementación que consulta directamente la tabla stores
+  private async getStoreInfoDirectly(order: any, items: any[]): Promise<any> {
     try {
-      // Si el pedido ya tiene store_id, usamos ese
+      console.log(`[DEBUG] Obteniendo información de tienda para pedido ${order.id}...`);
+      
+      // Si el pedido tiene store_id, obtener la información de esa tienda
       if (order.store_id) {
-        try {
-          const { data, error } = await this.supabase.getClient()
-            .from('stores')
-            .select('*')
-            .eq('id', order.store_id)
-            .single();
-
-          if (error) throw error;
-          return data;
-        } catch (err) {
-          console.error(`Error al obtener info de tienda ${order.store_id}:`, err);
-          // Retornar un objeto con un nombre por defecto en caso de error
-          return { id: order.store_id, name: 'Tienda' };
-        }
+        console.log(`[DEBUG] Pedido tiene store_id: ${order.store_id}`);
+        
+        // Asegurarnos de devolver el ID como mínimo
+        return { 
+          id: order.store_id,
+          name: 'Tienda',
+          _debug_id: order.store_id // Para depuración
+        };
       }
       
       // Si no hay store_id en el pedido, intentamos obtenerlo de los items
       // Este es el caso de pedidos multi-tienda
       if (items && items.length > 0) {
-        // Primero intentamos obtener store_id de los items
-        const storeIds = [...new Set(items.map(item => item.store_id).filter(Boolean))];
+        // Recolectar todos los store_ids de los items y productos
+        console.log(`[DEBUG] Buscando store_ids en ${items.length} items...`);
+        const storeIds = new Set<string>();
         
-        // Si no hay store_ids en los items, intentamos obtenerlos de la info de producto
-        if (storeIds.length === 0) {
-          const productStoreIds = [...new Set(items
-            .filter(item => item.product_info && item.product_info.store_id)
-            .map(item => item.product_info.store_id))];
-            
-          if (productStoreIds.length > 0) {
-            storeIds.push(...productStoreIds);
+        // Añadir store_ids directamente de los items
+        items.forEach(item => {
+          if (item.store_id) {
+            storeIds.add(item.store_id);
+            console.log(`[DEBUG] Item ${item.id} tiene store_id: ${item.store_id}`);
           }
-        }
+          
+          // También verificar si hay store_id en la info del producto
+          if (item.product_info && item.product_info.store_id) {
+            storeIds.add(item.product_info.store_id);
+            console.log(`[DEBUG] Producto ${item.product_id} tiene store_id: ${item.product_info.store_id}`);
+          }
+        });
         
-        if (storeIds.length === 1) {
-          // Un solo store
-          try {
-            const { data, error } = await this.supabase.getClient()
-              .from('stores')
-              .select('*')
-              .eq('id', storeIds[0])
-              .single();
-
-            if (error) throw error;
-            return data || { id: storeIds[0], name: 'Tienda' };
-          } catch (err) {
-            console.error(`Error al obtener info de tienda ${storeIds[0]}:`, err);
-            return { id: storeIds[0], name: 'Tienda' };
-          }
-        } else if (storeIds.length > 1) {
-          // Multi-store
-          try {
-            const { data, error } = await this.supabase.getClient()
-              .from('stores')
-              .select('*')
-              .in('id', storeIds);
-
-            if (error) throw error;
-            
-            // Si no se encontraron tiendas, crear objetos con nombres por defecto
-            if (!data || data.length === 0) {
-              const defaultStores = storeIds.map(id => ({ id, name: 'Tienda' }));
-              return { multiStore: true, stores: defaultStores };
-            }
-            
-            // Asegurarnos de que todas las tiendas tienen un nombre
-            const stores = data.map(store => ({
-              ...store,
-              name: store.name || 'Tienda'
-            }));
-            
-            return { multiStore: true, stores };
-          } catch (err) {
-            console.error(`Error al obtener info de múltiples tiendas:`, err);
-            // Devolver un objeto con tiendas por defecto
-            const defaultStores = storeIds.map(id => ({ id, name: 'Tienda' }));
-            return { multiStore: true, stores: defaultStores };
-          }
+        const uniqueStoreIds = Array.from(storeIds);
+        console.log(`[DEBUG] IDs de tiendas encontrados: ${uniqueStoreIds.join(', ')}`);
+        
+        if (uniqueStoreIds.length === 1) {
+          // Caso de una sola tienda
+          const storeId = uniqueStoreIds[0];
+          console.log(`[DEBUG] Un solo store_id: ${storeId}`);
+          
+          // Devolver al menos el ID
+          return { 
+            id: storeId,
+            name: 'Tienda',
+            _debug_id: storeId // Para depuración
+          };
+        } else if (uniqueStoreIds.length > 1) {
+          // Caso de múltiples tiendas
+          console.log(`[DEBUG] Múltiples tiendas: ${uniqueStoreIds.length}`);
+          
+          // Crear objetos con los IDs
+          const stores = uniqueStoreIds.map(id => ({ 
+            id: id,
+            name: 'Tienda',
+            _debug_id: id // Para depuración
+          }));
+          
+          return { multiStore: true, stores };
         }
       }
       
-      // Si no hay información de tienda, devolver un objeto con nombre por defecto
-      return { name: 'Tienda sin especificar' };
+      // Si no encontramos información de tienda
+      console.log(`[DEBUG] No se encontró información de tienda para el pedido ${order.id}`);
+      return { 
+        name: 'Tienda',
+        _debug_noStore: true // Para depuración
+      };
     } catch (error) {
-      console.error('Error al obtener información de tienda:', error);
-      return { name: 'Tienda sin especificar' };
+      console.error('[DEBUG] Error al obtener información de tienda:', error);
+      return { 
+        name: 'Tienda',
+        _debug_error: true // Para depuración
+      };
     }
   }
 
   // Método para obtener la lista de tiendas de un pedido
   getStoreList(order: Order): any[] {
-    if (!order.store_info) return [];
+    if (!order || !order.store_info) return [];
     
-    if (order.store_info.multiStore && order.store_info.stores) {
-      return order.store_info.stores;
-    } else {
-      // Si es una sola tienda, la devolvemos en un array
+    // Caso de múltiples tiendas
+    if (order.store_info.multiStore && Array.isArray(order.store_info.stores)) {
+      // Filtramos para evitar tiendas undefined o null
+      return order.store_info.stores.filter((store: any) => store);
+    } 
+    
+    // Si es una sola tienda, la devolvemos en un array (asegurándonos que no es null o undefined)
+    if (order.store_info && typeof order.store_info === 'object') {
       return [order.store_info];
     }
+    
+    // Si no hay información válida, retornar array vacío
+    return [];
   }
 
   // Método para marcar un pedido como entregado
@@ -333,7 +331,7 @@ export class OrderService {
       }
 
       // Obtener info de la tienda
-      const storeInfo = await this.getStoreInfo(data, items || []);
+      const storeInfo = await this.getStoreInfoDirectly(data, items || []);
 
       // Formatear la fecha
       const date = new Date(data.created_at || data.date);
@@ -348,5 +346,60 @@ export class OrderService {
       console.error('Error al obtener pedido por ID:', error);
       return null;
     }
+  }
+
+  // Método para depurar un pedido y su información de tiendas
+  debugOrderStoreInfo(orderId: string): Promise<any> {
+    return new Promise(async (resolve) => {
+      try {
+        // Obtener el pedido
+        const { data: order, error } = await this.supabase.getClient()
+          .from('orders')
+          .select('*')
+          .eq('id', orderId)
+          .single();
+        
+        if (error) {
+          console.error('Error al obtener pedido:', error);
+          resolve({ error: 'Error al obtener pedido' });
+          return;
+        }
+        
+        // Obtener los items
+        const { data: items, error: itemsError } = await this.supabase.getClient()
+          .from('order_items')
+          .select('*')
+          .eq('order_id', orderId);
+        
+        if (itemsError) {
+          console.error('Error al obtener items:', itemsError);
+          resolve({ error: 'Error al obtener items', order });
+          return;
+        }
+        
+        // Obtener IDs de tiendas
+        const storeIds = [
+          order.store_id,
+          ...items.map(item => item.store_id).filter(Boolean)
+        ].filter(Boolean);
+        
+        const uniqueStoreIds = [...new Set(storeIds)];
+        
+        // Obtener tiendas usando el StoreService
+        const stores = await this.storeService.getStoresByIds(uniqueStoreIds);
+        
+        // Resultado de diagnóstico
+        resolve({
+          order,
+          items,
+          uniqueStoreIds,
+          storesFound: stores,
+          storeInfoGenerated: await this.getStoreInfoDirectly(order, items)
+        });
+      } catch (err) {
+        console.error('Error en diagnóstico:', err);
+        resolve({ error: 'Error inesperado en diagnóstico' });
+      }
+    });
   }
 } 

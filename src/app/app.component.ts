@@ -4,6 +4,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { Storage } from '@ionic/storage-angular';
 import { filter } from 'rxjs/operators';
 import { AuthService } from './services/auth.service';
+import { StoreService } from './services/store.service';
 
 @Component({
   selector: 'app-root',
@@ -20,11 +21,15 @@ export class AppComponent implements OnInit {
   constructor(
     private router: Router,
     private storage: Storage,
-    private authService: AuthService
+    private authService: AuthService,
+    private storeService: StoreService
   ) {}
 
   async ngOnInit() {
     await this.storage.create();
+    
+    // Precargar datos de tiendas
+    this.loadStoreData();
     
     // await this.resetIntroFlag(); // Comentado para no borrar el flag de intro ni la sesión activa en cada inicio
     
@@ -68,6 +73,19 @@ export class AppComponent implements OnInit {
         this.initialNavigation = false;
       }
     });
+  }
+  
+  /**
+   * Cargar información de tiendas para uso en toda la aplicación
+   */
+  private async loadStoreData() {
+    try {
+      console.log('Iniciando precarga de información de tiendas...');
+      await this.storeService.preloadStores();
+      console.log('Precarga de tiendas completada');
+    } catch (error) {
+      console.error('Error al precargar datos de tiendas:', error);
+    }
   }
   
   private async checkInitialRoute() {

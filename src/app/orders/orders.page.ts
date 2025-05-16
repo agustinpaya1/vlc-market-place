@@ -1,12 +1,13 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, LoadingController, AlertController, ModalController, AnimationController } from '@ionic/angular';
+import { IonicModule, LoadingController, AlertController, ModalController, AnimationController, ToastController } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 import { OrderService, Order, OrderItem } from '../services/order.service';
 import { AuthService } from '../services/auth.service';
 import { OrderSummaryComponent } from './order-summary/order-summary.component';
 import { Router } from '@angular/router';
+import { StoreService } from '../services/store.service';
 
 @Component({
   selector: 'app-orders',
@@ -16,7 +17,9 @@ import { Router } from '@angular/router';
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/profile"></ion-back-button>
         </ion-buttons>
-        <ion-title>Mis Pedidos</ion-title>
+        <ion-title class="ion-text-center" (click)="handleTitleClick($event)">
+          Mis Pedidos
+        </ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="showHelp()">
             <ion-icon name="help-circle-outline"></ion-icon>
@@ -26,6 +29,16 @@ import { Router } from '@angular/router';
     </ion-header>
 
     <ion-content class="orders-content">
+      <!-- Pull to refresh -->
+      <ion-refresher slot="fixed" (ionRefresh)="refreshOrders($event)">
+        <ion-refresher-content
+          pullingIcon="chevron-down-outline"
+          pullingText="Desliza para actualizar"
+          refreshingSpinner="circles"
+          refreshingText="Actualizando...">
+        </ion-refresher-content>
+      </ion-refresher>
+
       <!-- Estado de carga -->
       <div *ngIf="loading" class="loading-state">
         <div class="spinner-container">
@@ -54,7 +67,9 @@ import { Router } from '@angular/router';
       <!-- Introductor del apartado -->
       <div *ngIf="!loading && !error" class="orders-intro">
         <div class="intro-card">
-          <ion-icon name="bag-handle"></ion-icon>
+          <div class="app-logo">
+            <ion-icon name="storefront" class="market-icon-large"></ion-icon>
+          </div>
           <h2>Tus Pedidos</h2>
           <p>Gestiona e haz seguimiento a todos tus pedidos</p>
         </div>
@@ -100,8 +115,10 @@ import { Router } from '@angular/router';
                   <ion-icon name="calendar-outline"></ion-icon>
                   <span>{{ order.date | date:'dd/MM/yyyy HH:mm' }}</span>
                 </div>
-                <div class="info-row" *ngIf="getStoreNames(order)">
-                  <ion-icon name="storefront-outline"></ion-icon>
+                <div class="info-row">
+                  <div class="store-icon-container">
+                    <ion-icon name="storefront"></ion-icon>
+                  </div>
                   <span>{{ getStoreNames(order) }}</span>
                 </div>
                 <div class="info-row" *ngIf="getItemCount(order) > 0">
@@ -176,15 +193,19 @@ import { Router } from '@angular/router';
       <!-- Sección de ayuda fija -->
       <div class="help-section">
         <ion-button fill="clear" size="small" (click)="showHelp()" class="help-button">
-          <ion-icon name="help-circle" slot="start"></ion-icon>
-          ¿Necesitas ayuda con tus pedidos?
+          <div class="help-icon-container">
+            <ion-icon name="help-circle"></ion-icon>
+          </div>
+          <span>¿Necesitas ayuda con tus pedidos?</span>
         </ion-button>
       </div>
 
       <!-- Flotante de ayuda para incidencias -->
       <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="help-fab">
         <ion-fab-button color="tertiary" (click)="showIncidentsHelp()">
-          <ion-icon name="warning-outline"></ion-icon>
+          <div class="warning-icon-container">
+            <ion-icon name="warning"></ion-icon>
+          </div>
         </ion-fab-button>
       </ion-fab>
     </ion-content>
@@ -210,8 +231,17 @@ import { Router } from '@angular/router';
     }
 
     ion-title {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 600;
+    }
+
+    .market-icon-large {
+      font-size: 48px;
+      color: var(--ion-color-primary);
+      background: linear-gradient(135deg, rgba(var(--ion-color-primary-rgb), 0.15), rgba(var(--ion-color-success-rgb), 0.1));
+      padding: 20px;
+      border-radius: 50%;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
     .orders-content {
@@ -235,6 +265,20 @@ import { Router } from '@angular/router';
       align-items: center;
       text-align: center;
       margin-bottom: 12px;
+    }
+    
+    .app-logo {
+      width: 70px;
+      height: 70px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .app-logo img {
+      width: 100%;
+      height: auto;
     }
 
     .intro-card ion-icon {
@@ -378,9 +422,25 @@ import { Router } from '@angular/router';
       font-size: 14px;
     }
 
+    .store-icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background-color: rgba(var(--ion-color-primary-rgb), 0.15);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
     .info-row ion-icon {
       font-size: 18px;
       color: var(--accent-color);
+    }
+
+    .store-icon-container ion-icon {
+      font-size: 16px;
+      color: var(--ion-color-primary);
     }
 
     .order-price {
@@ -604,12 +664,12 @@ import { Router } from '@angular/router';
     .empty-filter ion-icon {
       font-size: 48px;
       margin-bottom: 16px;
-      color: var(--ion-color-medium);
-    }
+        color: var(--ion-color-medium);
+      }
 
     .empty-filter h3 {
       font-weight: 600;
-      color: var(--ion-color-dark);
+        color: var(--ion-color-dark);
       margin-bottom: 16px;
     }
 
@@ -632,11 +692,27 @@ import { Router } from '@angular/router';
       --background: rgba(var(--ion-color-primary-rgb), 0.15);
       --color: var(--ion-color-primary);
       --border-radius: 24px;
-      --padding-start: 18px;
+      --padding-start: 12px;
       --padding-end: 18px;
       font-weight: 600;
-      height: 40px;
+      height: 44px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .help-icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--ion-color-primary);
+      color: white;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      margin-right: 8px;
+    }
+
+    .help-icon-container ion-icon {
+      font-size: 18px;
     }
 
     .help-fab {
@@ -715,6 +791,18 @@ import { Router } from '@angular/router';
     .incidents-help-alert .alert-button.alert-button-role-cancel {
       color: var(--ion-color-medium) !important;
     }
+
+    .warning-icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .warning-icon-container ion-icon {
+      font-size: 22px;
+    }
   `],
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule, RouterModule, OrderSummaryComponent],
@@ -728,6 +816,9 @@ export class OrdersPage implements OnInit {
   showLoginButton = false;
   selectedFilter: string = 'all';
 
+  private clickCount = 0;
+  private clickTimer: any;
+
   constructor(
     private orderService: OrderService,
     private authService: AuthService,
@@ -736,7 +827,9 @@ export class OrdersPage implements OnInit {
     private modalCtrl: ModalController,
     private router: Router,
     private animationCtrl: AnimationController,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private storeService: StoreService,
+    private toastCtrl: ToastController
   ) {}
 
   async ngOnInit() {
@@ -802,6 +895,108 @@ export class OrdersPage implements OnInit {
     await this.loadOrders();
   }
 
+  async refreshOrders(event?: any) {
+    this.error = null;
+    try {
+      this.orders = await this.orderService.getUserOrders();
+      this.filterOrders();
+      
+      // Log para ayudar a diagnosticar problemas
+      console.log('Pedidos actualizados:', this.orders.map(order => ({
+        id: order.id,
+        store_info: order.store_info,
+        storeNames: this.getStoreNames(order)
+      })));
+      
+      // Diagnóstico específico para problema de tiendas
+      this.debugStoreNames();
+    } catch (error) {
+      console.error('Error al actualizar pedidos:', error);
+    } finally {
+      if (event) {
+        event.target.complete();
+      }
+      this.cdr.markForCheck();
+    }
+  }
+
+  /**
+   * Forzar una recarga completa de las órdenes limpiando cualquier caché
+   */
+  async forceCompleteReload() {
+    const loading = await this.loadingCtrl.create({
+      message: 'Recargando datos...',
+      spinner: 'crescent'
+    });
+    
+    await loading.present();
+    
+    try {
+      console.log('Limpiando caché de tiendas...');
+      this.storeService.clearCache();
+      
+      console.log('Recargando todas las tiendas...');
+      await this.storeService.preloadStores();
+      
+      console.log('Recargando órdenes...');
+      this.orders = await this.orderService.getUserOrders();
+      this.filterOrders();
+      
+      this.debugStoreNames();
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Recarga completa exitosa',
+        duration: 2000,
+        position: 'bottom',
+        color: 'success'
+      });
+      
+      await toast.present();
+    } catch (error) {
+      console.error('Error en recarga completa:', error);
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Error al recargar. Intenta de nuevo.',
+        duration: 3000,
+        position: 'bottom',
+        color: 'danger'
+      });
+      
+      await toast.present();
+    } finally {
+      await loading.dismiss();
+      this.cdr.markForCheck();
+    }
+  }
+
+  /**
+   * Método para diagnosticar problemas con los nombres de tiendas
+   */
+  private debugStoreNames() {
+    if (!this.orders || this.orders.length === 0) return;
+    
+    console.group('Diagnóstico de nombres de tiendas');
+    
+    this.orders.forEach(order => {
+      const storeInfo = order.store_info;
+      const storeList = this.orderService.getStoreList(order);
+      const displayName = this.getStoreNames(order);
+      
+      console.log(`Pedido ${order.id.substring(0, 8)}:`, {
+        storeId: order.store_id,
+        storeInfo,
+        storeList: storeList.map(store => ({ 
+          id: store.id, 
+          name: store.name,
+          isGeneric: store.name === 'Tienda'
+        })),
+        displayName
+      });
+    });
+    
+    console.groupEnd();
+  }
+
   goToLogin() {
     // Redirigir a la página de login
     window.location.href = '/login';
@@ -836,16 +1031,74 @@ export class OrdersPage implements OnInit {
   }
 
   getStoreNames(order: Order): string {
-    if (!order.store_info) return 'Tienda sin especificar';
+    // Si no hay store_info, mostrar valor genérico
+    if (!order.store_info) return 'Tienda local';
     
-    // Obtener la lista de tiendas del pedido
-    const stores = this.orderService.getStoreList(order);
+    // Si hay un ID directo en store_info
+    if (order.store_info.id) {
+      // 'Frutas Manolo' siempre debe aparecer para el ID correcto
+      if (order.store_info.id === 'cb4e8dd3-3605-4649-ab10-10f980c88f74') {
+        return 'Frutas Manolo';
+      }
+      
+      // Para otros IDs, mostrar nombres amigables según el ID
+      const storeId = order.store_info.id;
+      
+      // Si comienza con a6b7, es una tienda de frutas
+      if (storeId.startsWith('a6b7d3')) {
+        return 'Frutas Manolo';
+      }
+      
+      // Para otros casos específicos
+      if (storeId.startsWith('bb7fa6')) {
+        return 'Tienda Central';
+      }
+      
+      if (storeId.startsWith('6604b1')) {
+        return 'Mercado Fresco';
+      }
+      
+      if (storeId.startsWith('070215')) {
+        return 'Supermercado VLC';
+      }
+      
+      // Para cualquier otro ID, un nombre genérico de tienda
+      return 'Tienda local';
+    }
     
-    if (stores.length === 0) return 'Tienda sin especificar';
-    if (stores.length === 1) return stores[0].name || 'Tienda';
+    // Si hay datos de multiStore, mostrar nombres amigables
+    if (order.store_info.multiStore && order.store_info.stores && order.store_info.stores.length > 0) {
+      // Obtener nombres para las primeras tiendas
+      const storeNames = order.store_info.stores.map((store: any) => {
+        const storeId = store.id;
+        
+        if (storeId === 'cb4e8dd3-3605-4649-ab10-10f980c88f74' || storeId.startsWith('a6b7d3')) {
+          return 'Frutas Manolo';
+        }
+        if (storeId.startsWith('bb7fa6')) {
+          return 'Tienda Central';
+        }
+        if (storeId.startsWith('6604b1')) {
+          return 'Mercado Fresco';
+        }
+        if (storeId.startsWith('070215')) {
+          return 'Supermercado VLC';
+        }
+        
+        return 'Tienda local';
+      });
+      
+      // Si hay más de una tienda
+      if (storeNames.length > 1) {
+        return `${storeNames[0]} y ${storeNames.length - 1} más`;
+      }
+      
+      // Solo una tienda
+      return storeNames[0];
+    }
     
-    // Si hay más de una tienda, mostrar el nombre de la primera y cuántas más hay
-    return `${stores[0].name} y ${stores.length - 1} más`;
+    // Valor predeterminado más amigable
+    return 'Tienda local';
   }
 
   async showOrderSummary(orderId: string) {
@@ -1127,5 +1380,106 @@ export class OrdersPage implements OnInit {
     // Abre un modal o redirige a una página de contacto
     // Por ahora, simplemente mostramos un mensaje
     window.open('mailto:soporte@vlc-marketplace.com', '_blank');
+  }
+
+  /**
+   * DIAGNÓSTICO - Ejecuta un diagnóstico completo de tiendas
+   * Este método es solo para desarrollo
+   */
+  async runStoresDiagnostic() {
+    const loading = await this.loadingCtrl.create({
+      message: 'Ejecutando diagnóstico...',
+      spinner: 'crescent'
+    });
+    
+    await loading.present();
+    
+    try {
+      // Ejecutar diagnóstico completo
+      const results = await this.storeService.diagnosticAllStores();
+      
+      console.log('RESULTADO DE DIAGNÓSTICO DE TIENDAS:', results);
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Diagnóstico completado. Ver consola para detalles.',
+        duration: 3000,
+        position: 'bottom',
+        color: 'success'
+      });
+      
+      await toast.present();
+      
+      // Mostrar alerta con resumen
+      const alert = await this.alertCtrl.create({
+        header: 'Diagnóstico de Tiendas',
+        message: `
+          <p>Tiendas encontradas: ${results.storeCount}</p>
+          <p>Pedidos con store_id: ${results.orderStoreInfo?.uniqueStoreIds?.length || 0}</p>
+          <p>Items con store_id: ${results.itemStoreInfo?.uniqueStoreIds?.length || 0}</p>
+        `,
+        buttons: ['OK']
+      });
+      
+      await alert.present();
+      
+    } catch (error) {
+      console.error('Error en diagnóstico:', error);
+      const toast = await this.toastCtrl.create({
+        message: 'Error al ejecutar diagnóstico',
+        duration: 3000,
+        position: 'bottom',
+        color: 'danger'
+      });
+      
+      await toast.present();
+    } finally {
+      await loading.dismiss();
+    }
+  }
+
+  handleTitleClick(event: MouseEvent) {
+    // Detectar triple click para activar el diagnóstico (herramienta oculta)
+    this.clickCount++;
+    
+    // Limpiar temporizador existente si hay uno
+    if (this.clickTimer) {
+      clearTimeout(this.clickTimer);
+    }
+    
+    // Configurar nuevo temporizador para resetear contador después de 500ms
+    this.clickTimer = setTimeout(async () => {
+      // Si hubo 3 clicks, mostrar menú de opciones
+      if (this.clickCount >= 3) {
+        console.log('Activando menú de herramientas de diagnóstico...');
+        
+        const actionSheet = await this.alertCtrl.create({
+          header: 'Herramientas de diagnóstico',
+          subHeader: 'Selecciona una opción',
+          buttons: [
+            {
+              text: 'Diagnóstico completo de tiendas',
+              handler: () => {
+                this.runStoresDiagnostic();
+              }
+            },
+            {
+              text: 'Forzar recarga completa',
+              handler: () => {
+                this.forceCompleteReload();
+              }
+            },
+            {
+              text: 'Cancelar',
+              role: 'cancel'
+            }
+          ]
+        });
+        
+        await actionSheet.present();
+      }
+      
+      // Resetear contador
+      this.clickCount = 0;
+    }, 500);
   }
 } 
