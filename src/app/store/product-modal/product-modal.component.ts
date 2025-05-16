@@ -82,9 +82,6 @@ export class ProductModalComponent implements OnInit {
         imageUrl: this.product.imageUrl
       });
       
-      // Mostrar notificación (opcional)
-      this.notificationService.showSuccess('Producto añadido al carrito');
-      
       // Cerrar el modal y pasar datos
       this.modalCtrl.dismiss({
         added: true,

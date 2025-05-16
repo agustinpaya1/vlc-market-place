@@ -1074,22 +1074,8 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
         imageUrl: product.imageUrl || product.image_url
       });
       
-      // Mostrar notificación
-      const toast = await this.toastController.create({
-        message: `${product.name} añadido al carrito`,
-        duration: 2000,
-        position: 'bottom',
-        color: 'success',
-        buttons: [
-          {
-            text: 'Ver carrito',
-            handler: () => {
-              this.goToCart();
-            }
-          }
-        ]
-      });
-      await toast.present();
+      // Eliminado el toast aquí para evitar notificación duplicada y mostrarla solo si el usuario está logueado
+      // El CartService ya maneja la notificación correctamente
     } catch (error) {
       console.error('Error al añadir producto al carrito:', error);
     }

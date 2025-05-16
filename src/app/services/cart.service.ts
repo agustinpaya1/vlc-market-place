@@ -49,7 +49,8 @@ export class CartService {
   }
 
   async addToCart(item: CartItem): Promise<boolean> {
-    if (!this.isAuthenticated) {
+    const user = await this.authService.getCurrentUser();
+    if (!user) {
       await this.notificationService.show({
         message: 'Inicia sesión o regístrate para añadir productos al carrito',
         type: 'warning',
@@ -79,13 +80,17 @@ export class CartService {
   }
 
   async removeFromCart(productId: string) {
+    const user = await this.authService.getCurrentUser();
     const currentItems = this.cartItems.value;
     const updatedItems = currentItems.filter(item => item.id !== productId);
     this.cartItems.next(updatedItems);
-    await this.notificationService.showInfo('Producto eliminado del carrito');
+    if (user) {
+      await this.notificationService.showInfo('Producto eliminado del carrito');
+    }
   }
 
   async updateQuantity(productId: string, quantity: number) {
+    const user = await this.authService.getCurrentUser();
     const currentItems = this.cartItems.value;
     const item = currentItems.find(item => item.id === productId);
     
@@ -95,7 +100,9 @@ export class CartService {
       } else {
         item.quantity = quantity;
         this.cartItems.next([...currentItems]);
-        await this.notificationService.showSuccess(`Cantidad actualizada: ${item.name} (${quantity})`);
+        if (user) {
+          await this.notificationService.showSuccess(`Cantidad actualizada: ${item.name} (${quantity})`);
+        }
       }
     }
   }
