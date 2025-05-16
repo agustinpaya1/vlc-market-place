@@ -10,7 +10,10 @@
     </div>
     <div class="header-actions">
       <ion-button fill="clear" class="wallet-button" (click)="showVLCoinsInfo()">
-        <img src="assets/icons/vl-coin.svg" alt="Monedas VL" class="vl-coin-icon">
+        <div class="vlcoin-balance-display">
+          <img src="assets/icons/vlcoin.png" alt="Monedas VL" class="vl-coin-icon">
+          <span class="vlcoin-balance">{{ vlcoinBalance }}</span>
+        </div>
       </ion-button>
       <ion-button *ngIf="isAuthenticated" fill="clear" class="notification-button" (click)="openNotificationPopover($event)">
         <ion-icon name="notifications-outline"></ion-icon>
@@ -44,7 +47,7 @@
       mode="ios">
       <div class="segment-button-content">
         <div class="category-icon" [class.active]="selectedCategory === category">
-          <img [src]="getCategoryImage(category)" [alt]="category" class="category-img" loading="lazy">
+          <img [src]="getCategoryImage(category)" [alt]="category" [title]="category" class="category-img" loading="lazy">
         </div>
         <ion-label class="category-name">{{ category }}</ion-label>
       </div>
@@ -79,7 +82,7 @@
       <ion-row>
         <ion-col size="12" size-md="6" size-lg="4" *ngFor="let store of filteredStores">
           <ion-card class="store-card" (click)="viewStore(store.id)">
-            <img [src]="store.imageUrl" [alt]="store.name" class="store-image" (error)="handleImageError($event)" loading="lazy" width="100%" height="180px">
+            <img [src]="store.imageUrl" [alt]="store.name" [title]="store.name" class="store-image" (error)="handleImageError($event)" loading="lazy" width="100%" height="180px">
             <ion-card-header>
               <ion-card-subtitle>
                 <ion-chip *ngFor="let category of store.categories" class="store-category-chip">
@@ -135,12 +138,14 @@
               <img *ngIf="n.storeId && getStoreById(n.storeId)?.imageUrl && n.type !== 'recordatorio'" 
                    [src]="getStoreById(n.storeId)?.imageUrl" 
                    [alt]="getStoreById(n.storeId)?.name"
+                   [title]="getStoreById(n.storeId)?.name"
                    (error)="handleNotificationImageError($event, n.type)" />
               
               <!-- Para retos y recompensas con imagen -->
               <img *ngIf="(n.type === 'reto' || n.type === 'recompensa') && n.image" 
                    [src]="n.image" 
                    [alt]="n.title" 
+                   [title]="n.title"
                    class="notification-type-image"
                    (error)="handleNotificationImageError($event, n.type)" />
               
@@ -177,11 +182,11 @@
               <div class="notification-message">{{ n.message }}</div>
               <!-- Mostrar coins para retos y recompensas -->
               <div *ngIf="n.type === 'reto' || n.type === 'recompensa'" class="notification-coins">
-                <div class="v-coin-circle small">V</div>
+                <img src="assets/icons/vlcoin.png" alt="Monedas VL" class="vl-coin-icon small">
                 <span>{{ n.type === 'reto' ? n.challenge.coins : n.reward.coins }}</span>
               </div>
             </div>
-            <button class="notification-delete" (click)="removeNotification(n.id)">
+            <button class="notification-delete" (click)="removeNotification(n.id)" title="Eliminar notificación">
               <ion-icon name="trash"></ion-icon>
             </button>
           </div>
