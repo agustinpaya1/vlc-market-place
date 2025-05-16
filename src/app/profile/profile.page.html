@@ -63,18 +63,20 @@
     <ion-list lines="full" class="user-info-list hardware-accelerated">
       <ion-item>
         <ion-icon name="call-outline" slot="start"></ion-icon>
-        <ion-label>
-          <p>Teléfono</p>
-          <h3>{{ user.phone }}</h3>
-        </ion-label>
+        <ion-label position="stacked">Teléfono</ion-label>
+        <ion-input [(ngModel)]="user.phone" name="phone" type="tel" placeholder="Teléfono"></ion-input>
+        <ion-button size="small" fill="solid" color="success" slot="end" (click)="saveProfileField('phone')" style="--padding-start: 8px; --padding-end: 8px; height: 28px; --border-radius: 4px; min-width: 32px;">
+          <ion-icon name="save-outline" style="margin: 0;"></ion-icon>
+        </ion-button>
       </ion-item>
 
       <ion-item>
         <ion-icon name="location-outline" slot="start"></ion-icon>
-        <ion-label>
-          <p>Dirección</p>
-          <h3>{{ user.address }}</h3>
-        </ion-label>
+        <ion-label position="stacked">Dirección</ion-label>
+        <ion-input [(ngModel)]="user.address" name="address" type="text" placeholder="Dirección"></ion-input>
+        <ion-button size="small" fill="solid" color="success" slot="end" (click)="saveProfileField('address')" style="--padding-start: 8px; --padding-end: 8px; height: 28px; --border-radius: 4px; min-width: 32px;">
+          <ion-icon name="save-outline" style="margin: 0;"></ion-icon>
+        </ion-button>
       </ion-item>
     </ion-list>
 

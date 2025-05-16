@@ -319,7 +319,10 @@ export class StorePage implements OnInit {
   }
 
   // Methods for the overlaid buttons
-  async toggleFavorite(product: Product) {
+  async toggleFavorite(product: Product, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
     const user = await this.authService.getCurrentUser();
     if (!user) {
       this.toastController.create({

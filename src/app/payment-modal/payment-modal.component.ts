@@ -71,12 +71,6 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   vlcoinsToUse: number = 0;
   vlcoinBalance: number = 0;
 
-  // Siempre modo desarrollo para simular pagos
-  private isDevelopment = true;
-
-  private trackerInterval: any;
-  private trackerTimeouts: any[] = [];
-
   constructor(
     private modalCtrl: ModalController,
     private paymentService: PaymentService,
@@ -168,12 +162,6 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.trackerInterval) {
-      clearInterval(this.trackerInterval);
-    }
-    // Limpiar timeouts
-    this.trackerTimeouts.forEach(t => clearTimeout(t));
-    this.trackerTimeouts = [];
     this.paymentService.destroyCardElement();
   }
 
@@ -355,56 +343,11 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   initOrderTracker() {
-    // Reiniciar estados
-    this.deliveryProgress = 0;
-    this.deliverySteps.forEach(step => step.completed = false);
-    this.orderStatus = 'pending';
-    this.currentLocation = 'Tienda';
-    this.showOrderTracker = true;
-
-    // Simulación de los 4 pasos en 1 minuto
-    // Paso 0: recibido (0s)
-    // Paso 1: preparación (10s)
-    // Paso 2: en camino (25s)
-    // Paso 3: entregado (25s)
-    const steps = [0, 10000, 25000, 25000]; // Duración de cada paso en ms
-    let accumulated = 0;
-    const totalSteps = this.deliverySteps.length;
-
-    // Paso 0: recibido (inmediato)
+    // Actualizar el estado del primer paso (pedido recibido)
     this.deliverySteps[0].completed = true;
     this.deliveryProgress = 25;
-    this.orderStatus = 'pending';
-    this.currentLocation = 'Tienda';
-
-    // Paso 1: preparación (a los 10s)
-    accumulated += steps[1];
-    this.trackerTimeouts.push(setTimeout(() => {
-      this.deliverySteps[1].completed = true;
-      this.deliveryProgress = 50;
-      this.orderStatus = 'processing';
-      this.currentLocation = 'Preparación';
-    }, accumulated));
-
-    // Paso 2: en camino (a los 35s)
-    accumulated += steps[2];
-    this.trackerTimeouts.push(setTimeout(() => {
-      this.deliverySteps[2].completed = true;
-      this.deliveryProgress = 75;
-      this.orderStatus = 'shipped';
-      this.currentLocation = 'En camino';
-    }, accumulated));
-
-    // Paso 3: entregado (a los 60s)
-    accumulated += steps[3];
-    this.trackerTimeouts.push(setTimeout(() => {
-      this.deliverySteps[3].completed = true;
-      this.deliveryProgress = 100;
-      this.orderStatus = 'delivered';
-      this.currentLocation = 'Entregado';
-    }, accumulated));
-
-    // Establecer tiempo estimado de entrega a 1 minuto desde ahora
+    
+    // Simular una estimación de entrega basada en la hora actual
     const now = new Date();
     this.estimatedDeliveryTime = new Date(now.getTime() + 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
