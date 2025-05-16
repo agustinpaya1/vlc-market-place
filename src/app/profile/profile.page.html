@@ -1,6 +1,6 @@
-<ion-content class="ion-padding">
+<ion-content>
   <!-- Contenido cuando el usuario está autenticado -->
-  <div *ngIf="isAuthenticated" class="hardware-accelerated">
+  <div *ngIf="isAuthenticated" class="ion-padding hardware-accelerated">
     <div class="user-profile-header">
       <div class="user-avatar-container hardware-accelerated">
         <!-- User avatar with comprehensive error handling -->
@@ -95,7 +95,9 @@
   <!-- Contenido cuando el usuario NO está autenticado -->
   <div *ngIf="!isAuthenticated" class="not-authenticated-container hardware-accelerated">
     <div class="app-logo">
-      <img [src]="logoUrl" alt="MercAU" class="transparent-logo hardware-accelerated" (error)="onImageError($event)" loading="eager" width="150" height="150">
+      <div class="logo-container">
+        <img [src]="logoUrl" alt="MercAU" class="transparent-logo" (error)="onImageError($event)" loading="eager">
+      </div>
       <h1>MercAU</h1>
     </div>
     

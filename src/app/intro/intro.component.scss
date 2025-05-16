@@ -428,14 +428,29 @@ ion-content {
   justify-content: center;
   margin-bottom: 20px;
   
-  .app-logo {
+  .app-logo-container {
+    background-color: white;
+    border-radius: 50%;
+    padding: 0;
     width: 180px;
     height: 180px;
-    object-fit: contain;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     margin-bottom: 25px;
+    overflow: hidden;
+    position: relative;
     animation: logoEntrance 1.5s ease-out forwards, logoFloat 3s infinite ease-in-out 1.5s;
     opacity: 0;
     transform: scale(0.5);
+  }
+  
+  .app-logo {
+    width: 160px;
+    height: 160px;
+    object-fit: contain;
+    background: transparent;
   }
   
   .app-name {
@@ -583,10 +598,15 @@ ion-content {
   .logo-intro {
     margin-bottom: 20px;
     
-    .app-logo {
+    .app-logo-container {
       width: 130px;
       height: 130px;
       margin-bottom: 15px;
+    }
+    
+    .app-logo {
+      width: 110px;
+      height: 110px;
     }
     
     .app-name {
@@ -597,9 +617,14 @@ ion-content {
 
 @media (max-width: 360px) {
   .logo-intro {
-    .app-logo {
+    .app-logo-container {
       width: 120px;
       height: 120px;
+    }
+    
+    .app-logo {
+      width: 100px;
+      height: 100px;
     }
     
     .app-name {
