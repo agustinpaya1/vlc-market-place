@@ -115,16 +115,7 @@ export class MainPageComponent implements OnInit {
     private cartService: CartService,
     private router: Router
   ) {
-    addIcons({
-      cart: cartOutline,
-      ellipsisVertical: ellipsisVerticalOutline,
-      remove: removeOutline,
-      add: addOutline,
-      trash: trashOutline,
-      logIn: logInOutline,
-      personAdd: personAddOutline,
-      logOut: logOutOutline
-    });
+    addIcons({cart,ellipsisVertical,remove,add,trash,logIn,personAdd,logOut,cart:cartOutline,ellipsisVertical:ellipsisVerticalOutline,remove:removeOutline,add:addOutline,trash:trashOutline,logIn:logInOutline,personAdd:personAddOutline,logOut:logOutOutline});
   }
 
   ngOnInit() {

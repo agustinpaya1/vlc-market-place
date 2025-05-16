@@ -32,10 +32,10 @@ export class NotificationService {
   async show(options: NotificationOptions) {
     const toast = await this.toastController.create({
       message: options.message,
-      duration: options.duration || 2000,
-      position: 'bottom',
-      color: this.getColorByType(options.type),
-      cssClass: 'notification-toast',
+      duration: options.duration || 1200,
+      position: 'top',
+      color: 'success',
+      cssClass: 'subtle-toast',
       buttons: options.action ? [
         {
           text: options.action.text,
@@ -50,10 +50,10 @@ export class NotificationService {
   async showSuccess(message: string) {
     const toast = await this.toastController.create({
       message,
-      duration: 2000,
-      position: 'bottom',
+      duration: 1200,
+      position: 'top',
       color: 'success',
-      cssClass: 'notification-toast'
+      cssClass: 'subtle-toast'
     });
     await toast.present();
   }
@@ -61,10 +61,10 @@ export class NotificationService {
   async showError(message: string) {
     const toast = await this.toastController.create({
       message,
-      duration: 3000,
-      position: 'bottom',
-      color: 'danger',
-      cssClass: 'notification-toast'
+      duration: 1200,
+      position: 'top',
+      color: 'success',
+      cssClass: 'subtle-toast'
     });
     await toast.present();
   }
@@ -72,10 +72,10 @@ export class NotificationService {
   async showWarning(message: string) {
     const toast = await this.toastController.create({
       message,
-      duration: 3000,
-      position: 'bottom',
-      color: 'warning',
-      cssClass: 'notification-toast'
+      duration: 1200,
+      position: 'top',
+      color: 'success',
+      cssClass: 'subtle-toast'
     });
     await toast.present();
   }
@@ -83,10 +83,10 @@ export class NotificationService {
   async showInfo(message: string) {
     const toast = await this.toastController.create({
       message,
-      duration: 2000,
-      position: 'bottom',
-      color: 'primary',
-      cssClass: 'notification-toast'
+      duration: 1200,
+      position: 'top',
+      color: 'success',
+      cssClass: 'subtle-toast'
     });
     await toast.present();
   }

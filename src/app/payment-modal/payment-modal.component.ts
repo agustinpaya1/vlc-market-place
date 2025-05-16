@@ -6,6 +6,8 @@ import { PaymentService } from '../services/payment.service';
 import { CartItem } from '../services/cart.service';
 import { addIcons } from 'ionicons';
 import { checkmarkCircle, cardOutline, close } from 'ionicons/icons';
+import { SupabaseService } from '../services/supabase.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-payment-modal',
@@ -24,14 +26,31 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   paymentId = '';
   isCardComplete = false;
 
+  vlcoinsToUse: number = 0;
+  vlcoinBalance: number = 0;
+
   constructor(
     private modalCtrl: ModalController,
-    private paymentService: PaymentService
+    private paymentService: PaymentService,
+    private supabaseService: SupabaseService,
+    private authService: AuthService
   ) {
     addIcons({ checkmarkCircle, cardOutline, close });
   }
 
-  ngOnInit() {}
+  async ngOnInit() {
+    const user = await this.authService.getCurrentUser();
+    if (user && user.id) {
+      // Consulta el balance real de la tabla vlcoin
+      const { data, error } = await this.supabaseService.getClient()
+        .from('vlcoin')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+      this.vlcoinBalance = data?.balance || 0;
+      this.vlcoinsToUse = 0;
+    }
+  }
 
   async ngAfterViewInit() {
     try {
@@ -65,6 +84,10 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
       this.errorMessage = 'Por favor, introduce los datos de la tarjeta completos.';
       return;
     }
+    if (this.vlcoinsToUse < 0 || this.vlcoinsToUse > this.vlcoinBalance) {
+      this.errorMessage = 'Cantidad de VLCoins a usar no válida.';
+      return;
+    }
     
     this.isLoading = true;
     this.errorMessage = '';
@@ -81,7 +104,45 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
       this.paymentId = result.paymentId;
       
       if (this.paymentSuccess) {
-        // Wait 2 seconds to show success message before closing
+        // 1. Obtener el usuario actual
+        const user = await this.authService.getCurrentUser();
+        if (!user || !user.id) {
+          this.errorMessage = 'No se pudo obtener el usuario autenticado.';
+          return;
+        }
+        // 1.1. Asegurar que existe fila en vlcoin
+        const { data: existing, error: findError } = await this.supabaseService.getClient()
+          .from('vlcoin')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+        if (!existing) {
+          await this.supabaseService.getClient()
+            .from('vlcoin')
+            .insert({ user_id: user.id, balance: 0 });
+        }
+        // 2. Guardar el pedido en Supabase
+        const { error } = await this.supabaseService.getClient()
+          .from('orders')
+          .insert({
+            user_id: user.id,
+            total_price: this.totalAmount,
+            status: 'pending',
+            created_at: new Date().toISOString(),
+            vlcoin_used: this.vlcoinsToUse
+          });
+        if (error) {
+          this.errorMessage = 'Error guardando el pedido: ' + error.message;
+          return;
+        }
+        // 3. Si se usaron VLCoins, actualiza el balance
+        if (this.vlcoinsToUse > 0) {
+          await this.supabaseService.getClient()
+            .from('vlcoin')
+            .update({ balance: this.vlcoinBalance - this.vlcoinsToUse })
+            .eq('user_id', user.id);
+        }
+        // 4. Esperar y cerrar modal
         setTimeout(() => {
           this.modalCtrl.dismiss({ success: true, paymentId: this.paymentId }, 'success');
         }, 2000);

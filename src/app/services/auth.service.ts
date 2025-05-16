@@ -35,11 +35,13 @@ export class AuthService {
 
   private async initializeUser() {
     try {
+      console.log('AuthService - Inicializando usuario...');
+      
       // Check if we already have a valid session
       const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
       
       if (session?.user) {
-        console.log('AuthService - Sesión existente recuperada');
+        console.log('AuthService - Sesión existente recuperada. User ID:', session.user.id);
         
         try {
           // Fetch user profile data
@@ -53,7 +55,7 @@ export class AuthService {
             throw error;
           }
           
-          this.user.next({
+          const userObj = {
             id: session.user.id,
             email: session.user.email || '',
             fullName: userData?.['full_name'] || session.user.user_metadata?.['full_name'] || '',
@@ -62,17 +64,20 @@ export class AuthService {
             vlcoinBalance: userData?.['vlcoin_balance'] || 0,
             phone: userData?.['phone'],
             address: userData?.['address']
-          });
+          };
           
-          console.log('AuthService - Usuario inicializado desde sesión existente');
+          this.user.next(userObj);
+          console.log('AuthService - Usuario inicializado desde sesión existente:', userObj);
         } catch (profileError) {
           console.error('AuthService - Error al cargar perfil de usuario:', profileError);
           // If we can't load the profile, still set the basic user data
-          this.user.next({
+          const userObj = {
             id: session.user.id,
             email: session.user.email || '',
             fullName: session.user.user_metadata?.['full_name'] || ''
-          });
+          };
+          this.user.next(userObj);
+          console.log('AuthService - Usuario inicializado con datos básicos:', userObj);
         }
       } else {
         console.log('AuthService - No hay sesión activa');
@@ -242,39 +247,39 @@ export class AuthService {
   }
 
   async logout(): Promise<void> {
-    await this.supabaseService.getClient().auth.signOut();
-    this.user.next(null);
-    await this.notificationService.showSuccess('Sesión cerrada correctamente');
+    try {
+      console.log('AuthService - Cerrando sesión...');
+      
+      // NO eliminamos activeSession para evitar que se muestre la intro después de cerrar sesión
+      // sessionStorage.removeItem('activeSession');
+      
+      // Sign out from Supabase
+      await this.supabaseService.getClient().auth.signOut();
+      
+      // Update our local state
+      this.user.next(null);
+      
+      console.log('AuthService - Sesión cerrada correctamente');
+      await this.notificationService.showSuccess('Sesión cerrada correctamente');
+    } catch (error) {
+      console.error('AuthService - Error al cerrar sesión:', error);
+      await this.notificationService.showError('Error al cerrar sesión');
+    }
   }
 
   async loginWithGoogle(): Promise<boolean> {
     try {
-      console.log('AuthService - Iniciando login con Google');
-      
-      // Obtener la URL completa para la redirección
-      const redirectTo = `${window.location.origin}/tabs/profile`;
-      console.log('AuthService - URL de redirección:', redirectTo);
-      
       const { data, error } = await this.supabaseService.getClient().auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectTo,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
+          redirectTo: window.location.origin
         }
       });
 
-      if (error) {
-        console.error('AuthService - Error en login con Google:', error);
-        throw error;
-      }
-      
-      console.log('AuthService - Login con Google iniciado correctamente');
+      if (error) throw error;
       return true;
     } catch (error) {
-      console.error('AuthService - Error en login con Google:', error);
+      console.error('Google login error:', error);
       return false;
     }
   }
@@ -393,6 +398,69 @@ export class AuthService {
     } catch (error) {
       console.error('Error actualizando perfil:', error);
       throw error;
+    }
+  }
+
+  async resetPassword(newPassword: string): Promise<boolean> {
+    try {
+      console.log('AuthService: Iniciando proceso de actualización de contraseña');
+      
+      // Verificar si hay una sesión activa
+      const { data: sessionData } = await this.supabaseService.getClient().auth.getSession();
+      console.log('AuthService: Estado de sesión actual:', sessionData.session ? 'Activa' : 'No hay sesión');
+      
+      // Si no hay sesión, intentar obtener parámetros de la URL
+      if (!sessionData.session) {
+        console.log('AuthService: No hay sesión activa, verificando URL');
+        
+        // Intentar extraer el token de la URL
+        let accessToken = null;
+        const url = window.location.href;
+        
+        // Verificar si hay un token en el hash
+        if (window.location.hash && window.location.hash.length > 1) {
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          accessToken = hashParams.get('access_token');
+        }
+        
+        // Verificar si hay un token en los parámetros de consulta
+        if (!accessToken && window.location.search) {
+          const queryParams = new URLSearchParams(window.location.search);
+          accessToken = queryParams.get('token') || queryParams.get('access_token');
+        }
+        
+        if (accessToken) {
+          console.log('AuthService: Token encontrado en URL, intentando establecer sesión');
+          
+          // Intenta establecer una sesión utilizando el token
+          const { error: sessionError } = await this.supabaseService.getClient().auth.setSession({
+            access_token: accessToken,
+            refresh_token: '' // No tenemos refresh token
+          });
+          
+          if (sessionError) {
+            console.error('AuthService: Error al establecer sesión con token:', sessionError);
+          } else {
+            console.log('AuthService: Sesión establecida correctamente con el token de la URL');
+          }
+        }
+      }
+      
+      // Intentar actualizar la contraseña
+      const { error } = await this.supabaseService.getClient().auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        console.error('AuthService: Error al actualizar contraseña:', error);
+        throw error;
+      }
+      
+      console.log('AuthService: Contraseña actualizada exitosamente');
+      return true;
+    } catch (error) {
+      console.error('AuthService: Error en resetPassword:', error);
+      return false;
     }
   }
 }
