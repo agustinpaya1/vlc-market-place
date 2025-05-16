@@ -21,20 +21,6 @@ export class SettingsService {
   });
 
   constructor(private notificationService: NotificationService) {
-    // Initialize with system preference
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-    const initialSettings = this.settings.value;
-    initialSettings.darkMode = prefersDark.matches;
-    this.settings.next(initialSettings);
-    
-    // Listen for system preference changes
-    prefersDark.addEventListener('change', (mediaQuery) => {
-      const currentSettings = this.settings.value;
-      currentSettings.darkMode = mediaQuery.matches;
-      this.settings.next(currentSettings);
-      this.applySettings(currentSettings);
-    });
-
     this.loadSettings();
   }
 
