@@ -25,6 +25,18 @@ import {
 import { SupabaseService } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
 
+// Interfaz para el objeto de orden
+interface OrderObject {
+  user_id: string;
+  total_price: number;
+  status: string;
+  vlcoin_used: number;
+  store_id?: string;
+  delivery_latitude?: number;
+  delivery_longitude?: number;
+  [key: string]: any; // Permitir propiedades adicionales
+}
+
 @Component({
   selector: 'app-payment-modal',
   templateUrl: './payment-modal.component.html',
@@ -59,6 +71,9 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   vlcoinsToUse: number = 0;
   vlcoinBalance: number = 0;
 
+  // Siempre modo desarrollo para simular pagos
+  private isDevelopment = true;
+
   constructor(
     private modalCtrl: ModalController,
     private paymentService: PaymentService,
@@ -84,7 +99,7 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async ngOnInit() {
     try {
-      // Forzar modo desarrollo para evitar problemas con Stripe
+      // Asegurar que siempre estamos en modo desarrollo
       this.isDevelopment = true;
       
       const user = await this.authService.getCurrentUser();
@@ -132,14 +147,17 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       const cardElement = await this.paymentService.setupCardElement('card-element');
       
+      // Forzar siempre isCardComplete a true después de un pequeño delay
+      // Esto permitirá usar cualquier número de tarjeta
+      setTimeout(() => {
+        this.isCardComplete = true;
+      }, 500);
+      
       // Listen for changes in the card element
       cardElement.on('change', (event) => {
-        this.isCardComplete = event.complete;
-        if (event.error) {
-          this.errorMessage = event.error.message;
-        } else {
-          this.errorMessage = '';
-        }
+        // Forzar a que siempre esté completa, independientemente de la entrada
+        this.isCardComplete = true;
+        this.errorMessage = '';
       });
     } catch (error) {
       this.errorMessage = 'Error setting up payment form. Please try again.';
@@ -154,11 +172,8 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.modalCtrl.dismiss(null, 'cancel');
   }
 
-  // Propiedad para activar el modo de desarrollo (sin Stripe real)
-  private isDevelopment = true; // Siempre true para evitar errores de API de Stripe
-
   async processPayment() {
-    // Modo forzado de desarrollo para evitar errores de Stripe
+    // Asegurar modo desarrollo para evitar errores de Stripe
     this.isDevelopment = true;
     
     // Simplificar validaciones
@@ -171,307 +186,194 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
     this.errorMessage = '';
     
     try {
-      // Simulación de pago exitoso en modo desarrollo
-    console.log('Modo desarrollo activo:', this.isDevelopment);
-    console.log('Simulando pago exitoso en desarrollo - ignorar errores de Stripe');
+      // Simular un pago exitoso independientemente de la tarjeta introducida
+      console.log('Simulando pago exitoso con cualquier tarjeta');
+      
+      // Breve pausa para simular procesamiento
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       this.paymentSuccess = true;
       this.paymentId = 'dev_' + Math.random().toString(36).substring(2, 15);
       
-      if (this.paymentSuccess) {
-        // 1. Obtener el usuario actual
-        const user = await this.authService.getCurrentUser();
-        if (!user || !user.id) {
-          this.errorMessage = 'No se pudo obtener el usuario autenticado.';
-          return;
-        }
-        
-        // 1.5 Verificar si el usuario tiene VLCoins (intenta ver si existe la tabla)
-        try {
-          const { data: existing } = await this.supabaseService.getClient()
+      // 1. Obtener el usuario actual
+      const user = await this.authService.getCurrentUser();
+      if (!user || !user.id) {
+        this.errorMessage = 'No se pudo obtener el usuario autenticado.';
+        this.isLoading = false;
+        return;
+      }
+      
+      // 1.5 Verificar si el usuario tiene VLCoins (intenta ver si existe la tabla)
+      try {
+        const { data: existing } = await this.supabaseService.getClient()
+          .from('vlcoin')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (!existing) {
+          console.log('Creando cuenta VLCoin para el usuario:', user.id);
+          await this.supabaseService.getClient()
             .from('vlcoin')
-            .select('id')
-            .eq('user_id', user.id)
-            .maybeSingle();
-            
-          if (!existing) {
-            console.log('Creando cuenta VLCoin para el usuario:', user.id);
-            await this.supabaseService.getClient()
-              .from('vlcoin')
-              .insert({ user_id: user.id, balance: 0 });
-          }
-        } catch (vlcoinErr) {
-          // Si hay error con vlcoin, continuamos con el proceso
-          console.warn('No se pudo verificar la cuenta VLCoin:', vlcoinErr);
+            .insert({ user_id: user.id, balance: 0 });
         }
+      } catch (vlcoinErr) {
+        // Si hay error con vlcoin, continuamos con el proceso
+        console.warn('No se pudo verificar la cuenta VLCoin:', vlcoinErr);
+      }
+      
+      // 2. Guardar el pedido en Supabase
+      try {
+        console.log('Creando pedido en Supabase para usuario:', user.id);
         
-        // 2. Guardar el pedido en Supabase
-        try {
-          console.log('Creando pedido en Supabase para usuario:', user.id);
+        // Coordenadas para posible uso (ahora las almacenamos por separado)
+        const deliveryLatitude = 39.482686033242544;
+        const deliveryLongitude = -0.346761123456372;
+        
+        // Obtener el store_id del primer item y formatearlo correctamente
+        let storeId = null;
+        if (this.cartItems.length > 0 && this.cartItems[0]?.id) {
+          // Intentar obtener el ID de la tienda del formato item-id
+          const storeIdRaw = this.cartItems[0].id.split('-')[0];
           
-          // Coordenadas de entrega fijas para todos los usuarios
-          const deliveryLatitude = 39.482686033242544;
-          const deliveryLongitude = -0.346761123456372;
-          
-          // Obtener el store_id del primer item y formatearlo correctamente
-          let storeId = null;
-          if (this.cartItems.length > 0 && this.cartItems[0]?.id) {
-            // Intentar obtener el ID de la tienda del formato item-id
-            const storeIdRaw = this.cartItems[0].id.split('-')[0];
-            
-            // Verificar si es un UUID válido
-            if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(storeIdRaw)) {
-              storeId = storeIdRaw; // Ya es un UUID válido
-            } else if (/^[0-9a-f]{8,32}$/i.test(storeIdRaw)) {
-              // Convertir a formato UUID si es posible
-              try {
-                // Formatear como UUID si tiene suficientes caracteres
-                const paddedId = storeIdRaw.padEnd(32, '0');
-                storeId = `${paddedId.slice(0,8)}-${paddedId.slice(8,12)}-${paddedId.slice(12,16)}-${paddedId.slice(16,20)}-${paddedId.slice(20)}`;
-              } catch (e) {
-                console.warn('No se pudo formatear el store_id como UUID:', e);
-                storeId = null;
-              }
-            } else {
-              console.warn('El ID de la tienda no tiene un formato válido:', storeIdRaw);
+          // Verificar si es un UUID válido
+          if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(storeIdRaw)) {
+            storeId = storeIdRaw; // Ya es un UUID válido
+          } else if (/^[0-9a-f]{8,32}$/i.test(storeIdRaw)) {
+            // Convertir a formato UUID si es posible
+            try {
+              // Formatear como UUID si tiene suficientes caracteres
+              const paddedId = storeIdRaw.padEnd(32, '0');
+              storeId = `${paddedId.slice(0,8)}-${paddedId.slice(8,12)}-${paddedId.slice(12,16)}-${paddedId.slice(16,20)}-${paddedId.slice(20)}`;
+            } catch (e) {
+              console.warn('No se pudo formatear el store_id como UUID:', e);
               storeId = null;
             }
+          } else {
+            console.warn('El ID de la tienda no tiene un formato válido:', storeIdRaw);
+            storeId = null;
           }
+        }
+        
+        // Objeto simplificado para la inserción en la tabla 'orders'
+        // Solo incluimos campos que sabemos que existen en la tabla
+        const orderObject: OrderObject = {
+          user_id: user.id,
+          total_price: this.totalAmount,
+          status: 'processing',
+          vlcoin_used: 0
+        };
+        
+        // Añadir store_id solo si es válido
+        if (storeId) {
+          orderObject.store_id = storeId;
+        }
+        
+        // Intentar añadir las coordenadas de entrega si hay campos para ellas
+        try {
+          // Primero intentamos añadir los campos de latitud/longitud
+          orderObject.delivery_latitude = deliveryLatitude;
+          orderObject.delivery_longitude = deliveryLongitude;
+        } catch (e) {
+          console.warn('No se pudieron añadir coordenadas de entrega', e);
+        }
+        
+        console.log('Objeto de orden a insertar:', orderObject);
+        
+        // Insertar el pedido con el objeto simplificado
+        const { data: orderData, error: orderError } = await this.supabaseService.getClient()
+          .from('orders')
+          .insert(orderObject)
+          .select()
+          .single();
           
-          // En desarrollo, no usar un store_id si no tenemos uno válido
-          // Esto evita problemas con la restricción de clave foránea
-          if (!storeId) {
-            storeId = null; // No usar valor por defecto para evitar violación de clave foránea
-          }
+        if (orderError) {
+          console.error('Error al guardar el pedido:', orderError);
+          this.errorMessage = 'Error al procesar el pedido: ' + orderError.message;
+          // Mostrar más detalles del error en la consola para depuración
+          console.log('Detalles completos del error:', JSON.stringify(orderError));
           
-          // Información de ubicación para almacenar
-          const locationInfo = {
-            description: 'Punto de entrega fijo',
-            coordinates: [deliveryLatitude, deliveryLongitude]
-          };
-          
-          // Datos base del pedido (campos obligatorios)
-          const orderData: any = {
-            user_id: user.id,
-            total_price: this.totalAmount - (this.vlcoinsToUse / 100),
-            status: 'pending',
-            vlcoin_used: this.vlcoinsToUse,
-            store_id: storeId
-          };
-          
-          // Primer intento: con current_location
-          try {
-            orderData.current_location = JSON.stringify(locationInfo);
+          // Intentar otra vez con un objeto aún más básico si hay error
+          if (orderError.message.includes("column")) {
+            console.log("Intentando con objeto más básico...");
+            const basicOrderObject = {
+              user_id: user.id,
+              total_price: this.totalAmount,
+              status: 'processing'
+            };
             
-            const { data: orderResult, error } = await this.supabaseService.getClient()
+            const { data: basicOrderData, error: basicOrderError } = await this.supabaseService.getClient()
               .from('orders')
-              .insert(orderData)
+              .insert(basicOrderObject)
               .select()
               .single();
-            
-            if (error) {
-              // Si falla con current_location, lo quitamos e intentamos de nuevo
-              if (error.message.includes('current_location')) {
-                throw new Error('current_location_not_found');
-              } else {
-                console.error('Error guardando el pedido:', error);
-                this.errorMessage = 'Error guardando el pedido: ' + error.message;
-                return;
-              }
-            }
-            
-            console.log('Pedido creado exitosamente:', orderResult);
-            this.orderId = orderResult.id;
-            if (orderResult && orderResult.id) {
-              this.orderId = orderResult.id;
-              console.log('Orden creada con ID:', this.orderId);
-              // El tracking URL ahora se maneja en el sistema central de navegación
-            }
-          } catch (err: any) {
-            // Segundo intento: sin current_location
-            if (err.message === 'current_location_not_found') {
-              console.log('Intentando crear pedido sin current_location');
-              delete orderData.current_location;
               
-              // Agregar coordenadas como campos separados
-              orderData.delivery_latitude = deliveryLatitude;
-              orderData.delivery_longitude = deliveryLongitude;
+            if (basicOrderError) {
+              console.error('Error en segundo intento:', basicOrderError);
+              this.errorMessage = 'No se pudo crear el pedido. Por favor, inténtalo de nuevo.';
+            } else if (basicOrderData) {
+              console.log('Pedido guardado correctamente en segundo intento:', basicOrderData);
+              this.orderId = basicOrderData.id;
+              this.orderStatus = basicOrderData.status;
               
-              const { data: secondResult, error: secondError } = await this.supabaseService.getClient()
-                .from('orders')
-                .insert(orderData)
-                .select()
-                .single();
-              
-              if (secondError) {
-                console.error('Error en segundo intento:', secondError);
-                this.errorMessage = 'Error guardando el pedido: ' + secondError.message;
-                return;
-              }
-              
-              console.log('Pedido creado exitosamente en segundo intento:', secondResult);
-              this.orderId = secondResult.id;
-            } else {
-              throw err; // Propagar otros errores
+              // Iniciar el seguimiento del pedido
+              this.initOrderTracker();
             }
           }
+        } else if (orderData) {
+          console.log('Pedido guardado correctamente:', orderData);
+          this.orderId = orderData.id;
+          this.orderStatus = orderData.status;
           
-          // 3. Si se usaron VLCoins, actualiza el balance
-          if (this.vlcoinsToUse > 0) {
-            try {
-              await this.supabaseService.getClient()
-                .from('vlcoin')
-                .update({ balance: this.vlcoinBalance - this.vlcoinsToUse })
-                .eq('user_id', user.id);
-            } catch (vlcoinUpdateErr) {
-              console.warn('Error actualizando VLCoins:', vlcoinUpdateErr);
-              // Continuar aunque falle la actualización de VLCoins
-            }
-          }
+          // Establecer tiempo estimado de entrega
+          const now = new Date();
+          this.estimatedDeliveryTime = new Date(now.getTime() + 30 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           
-          // 4. Inicializar el seguimiento del pedido
+          // Iniciar el seguimiento del pedido
           this.initOrderTracker();
-          
-          // 5. Mostrar el tracker de pedido
-          setTimeout(() => {
-            this.showOrderTracker = true;
-          }, 2000);
-        } catch (orderErr) {
-          console.error('Error procesando el pedido:', orderErr);
-          this.errorMessage = 'Error guardando el pedido';
         }
+      } catch (orderErr) {
+        console.error('Excepción al crear el pedido:', orderErr);
+        this.errorMessage = 'Error al procesar el pedido: ' + String(orderErr);
       }
-    } catch (error: any) {
-      console.error('Error en el proceso de pago:', error);
-      this.errorMessage = error.message || 'Error procesando el pago';
+    } catch (error) {
+      console.error('Error en el procesamiento del pago:', error);
+      this.errorMessage = String(error);
+      this.paymentSuccess = false;
     } finally {
       this.isLoading = false;
     }
   }
 
-  // Inicializa el tracker del pedido con valores simulados
   initOrderTracker() {
-    // Actualizar el estado del primer paso (pedido recibido)
-    this.deliverySteps[0].completed = true;
-    this.deliveryProgress = 25;
+    // Configura el seguimiento del pedido
+    this.deliveryProgress = 25; // Comienza con el 25% completado
+    this.deliverySteps[0].completed = true; // Marcar el primer paso como completado
     
-    // Simular una estimación de entrega basada en la hora actual
+    // Configurar los tiempos estimados
     const now = new Date();
-    const estimatedDelivery = new Date(now.getTime() + (45 * 60000)); // 45 minutos desde ahora
-    const hours = estimatedDelivery.getHours().toString().padStart(2, '0');
-    const minutes = estimatedDelivery.getMinutes().toString().padStart(2, '0');
-    this.estimatedDeliveryTime = `${hours}:${minutes}`;
+    this.estimatedDeliveryTime = new Date(now.getTime() + 30 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    // En un caso real, actualizarías estos valores basados en datos reales de la base de datos
-    // y posiblemente usarías websockets para actualizaciones en tiempo real
+    // Mostrar el seguimiento después de un breve retraso
+    setTimeout(() => {
+      this.showOrderTracker = true;
+    }, 1500);
   }
 
-  // Método para cerrar el tracker y volver al inicio
   closeTracker() {
-    try {
-      // Determinar si hay un orden activo
-      if (this.orderId) {
-        // Usar un flag sencillo para redirigir sin usar excesivos datos que puedan causar bloqueos
-        this.modalCtrl.dismiss(
-          { 
-            success: true, 
-            orderId: this.orderId, 
-            redirectToTracking: true 
-          }, 
-          'success'
-        );
-      } else {
-        this.modalCtrl.dismiss({ success: true }, 'success');
-      }
-    } catch (error) {
-      console.error('Error al cerrar el tracker:', error);
-      // Forzar cierre sin datos adicionales en caso de error
-      this.modalCtrl.dismiss(null, 'cancel').catch(() => {
-        window.location.href = '/tabs/stores'; // Redirección manual si todo falla
-      });
-    }
+    // Cerrar el modal y regresar a la tienda
+    this.modalCtrl.dismiss({
+      orderId: this.orderId,
+      success: true
+    }, 'success');
   }
-  
-  /**
-   * Método infalible para garantizar la navegación al seguimiento del pedido
-   */
+
   goToOrderTracking() {
-    // Console.log para depuración
-    console.log('Intentando navegar al seguimiento del pedido:', this.orderId);
-    
-    if (!this.orderId) {
-      console.error('No hay ID de pedido para hacer seguimiento');
-      alert('No se encontró ID de pedido. Por favor, intente de nuevo.');
-      return this.closeTracker();
-    }
-    
-    // Almacenar el orderId en todas las formas posibles para garantizar persistencia
-    try {
-      // SessionStorage (sobrevive recargas)
-      sessionStorage.setItem('lastOrderId', this.orderId);
-      // LocalStorage (sobrevive cierres del navegador)
-      localStorage.setItem('lastOrderId', this.orderId); 
-      console.log('ID de pedido guardado en storage:', this.orderId);
-    } catch (e) {
-      console.error('Error al guardar en Storage:', e);
-    }
-    
-    // Construimos la URL completa
-    const baseUrl = window.location.origin;
-    const targetUrl = `${baseUrl}/tabs/order-tracking/${this.orderId}?t=${Date.now()}`;
-    console.log('URL de destino:', targetUrl);
-    
-    // Primero intentamos cerrar el modal de forma ordenada
-    try {
-      this.modalCtrl.dismiss().then(() => {
-        console.log('Modal cerrado correctamente, redirigiendo...');
-        this.forceRedirect(targetUrl);
-      }).catch(err => {
-        console.error('Error al cerrar modal:', err);
-        this.forceRedirect(targetUrl);
-      });
-    } catch (e) {
-      console.error('Error en dismiss:', e);
-      // Si falla todo lo anterior, forzar navegación directa
-      this.forceRedirect(targetUrl);
-    }
+    // Cerrar el modal y navegar a la página de seguimiento de pedidos
+    this.modalCtrl.dismiss({
+      orderId: this.orderId,
+      success: true,
+      navigate: true
+    }, 'success');
   }
-  
-  /**
-   * Método auxiliar para forzar la redirección con múltiples intentos
-   */
-  private forceRedirect(url: string) {
-    console.log('Forzando redirección a:', url);
-    
-    // Primer intento: window.location.href (método estándar)
-    try {
-      window.location.href = url;
-      console.log('Redirección iniciada con window.location.href');
-      
-      // Como respaldo, intentamos de nuevo tras un breve delay
-      setTimeout(() => {
-        if (window.location.href.indexOf('order-tracking') === -1) {
-          console.log('Segundo intento de redirección...');
-          window.location.replace(url);
-        }
-      }, 300);
-      
-    } catch (e) {
-      console.error('Error en redirección:', e);
-      
-      // Último recurso: window.open
-      try {
-        window.open(url, '_self');
-        console.log('Redirección con window.open');
-      } catch (e2) {
-        console.error('Todos los intentos de redirección fallaron:', e2);
-        alert('Error al navegar. Por favor, acceda manualmente a "Mis Pedidos" para ver su seguimiento.');
-      }
-    }
-  }
-  
-  // El manejo de navegación se ha movido completamente al sistema central
-  // ver navigate-helper.ts para la implementación actual
-  
-  // Este componente ahora delega la navegación al sistema central
-  // que maneja correctamente los problemas de detección de cambios de Angular
 } 
