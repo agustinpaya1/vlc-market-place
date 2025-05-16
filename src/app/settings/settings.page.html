@@ -1,39 +1,120 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/profile"></ion-back-button>
+    </ion-buttons>
     <ion-title>Configuración</ion-title>
+    <ion-buttons slot="end">
+      <img src="https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/logoapp//logo.png" 
+           alt="Logo" 
+           class="header-logo"
+           (error)="handleImageError($event)">
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <!-- User Menu List -->
-  <ion-list>
-    <ion-item class="custom-item">
-      <ion-icon name="notifications" slot="start"></ion-icon>
-      <ion-label>Notificaciones push</ion-label>
-      <ion-toggle slot="end"></ion-toggle>
-    </ion-item>
+  <div class="page-background">
+    <div class="accent-circle circle-1"></div>
+    <div class="accent-circle circle-2"></div>
+  </div>
+  
+  <div class="settings-container">
+    <div class="secure-banner">
+      <div class="icon-container">
+        <ion-icon name="settings-outline"></ion-icon>
+      </div>
+      <div class="secure-text">
+        <h3>Configuración</h3>
+        <p>Personaliza tu experiencia en la app</p>
+      </div>
+    </div>
     
-    <ion-item class="custom-item">
-      <ion-icon name="language" slot="start"></ion-icon>
-      <ion-label>Idioma</ion-label>
-      <ion-select interface="popover" value="es" slot="end">
-        <ion-select-option value="es">Español</ion-select-option>
-        <ion-select-option value="en">English</ion-select-option>
-      </ion-select>
-    </ion-item>
-  </ion-list>
-
-  <!-- Settings Section -->
-  <div class="settings-section">
-    <div class="section-content">
-      <ion-item>
-        <ion-icon slot="start" name="notifications"></ion-icon>
-        <ion-label>
-          <h4>Notificaciones Push</h4>
-          <p>Recibe notificaciones de tus pedidos</p>
-        </ion-label>
-        <ion-toggle slot="end"></ion-toggle>
-      </ion-item>
+    <!-- Configuración General -->
+    <div class="section-container">
+      <div class="section-header">
+        <h2>General</h2>
+      </div>
+      
+      <div class="settings-card">
+        <div class="setting-item">
+          <div class="setting-info">
+            <ion-icon name="moon-outline"></ion-icon>
+            <div class="setting-text">
+              <h3>Modo oscuro</h3>
+              <p>Cambiar apariencia de la app</p>
+            </div>
+          </div>
+          <ion-toggle [(ngModel)]="settings.darkMode" (ionChange)="toggleDarkMode()"></ion-toggle>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <ion-icon name="notifications-outline"></ion-icon>
+            <div class="setting-text">
+              <h3>Notificaciones</h3>
+              <p>Recibe alertas de tus pedidos</p>
+            </div>
+          </div>
+          <ion-toggle [(ngModel)]="settings.notifications" (ionChange)="toggleNotifications()"></ion-toggle>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="setting-item" (click)="openLanguageSelector()">
+          <div class="setting-info">
+            <ion-icon name="language-outline"></ion-icon>
+            <div class="setting-text">
+              <h3>Idioma</h3>
+              <p>{{ getLanguageName(settings.language) }}</p>
+            </div>
+          </div>
+          <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Soporte y Ayuda -->
+    <div class="section-container">
+      <div class="section-header">
+        <h2>Soporte</h2>
+      </div>
+      
+      <div class="settings-card">
+        <div class="setting-item" (click)="openHelp()">
+          <div class="setting-info">
+            <ion-icon name="help-circle-outline"></ion-icon>
+            <div class="setting-text">
+              <h3>Ayuda</h3>
+              <p>Preguntas frecuentes</p>
+            </div>
+          </div>
+          <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="setting-item" (click)="clearCache()">
+          <div class="setting-info">
+            <ion-icon name="trash-outline"></ion-icon>
+            <div class="setting-text">
+              <h3>Limpiar caché</h3>
+              <p>Liberar espacio</p>
+            </div>
+          </div>
+          <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Botón de cerrar sesión -->
+    <div class="logout-container">
+      <ion-button (click)="logout()" fill="outline" color="danger" class="logout-button">
+        <ion-icon name="log-out-outline" slot="start"></ion-icon>
+        <span>Cerrar sesión</span>
+      </ion-button>
     </div>
   </div>
 </ion-content>

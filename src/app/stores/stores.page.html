@@ -10,7 +10,12 @@
     </div>
     <div class="header-actions">
       <ion-button fill="clear" class="wallet-button" (click)="showVLCoinsInfo()">
-        <img src="assets/icons/vl-coin.svg" alt="Monedas VL" class="vl-coin-icon">
+        <div>
+          <div class="balance-amount">
+            <img src="assets/icons/vlcoins.png" alt="Monedas VL" class="vl-coin-icon">
+            <span class="balance-text">{{ vlcoinBalance }}</span>
+          </div>
+        </div>
       </ion-button>
       <ion-button *ngIf="isAuthenticated" fill="clear" class="notification-button" (click)="openNotificationPopover($event)">
         <ion-icon name="notifications-outline"></ion-icon>

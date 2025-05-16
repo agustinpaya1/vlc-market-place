@@ -14,7 +14,8 @@ import {
   helpCircleOutline,
   logOutOutline,
   chevronForward,
-  trashOutline
+  trashOutline,
+  settingsOutline
 } from 'ionicons/icons';
 
 type LanguageCode = 'es' | 'en' | 'ca';
@@ -51,7 +52,8 @@ export class SettingsPage implements OnInit {
       helpCircleOutline,
       logOutOutline,
       chevronForward,
-      trashOutline
+      trashOutline,
+      settingsOutline
     });
   }
 
@@ -88,5 +90,12 @@ export class SettingsPage implements OnInit {
   async logout() {
     await this.authService.logout();
     this.router.navigate(['/tabs/stores']);
+  }
+  
+  handleImageError(event: any) {
+    // Fallback en caso de error al cargar el logo
+    if (event.target) {
+      event.target.src = 'assets/logo-placeholder.png';
+    }
   }
 }

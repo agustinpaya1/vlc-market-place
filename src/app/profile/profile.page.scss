@@ -172,27 +172,41 @@ $dark-card-bg: #2d2d2d; // Fondo de tarjeta para modo oscuro
   margin-bottom: 20px;
   border-radius: $border-radius-medium;
   overflow: hidden;
-  box-shadow: $card-shadow;
   background: transparent;
   padding: 8px 0;
   
   ion-item {
-    --background: #F8F9FA;
-    --border-radius: 25px;
+    --background: white;
+    --border-radius: 12px;
     --padding-start: 16px;
     --padding-end: 16px;
-    --padding-top: 12px;
-    --padding-bottom: 12px;
-    --min-height: 55px;
-    margin-bottom: 16px;
+    --padding-top: 14px;
+    --padding-bottom: 14px;
+    --min-height: 65px;
+    margin-bottom: 12px;
     --border-width: 0;
     --highlight-color-focused: #{$color-primary};
     --inner-padding-end: 16px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-    border-radius: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border-radius: 12px;
     margin-left: 8px;
     margin-right: 8px;
-    transition: transform $transition-speed ease;
+    transition: all 0.2s ease;
+    border-left: 4px solid $color-primary;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 40px;
+      height: 40px;
+      background-color: $color-primary;
+      opacity: 0.2;
+      clip-path: polygon(100% 0, 0 0, 100% 100%);
+    }
     
     &:last-child {
       margin-bottom: 0;
@@ -202,16 +216,41 @@ $dark-card-bg: #2d2d2d; // Fondo de tarjeta para modo oscuro
       color: $color-primary;
       margin-right: 16px;
       font-size: 22px;
-      transition: transform $transition-speed ease;
+      transition: transform 0.2s ease;
     }
     
-    &:hover {
+    ion-label {
+      font-weight: 500;
+      color: $color-text;
+      
+      &::after {
+        content: '';
+        display: block;
+        width: 100%;
+        height: 1px;
+        margin-top: 5px;
+        background: repeating-linear-gradient(
+          to right,
+          $color-primary,
+          $color-primary 4px,
+          transparent 4px,
+          transparent 10px
+        );
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+    }
+    
+    &:hover, &:active {
       transform: translateY(-2px);
-      --background: white;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 6px 16px rgba(2, 163, 150, 0.2);
       
       ion-icon {
         transform: translateX(4px);
+      }
+      
+      ion-label::after {
+        opacity: 0.5;
       }
     }
   }

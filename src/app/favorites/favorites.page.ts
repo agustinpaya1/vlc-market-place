@@ -10,286 +10,487 @@ import { ToastController } from '@ionic/angular';
 import { ViewWillEnter } from '@ionic/angular';
 import { Store } from '../interfaces/store.interface';
 import { CartService } from '../services/cart.service';
+import { addIcons } from 'ionicons';
+import { 
+  heartOutline, 
+  heart, 
+  cartOutline, 
+  storefront, 
+  storefrontOutline,
+  lockClosedOutline,
+  arrowForwardOutline,
+  homeOutline,
+  home
+} from 'ionicons/icons';
 
 @Component({
   selector: 'app-favorites',
   template: `
-    <ion-header>
+    <ion-header class="ion-no-border">
       <ion-toolbar>
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/profile"></ion-back-button>
         </ion-buttons>
         <ion-title>Favoritos</ion-title>
+        <ion-buttons slot="end">
+          <img src="https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/logoapp//logo.png" 
+               alt="Logo" 
+               class="header-logo"
+               (error)="handleImageError($event, 'logo')">
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
-    <ion-content class="ion-padding">
-      <div *ngIf="favoriteProducts.length > 0" class="section-title">
-        <h2>Productos favoritos</h2>
+    <ion-content>
+      <div class="page-background">
+        <div class="accent-circle circle-1"></div>
+        <div class="accent-circle circle-2"></div>
       </div>
-      <div *ngIf="favoriteProducts.length > 0" class="horizontal-scroll">
-        <div class="card-list">
-          <div class="mini-card" *ngFor="let item of favoriteProducts">
-            <img [src]="item.imageUrl" [alt]="item.name" (error)="handleImageError($event, 'product')">
-            <div class="mini-card-header">
-              <span class="mini-card-title clickable" (click)="goToStoreFromProduct(item)">{{ item.name }}</span>
-              <span class="mini-card-price">
-                <ng-container *ngIf="item.hasDiscount; else noDiscount">
-                  <span class="final-price">{{ item.finalPrice | currency:'EUR' }}</span>
-                  <span class="original-price">{{ item.price | currency:'EUR' }}</span>
-                </ng-container>
-                <ng-template #noDiscount>
-                  {{ item.price | currency:'EUR' }}
-                </ng-template>
-              </span>
-            </div>
-            <div class="mini-card-content">
-              <p>{{ item.description }}</p>
-              <ion-button size="small" (click)="addToCart(item)">
-                <ion-icon name="cart" slot="start"></ion-icon>
-              </ion-button>
-              <ion-button size="small" fill="clear" (click)="toggleFavorite(item, 'product')">
-                <ion-icon [name]="isFavorite(item.id, 'product') ? 'heart' : 'heart-outline'" color="danger" slot="start"></ion-icon>
-              </ion-button>
+      
+      <div class="favorites-container">
+        <div class="secure-banner">
+          <div class="icon-container">
+            <ion-icon name="heart"></ion-icon>
+          </div>
+          <div class="secure-text">
+            <h3>Tus Favoritos</h3>
+            <p>Encuentra rápidamente lo que más te gusta</p>
+          </div>
+        </div>
+        
+        <!-- Productos Favoritos -->
+        <div *ngIf="favoriteProducts.length > 0" class="section-container">
+          <div class="section-header">
+            <h2>Productos favoritos</h2>
+          </div>
+          
+          <div class="cards-grid">
+            <div class="product-card" *ngFor="let item of favoriteProducts">
+              <div class="card-accent-shape"></div>
+              <div class="product-image">
+                <img [src]="item.imageUrl" [alt]="item.name" (error)="handleImageError($event, 'product')">
+              </div>
+              <div class="product-details">
+                <h3 class="product-title clickable" (click)="goToStoreFromProduct(item)">{{ item.name }}</h3>
+                <div class="price-container">
+                  <ng-container *ngIf="item.hasDiscount; else noDiscount">
+                    <span class="final-price">{{ item.finalPrice | currency:'EUR' }}</span>
+                    <span class="original-price">{{ item.price | currency:'EUR' }}</span>
+                  </ng-container>
+                  <ng-template #noDiscount>
+                    <span class="final-price">{{ item.price | currency:'EUR' }}</span>
+                  </ng-template>
+                </div>
+                <p class="product-description">{{ item.description }}</p>
+                <div class="product-actions">
+                  <ion-button (click)="addToCart(item)" fill="solid" color="primary" class="cart-btn">
+                    <ion-icon name="cart-outline" slot="start"></ion-icon>
+                    <span>Añadir</span>
+                  </ion-button>
+                  <ion-button (click)="toggleFavorite(item, 'product')" fill="clear" color="danger" class="fav-btn">
+                    <ion-icon [name]="isFavorite(item.id, 'product') ? 'heart' : 'heart-outline'"></ion-icon>
+                  </ion-button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div *ngIf="favoriteStores.length > 0" class="section-title">
-        <h2>Tiendas favoritas</h2>
-      </div>
-      <div *ngIf="favoriteStores.length > 0" class="horizontal-scroll">
-        <div class="card-list">
-          <div class="mini-card" *ngFor="let store of favoriteStores">
-            <div class="corner-fav-btn">
-              <ion-button size="small" fill="clear" (click)="toggleFavorite(store, 'store')">
-                <ion-icon [name]="isFavorite(store.id, 'store') ? 'heart' : 'heart-outline'" color="danger" slot="icon-only"></ion-icon>
-              </ion-button>
-            </div>
-            <img [src]="store.imageUrl" [alt]="store.name" (error)="handleImageError($event, 'store')">
-            <div class="mini-card-header">
-              <span class="mini-card-title clickable" (click)="goToStore(store.id)">{{ store.name }}</span>
-              <span class="mini-card-location">{{ store.location }}</span>
-            </div>
-            <div class="mini-card-content">
-              <p>{{ store.description }}</p>
-              <ion-chip color="success" *ngIf="store.hasOffers">Ofertas</ion-chip>
+        
+        <!-- Tiendas Favoritas -->
+        <div *ngIf="favoriteStores.length > 0" class="section-container">
+          <div class="section-header">
+            <h2>Tiendas favoritas</h2>
+          </div>
+          
+          <div class="cards-grid">
+            <div class="store-card" *ngFor="let store of favoriteStores">
+              <div class="card-accent-shape"></div>
+              <div class="store-image">
+                <img [src]="store.imageUrl" [alt]="store.name" (error)="handleImageError($event, 'store')">
+              </div>
+              <div class="store-details">
+                <h3 class="store-title clickable" (click)="goToStore(store.id)">{{ store.name }}</h3>
+                <div class="store-location">
+                  <ion-icon name="storefront-outline"></ion-icon>
+                  <span>{{ store.location }}</span>
+                </div>
+                <p class="store-description">{{ store.description }}</p>
+                <div class="store-actions">
+                  <ion-button routerLink="/tabs/store/{{store.id}}" fill="solid" color="primary" class="view-btn">
+                    <span>Ver tienda</span>
+                    <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
+                  </ion-button>
+                  <ion-button (click)="toggleFavorite(store, 'store')" fill="clear" color="danger" class="fav-btn">
+                    <ion-icon [name]="isFavorite(store.id, 'store') ? 'heart' : 'heart-outline'"></ion-icon>
+                  </ion-button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Estado vacío -->
-      <div *ngIf="favoriteProducts.length === 0 && favoriteStores.length === 0" class="empty-state">
-        <ion-icon name="heart"></ion-icon>
-        <h2>No tienes favoritos</h2>
-        <p>Guarda tus productos o tiendas favoritas para encontrarlos fácilmente</p>
-        <ion-button routerLink="/tabs/stores">
-          Explorar tiendas
-        </ion-button>
+        <!-- Estado vacío -->
+        <div *ngIf="favoriteProducts.length === 0 && favoriteStores.length === 0" class="empty-state">
+          <div class="empty-container">
+            <ion-icon class="heart-icon" name="heart" color="danger"></ion-icon>
+            <h2>No tienes favoritos</h2>
+            <p>Guarda tus productos o tiendas favoritas para encontrarlos fácilmente</p>
+            <ion-button routerLink="/tabs/stores" fill="outline" color="primary" class="explore-button">
+              <ion-icon name="home" slot="start"></ion-icon>
+              <span>Descubre tus favoritas</span>
+            </ion-button>
+          </div>
+        </div>
       </div>
     </ion-content>
   `,
-  styles: [
-    `
-    .empty-state {
-      text-align: center;
-      margin-top: 40px;
-      padding: 20px;
-      ion-icon {
-        font-size: 64px;
-        color: var(--ion-color-danger);
-      }
-      h2 {
-        margin: 20px 0 10px;
-        color: var(--ion-color-dark);
-      }
-      p {
-        color: var(--ion-color-medium);
-        margin-bottom: 20px;
-      }
+  styles: [`
+    :host {
+      --primary-color: #02A396;
+      --primary-light: rgba(2, 163, 150, 0.15);
+      --primary-medium: rgba(2, 163, 150, 0.3);
+      --primary-dark: #028090;
+      --text-dark: #2A3B47;
+      --text-medium: #546E7A;
+      --text-light: #B0BEC5;
+      --accent-green: #4CAF50;
+      --white: #FFFFFF;
+      --light-bg: #F5F7FA;
     }
-    .section-title {
-      margin-top: 24px;
-      margin-bottom: 8px;
-      text-align: left;
-    }
-    .horizontal-scroll {
-      overflow-x: auto;
-      padding-bottom: 8px;
-      margin-bottom: 16px;
-      display: block;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;
-      scrollbar-color: #02A396 #e0e0e0;
-    }
-    .horizontal-scroll::-webkit-scrollbar {
-      height: 8px;
-      background: #e0e0e0;
-      border-radius: 8px;
-    }
-    .horizontal-scroll::-webkit-scrollbar-thumb {
-      background: #02A396;
-      border-radius: 8px;
-    }
-    .card-list {
-      white-space: nowrap;
-      display: block;
-      padding-bottom: 2px;
-    }
-    .mini-card {
-      min-width: 210px;
-      max-width: 220px;
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      display: inline-block;
-      vertical-align: top;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 10px 10px 12px 10px;
-      transition: box-shadow 0.2s;
-      margin-right: 12px;
+
+    ion-header {
       position: relative;
     }
-    .mini-card:last-child {
-      margin-right: 0;
+
+    ion-toolbar {
+      --background: var(--primary-color);
+      --color: var(--white);
     }
-    .mini-card:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+    
+    ion-title {
+      font-weight: 600;
     }
-    .mini-card img {
-      width: 100%;
-      height: 90px;
-      object-fit: cover;
-      border-radius: 10px;
+
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      margin-right: 12px;
+      border-radius: 50%;
+      background-color: var(--white);
+      padding: 2px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .page-background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--light-bg);
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .accent-circle {
+      position: absolute;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      opacity: 0.2;
+    }
+
+    .circle-1 {
+      width: 250px;
+      height: 250px;
+      top: -50px;
+      left: -70px;
+    }
+
+    .circle-2 {
+      width: 350px;
+      height: 350px;
+      bottom: -100px;
+      right: -100px;
+    }
+
+    ion-content {
+      --background: transparent;
+    }
+
+    .favorites-container {
+      padding: 16px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .secure-banner {
+      display: flex;
+      align-items: center;
+      background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(2, 163, 150, 0.3);
+    }
+
+    .icon-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      margin-right: 14px;
+      
+      ion-icon {
+        color: var(--white);
+        font-size: 22px;
+      }
+    }
+
+    .secure-text {
+      color: var(--white);
+      
+      h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      
+      p {
+        margin: 0;
+        font-size: 12px;
+        opacity: 0.9;
+      }
+    }
+
+    .section-container {
+      margin-bottom: 24px;
+    }
+
+    .section-header {
+      margin-bottom: 12px;
+      
+      h2 {
+        color: var(--text-dark);
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+      }
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .product-card, .store-card {
+      position: relative;
+      background: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border: 1px solid rgba(2, 163, 150, 0.2);
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(2, 163, 150, 0.2);
+      }
+    }
+
+    .card-accent-shape {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 40px;
+      height: 40px;
+      background-color: var(--primary-color);
+      opacity: 0.2;
+      clip-path: polygon(100% 0, 0 0, 100% 100%);
+    }
+
+    .product-image, .store-image {
+      height: 140px;
+      overflow: hidden;
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    .product-details, .store-details {
+      padding: 16px;
+    }
+
+    .product-title, .store-title {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-dark);
+      
+      &.clickable {
+        cursor: pointer;
+        color: var(--primary-color);
+        
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+
+    .price-container {
+      display: flex;
+      align-items: center;
       margin-bottom: 8px;
+      gap: 8px;
     }
-    .mini-card-header {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      margin-bottom: 4px;
-    }
-    .mini-card-title {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 2px;
-      cursor: pointer;
-      color: var(--ion-color-primary);
-      text-decoration: underline;
-      line-height: 1.1;
-    }
-    .mini-card-price {
-      font-size: 0.95rem;
-      color: var(--ion-color-medium);
-      margin-bottom: 2px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+
     .final-price {
-      color: var(--ion-color-primary);
-      font-weight: 600;
-      font-size: 1.08em;
+      color: var(--primary-color);
+      font-weight: 700;
+      font-size: 16px;
     }
+
     .original-price {
-      color: #b0b0b0;
       text-decoration: line-through;
-      font-size: 0.95em;
-      margin-left: 4px;
+      color: var(--text-medium);
+      font-size: 13px;
     }
-    .mini-card-location {
-      font-size: 0.95rem;
-      color: var(--ion-color-medium);
-      margin-bottom: 2px;
-    }
-    .mini-card-content {
-      width: 100%;
+
+    .store-location {
       display: flex;
-      flex-direction: row;
       align-items: center;
-      gap: 6px;
-      font-size: 0.92rem;
-      margin-top: 2px;
+      margin-bottom: 8px;
+      color: var(--text-medium);
+      font-size: 14px;
+      
+      ion-icon {
+        color: var(--primary-color);
+        margin-right: 6px;
+      }
     }
-    .mini-card-content p {
-      flex: 1;
-      margin: 0;
-      color: var(--ion-color-medium);
-      font-size: 0.92rem;
-      line-height: 1.2;
-      max-height: 2.4em;
+
+    .product-description, .store-description {
+      color: var(--text-medium);
+      font-size: 14px;
+      margin: 0 0 12px 0;
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.3;
+      max-height: 2.6em;
     }
-    .mini-card ion-button {
+
+    .product-actions, .store-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    ion-button.cart-btn, ion-button.view-btn {
+      --background: var(--primary-color);
+      --border-radius: 20px;
+      --padding-start: 12px;
+      --padding-end: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      --box-shadow: 0 3px 8px rgba(2, 163, 150, 0.2);
+    }
+
+    ion-button.fav-btn {
+      --color: #f44336;
+      --box-shadow: none;
+      --border-radius: 50%;
       --padding-start: 0;
       --padding-end: 0;
-      --border-radius: 50%;
-      margin: 0 2px;
-      min-width: 32px;
-      min-height: 32px;
-      height: 32px;
-      width: 32px;
-      font-size: 1.1em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      --box-shadow: none;
-    }
-    .mini-card ion-icon {
-      font-size: 1.4em;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .mini-card ion-chip {
-      margin-left: 0;
-      margin-right: 4px;
-      font-size: 0.85em;
-      height: 22px;
-    }
-    .subtle-toast {
-      --background: rgba(40, 40, 40, 0.92);
-      --color: #fff;
-      --border-radius: 12px;
-      --box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-      font-size: 0.98em;
-      min-width: 120px;
-      max-width: 80vw;
-      text-align: center;
-      margin-top: 8px;
-    }
-    .corner-fav-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      z-index: 2;
-    }
-    .corner-fav-btn ion-button {
-      --background: transparent;
-      --box-shadow: none;
-      --color: inherit;
-      min-width: 32px;
-      min-height: 32px;
-      width: 32px;
-      height: 32px;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .corner-fav-btn ion-icon {
-      font-size: 1.7em;
+      width: 36px;
+      height: 36px;
       margin: 0;
+      
+      ion-icon {
+        font-size: 22px;
+      }
     }
-    `
-  ],
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0;
+      margin-top: 30px;
+    }
+
+    .empty-container {
+      position: relative;
+      padding: 30px 20px;
+      background: linear-gradient(135deg, var(--white) 0%, var(--light-bg) 100%);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 350px;
+      margin: 0 auto;
+      box-shadow: 0 10px 30px rgba(2, 163, 150, 0.2);
+      border: 1px solid rgba(2, 163, 150, 0.2);
+    }
+
+    .heart-icon {
+      font-size: 70px;
+      color: var(--ion-color-danger);
+      margin-bottom: 16px;
+      background-color: rgba(244, 67, 54, 0.15);
+      padding: 18px;
+      border-radius: 50%;
+    }
+
+    .empty-state h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      color: var(--text-medium);
+      font-size: 15px;
+      margin-bottom: 24px;
+      max-width: 250px;
+    }
+
+    .empty-state ion-button.explore-button {
+      --color: var(--primary-color);
+      --border-color: var(--primary-color);
+      --border-width: 2px;
+      --border-radius: 25px;
+      --background: transparent;
+      --background-hover: rgba(2, 163, 150, 0.08);
+      --box-shadow: none;
+      font-weight: 600;
+      font-size: 15px;
+      height: 48px;
+      --padding-start: 20px;
+      --padding-end: 20px;
+      margin-top: 10px;
+      text-transform: none;
+      
+      ion-icon {
+        margin-right: 8px;
+        font-size: 18px;
+        color: var(--primary-color);
+      }
+      
+      &:hover {
+        --background: rgba(2, 163, 150, 0.08);
+      }
+    }
+  `],
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule, RouterModule]
 })
@@ -305,7 +506,19 @@ export class FavoritesPage implements OnInit, ViewWillEnter {
     private toastController: ToastController,
     private router: Router,
     private cartService: CartService
-  ) { }
+  ) {
+    addIcons({
+      heartOutline, 
+      heart, 
+      cartOutline, 
+      storefront, 
+      storefrontOutline,
+      lockClosedOutline,
+      arrowForwardOutline,
+      homeOutline,
+      home
+    });
+  }
 
   async ngOnInit() {
     await this.loadFavorites();
@@ -391,9 +604,13 @@ export class FavoritesPage implements OnInit, ViewWillEnter {
     }
   }
 
-  handleImageError(event: Event, type: 'product' | 'store') {
+  handleImageError(event: Event, type: 'product' | 'store' | 'logo') {
     const img = event.target as HTMLImageElement;
-    img.src = type === 'product' ? 'assets/products/default-product.jpg' : 'assets/stores/default-store.jpg';
+    if (type === 'logo') {
+      img.src = 'assets/logo-placeholder.png';
+    } else {
+      img.src = type === 'product' ? 'assets/products/default-product.jpg' : 'assets/stores/default-store.jpg';
+    }
     img.onerror = null;
   }
 
