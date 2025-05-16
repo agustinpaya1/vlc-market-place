@@ -323,11 +323,18 @@ export class StorePage implements OnInit {
     const user = await this.authService.getCurrentUser();
     if (!user) {
       this.toastController.create({
-        message: 'Debes iniciar sesión para usar favoritos',
-        duration: 1200,
+        message: '<ion-icon name="lock-closed-outline"></ion-icon> Debes iniciar sesión para usar favoritos',
+        duration: 2500,
         position: 'top',
-        color: 'success',
-        cssClass: 'subtle-toast'
+        buttons: [
+          {
+            text: 'Iniciar sesión',
+            handler: () => {
+              this.router.navigate(['/login']);
+            }
+          }
+        ],
+        cssClass: 'auth-required-toast'
       }).then(toast => toast.present());
       return;
     }
@@ -336,21 +343,21 @@ export class StorePage implements OnInit {
       await this.supabaseService.removeFavorite(user.id, product.id, 'product');
       this.userFavorites = this.userFavorites.filter(id => id !== product.id);
       this.toastController.create({
-        message: 'Eliminado de favoritos',
-        duration: 1200,
+        message: `<ion-icon name="heart-dislike-outline"></ion-icon> ${product.name} eliminado de favoritos`,
+        duration: 1500,
         position: 'top',
-        color: 'success',
-        cssClass: 'subtle-toast'
+        color: 'danger',
+        cssClass: 'subtle-toast toast-with-icon'
       }).then(toast => toast.present());
     } else {
       await this.supabaseService.addFavorite(user.id, product.id, 'product');
       this.userFavorites = [...this.userFavorites, product.id];
       this.toastController.create({
-        message: 'Añadido a favoritos',
-        duration: 1200,
+        message: `<ion-icon name="heart"></ion-icon> ${product.name} añadido a favoritos`,
+        duration: 1500,
         position: 'top',
         color: 'success',
-        cssClass: 'subtle-toast'
+        cssClass: 'subtle-toast toast-with-icon'
       }).then(toast => toast.present());
     }
   }
@@ -382,11 +389,18 @@ export class StorePage implements OnInit {
     const user = await this.authService.getCurrentUser();
     if (!user || !this.store) {
       this.toastController.create({
-        message: 'Debes iniciar sesión para usar favoritos',
-        duration: 1200,
+        message: '<ion-icon name="lock-closed-outline"></ion-icon> Debes iniciar sesión para usar favoritos',
+        duration: 2500,
         position: 'top',
-        color: 'success',
-        cssClass: 'subtle-toast'
+        buttons: [
+          {
+            text: 'Iniciar sesión',
+            handler: () => {
+              this.router.navigate(['/login']);
+            }
+          }
+        ],
+        cssClass: 'auth-required-toast'
       }).then(toast => toast.present());
       return;
     }
@@ -394,21 +408,21 @@ export class StorePage implements OnInit {
       await this.supabaseService.removeFavorite(user.id, this.store.id, 'store');
       this.userFavoriteStore = false;
       this.toastController.create({
-        message: 'Tienda eliminada de favoritos',
-        duration: 1200,
+        message: `<ion-icon name="heart-dislike-outline"></ion-icon> ${this.store.name} eliminada de favoritos`,
+        duration: 1500,
         position: 'top',
-        color: 'success',
-        cssClass: 'subtle-toast'
+        color: 'danger',
+        cssClass: 'subtle-toast toast-with-icon'
       }).then(toast => toast.present());
     } else {
       await this.supabaseService.addFavorite(user.id, this.store.id, 'store');
       this.userFavoriteStore = true;
       this.toastController.create({
-        message: 'Tienda añadida a favoritos',
-        duration: 1200,
+        message: `<ion-icon name="heart"></ion-icon> ${this.store.name} añadida a favoritos`,
+        duration: 1500,
         position: 'top',
         color: 'success',
-        cssClass: 'subtle-toast'
+        cssClass: 'subtle-toast toast-with-icon'
       }).then(toast => toast.present());
     }
   }

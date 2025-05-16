@@ -7,6 +7,8 @@ export interface NotificationOptions {
   message: string;
   type?: NotificationType;
   duration?: number;
+  icon?: string;
+  position?: 'top' | 'middle' | 'bottom';
   action?: {
     text: string;
     handler: () => void;
@@ -30,12 +32,22 @@ export class NotificationService {
   }
 
   async show(options: NotificationOptions) {
+    const type = options.type || 'info';
+    const color = this.getColorByType(type);
+    const duration = options.duration || 2000;
+    const position = options.position || 'top';
+    
+    let message = options.message;
+    if (options.icon) {
+      message = `<ion-icon name="${options.icon}"></ion-icon> ${message}`;
+    }
+
     const toast = await this.toastController.create({
-      message: options.message,
-      duration: options.duration || 1200,
-      position: 'top',
-      color: 'success',
-      cssClass: 'subtle-toast',
+      message: message,
+      duration: duration,
+      position: position,
+      color: color,
+      cssClass: `subtle-toast toast-${type} ${options.icon ? 'toast-with-icon' : ''}`,
       buttons: options.action ? [
         {
           text: options.action.text,
@@ -45,49 +57,67 @@ export class NotificationService {
       ] : []
     });
     await toast.present();
+    return toast;
   }
 
-  async showSuccess(message: string) {
-    const toast = await this.toastController.create({
+  async showSuccess(message: string, options: Partial<NotificationOptions> = {}) {
+    return this.show({
       message,
-      duration: 1200,
-      position: 'top',
-      color: 'success',
-      cssClass: 'subtle-toast'
+      type: 'success',
+      icon: options.icon || 'checkmark-circle',
+      duration: options.duration || 2000,
+      position: options.position || 'top',
+      action: options.action
     });
-    await toast.present();
   }
 
-  async showError(message: string) {
-    const toast = await this.toastController.create({
+  async showError(message: string, options: Partial<NotificationOptions> = {}) {
+    return this.show({
       message,
-      duration: 1200,
-      position: 'top',
-      color: 'success',
-      cssClass: 'subtle-toast'
+      type: 'error',
+      icon: options.icon || 'alert-circle',
+      duration: options.duration || 3000,
+      position: options.position || 'top',
+      action: options.action
     });
-    await toast.present();
   }
 
-  async showWarning(message: string) {
-    const toast = await this.toastController.create({
+  async showWarning(message: string, options: Partial<NotificationOptions> = {}) {
+    return this.show({
       message,
-      duration: 1200,
-      position: 'top',
-      color: 'success',
-      cssClass: 'subtle-toast'
+      type: 'warning',
+      icon: options.icon || 'warning',
+      duration: options.duration || 3000,
+      position: options.position || 'top',
+      action: options.action
     });
-    await toast.present();
   }
 
-  async showInfo(message: string) {
-    const toast = await this.toastController.create({
+  async showInfo(message: string, options: Partial<NotificationOptions> = {}) {
+    return this.show({
       message,
-      duration: 1200,
-      position: 'top',
-      color: 'success',
-      cssClass: 'subtle-toast'
+      type: 'info',
+      icon: options.icon || 'information-circle',
+      duration: options.duration || 2000,
+      position: options.position || 'top',
+      action: options.action
+    });
+  }
+
+  async showAuthRequired(message: string = 'Debes iniciar sesión para continuar', action: () => void) {
+    const toast = await this.toastController.create({
+      message: `<ion-icon name="lock-closed-outline"></ion-icon> ${message}`,
+      duration: 4000,
+      position: 'bottom',
+      buttons: [
+        {
+          text: 'Iniciar sesión',
+          handler: action
+        }
+      ],
+      cssClass: 'auth-required-toast'
     });
     await toast.present();
+    return toast;
   }
 } 

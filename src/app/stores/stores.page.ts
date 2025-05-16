@@ -29,6 +29,8 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
+  heartOutline, 
+  heart, 
   storefront, 
   location, 
   time, 
@@ -36,41 +38,46 @@ import {
   star, 
   trendingUp, 
   map, 
-  starHalf,
-  sunny,
+  starHalf, 
+  sunny, 
   moon, 
-  searchOutline,
-  search,
   notifications, 
+  searchOutline, 
+  search, 
   locationOutline, 
   chevronDownOutline, 
   notificationsOutline, 
   optionsOutline, 
   timeOutline, 
-  arrowForwardOutline,
-  camera,
-  chatbubbleEllipses,
-  shirtOutline,
-  pizzaOutline,
-  fishOutline,
-  basketOutline,
-  wineOutline,
-  leafOutline,
-  restaurantOutline,
-  fastFoodOutline,
-  waterOutline,
-  scanOutline,
-  walletOutline,
-  cash,
-  trash,
-  trophy,
-  gift,
-  ribbon,
-  pricetag,
-  cube,
-  calendar,
-  logInOutline,
-  constructOutline
+  arrowForwardOutline, 
+  camera, 
+  chatbubbleEllipses, 
+  shirtOutline, 
+  pizzaOutline, 
+  fishOutline, 
+  basketOutline, 
+  wineOutline, 
+  leafOutline, 
+  restaurantOutline, 
+  fastFoodOutline, 
+  waterOutline, 
+  scanOutline, 
+  walletOutline, 
+  cash, 
+  trash, 
+  trophy, 
+  gift, 
+  ribbon, 
+  pricetag, 
+  cube, 
+  calendar, 
+  logInOutline, 
+  constructOutline,
+  documentOutline,
+  gameControllerOutline,
+  flowerOutline,
+  musicalNotesOutline,
+  beerOutline
 } from 'ionicons/icons';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, take, takeUntil } from 'rxjs/operators';
@@ -188,7 +195,11 @@ export class StoresPage implements OnInit, OnDestroy {
     'Vinos',
     'Gourmet',
     'Herramientas',
-    'Especialidad'
+    'Especialidad',
+    'Papelería',
+    'Juguetería',
+    'Perfumería',
+    'Licores'
   ];
   sortOptions = [
     { value: 'default', label: 'Destacados', icon: 'star' },
@@ -223,13 +234,15 @@ export class StoresPage implements OnInit, OnDestroy {
     private vlcoinService: VlcoinService
   ) {
     addIcons({
-      storefront, location, time, arrowForward, star, trendingUp, map, starHalf,
+      heartOutline, heart, storefront, location, time, arrowForward, star, trendingUp, map, starHalf,
       sunny, moon, notifications, searchOutline, search, locationOutline,
       chevronDownOutline, notificationsOutline, optionsOutline, timeOutline,
       arrowForwardOutline, camera, chatbubbleEllipses, shirtOutline, pizzaOutline,
       fishOutline, basketOutline, wineOutline, leafOutline, restaurantOutline,
       fastFoodOutline, waterOutline, scanOutline, walletOutline, cash, trash,
-      trophy, gift, ribbon, pricetag, cube, calendar, logInOutline, constructOutline
+      trophy, gift, ribbon, pricetag, cube, calendar, logInOutline, constructOutline,
+      documentOutline, gameControllerOutline, flowerOutline, musicalNotesOutline,
+      beerOutline
     });
 
     // Set up search functionality with improved debounce
@@ -899,7 +912,11 @@ export class StoresPage implements OnInit, OnDestroy {
       'Vinos': 'wineOutline',
       'Gourmet': 'restaurantOutline',
       'Herramientas': 'constructOutline',
-      'Especialidad': 'pizzaOutline'
+      'Especialidad': 'pizzaOutline',
+      'Papelería': 'documentOutline',
+      'Juguetería': 'gameControllerOutline',
+      'Perfumería': 'flowerOutline',
+      'Licores': 'beerOutline'
     };
     
     return iconMap[category] || 'storefront';
@@ -995,12 +1012,14 @@ export class StoresPage implements OnInit, OnDestroy {
    */
   getCategoryImage(category: string): string {
     const mainColor = '02A396';
+    
+    // Para todas las categorías, usar SVG con iconos blancos
     const svgMap: {[key: string]: string} = {
       'Todos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M30 35h40v30H30zm5 5h30v20H35z' fill='white'/%3E%3C/svg%3E`,
       
-      'Fruterías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M35 40c0-8.3 6.7-15 15-15s15 6.7 15 15-6.7 15-15 15-15-6.7-15-15zm25 0c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zm-10 15l5 20h-10l5-20' fill='white'/%3E%3C/svg%3E`,
+      'Fruterías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M25 65c0 0 10 10 25 10s25-10 25-10H25z' fill='white'/%3E%3Ccircle cx='38' cy='45' r='10' fill='white'/%3E%3Cpath d='M38 35v-5' stroke='white' stroke-width='3'/%3E%3Ccircle cx='50' cy='40' r='10' fill='white'/%3E%3Cpath d='M50 30v-5' stroke='white' stroke-width='3'/%3E%3Ccircle cx='62' cy='45' r='10' fill='white'/%3E%3Cpath d='M62 35v-5' stroke='white' stroke-width='3'/%3E%3C/svg%3E`,
       
-      'Carnicerías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M30 35c0-2.8 2.2-5 5-5h30c2.8 0 5 2.2 5 5v30c0 2.8-2.2 5-5 5H35c-2.8 0-5-2.2-5-5V35zm5 0h30v30H35V35z' fill='white'/%3E%3Cpath d='M40 40h20v20H40z' fill='white'/%3E%3C/svg%3E`,
+      'Carnicerías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M30 30 L70 30 C70 30 65 40 50 40 C35 40 30 30 30 30 Z' fill='white'/%3E%3Cpath d='M35 40 L35 65 C35 70 50 70 50 65 C50 70 65 70 65 65 L65 40' fill='white'/%3E%3Cpath d='M40 35 L45 35 M55 35 L60 35 M45 50 L55 50' stroke='white' stroke-width='2'/%3E%3C/svg%3E`,
       
       'Pescaderías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M25 50c15-20 35-20 50 0-15 20-35 20-50 0zm40-5c0-2.8 2.2-5 5-5s5 2.2 5 5-2.2 5-5 5-5-2.2-5-5z' fill='white'/%3E%3C/svg%3E`,
       
@@ -1008,15 +1027,23 @@ export class StoresPage implements OnInit, OnDestroy {
       
       'Lácteos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M35 30l5 10v30h20V40l5-10H35zm5 5h20l-2.5 5h-15l-2.5-5z' fill='white'/%3E%3C/svg%3E`,
       
-      'Orgánicos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M30 50c0-20 20-25 20-25s0 10 0 25-20 25-20 25 0-10 0-25zm40 0c0-20-20-25-20-25s0 10 0 25 20 25 20 25 0-10 0-25z' fill='white'/%3E%3C/svg%3E`,
+      'Orgánicos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M30 50c0 0 5-25 20-25 15 0 20 25 20 25s-5 25-20 25c-15 0-20-25-20-25z' fill='none' stroke='white' stroke-width='3'/%3E%3Cpath d='M30 50h40M50 25v50' stroke='white' stroke-width='3'/%3E%3Ccircle cx='50' cy='50' r='10' fill='white'/%3E%3C/svg%3E`,
       
-      'Vinos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M40 30l5 10v25h10V40l5-10H40zm5 5h10l-2 5H47l-2-5zM45 70h10v5H45z' fill='white'/%3E%3C/svg%3E`,
+      'Vinos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M40 25h20l-5 25v20h5v5H40v-5h5V50l-5-25zm5 5l3 15h4l3-15h-10z' fill='white'/%3E%3C/svg%3E`,
       
-      'Gourmet': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M35 30v40h5V55h20v15h5V30h-5v20H40V30h-5z' fill='white'/%3E%3C/svg%3E`,
+      'Gourmet': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M30 60h40v5H30zm35-5c0-15-15-25-15-25S35 40 35 55h30zm-15-30v5' stroke='white' stroke-width='3' fill='none'/%3E%3C/svg%3E`,
       
-      'Herramientas': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M35 35l30 30M35 65l30-30' stroke='white' stroke-width='5'/%3E%3C/svg%3E`,
+      'Herramientas': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M65 35L50 50v10h5l15-15v-10h-5zM35 65L50 50l5 5-15 15h-5v-5z' fill='white'/%3E%3C/svg%3E`,
       
-      'Especialidad': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M50 25l8 17h17l-13 13 5 17-17-8-17 8 5-17-13-13h17z' fill='white'/%3E%3C/svg%3E`
+      'Especialidad': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M50 25l8 17h17l-13 13 5 17-17-8-17 8 5-17-13-13h17z' fill='white'/%3E%3C/svg%3E`,
+      
+      'Papelería': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M35 30v40h30V30H35zm5 5h20v30H40V35z' fill='white'/%3E%3Cpath d='M45 40h10v5H45zm0 10h10v5H45z' fill='white'/%3E%3C/svg%3E`,
+      
+      'Juguetería': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M30 40c0-2.8 2.2-5 5-5h30c2.8 0 5 2.2 5 5v20c0 2.8-2.2 5-5 5H35c-2.8 0-5-2.2-5-5V40zm5 0v20h30V40H35z' fill='white'/%3E%3Ccircle cx='40' cy='45' r='3' fill='white'/%3E%3Ccircle cx='60' cy='45' r='3' fill='white'/%3E%3Cpath d='M40 55h20v3H40z' fill='white'/%3E%3C/svg%3E`,
+      
+      'Perfumería': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M40 30h20v10H40z' fill='white'/%3E%3Cpath d='M35 40h30v30H35z' fill='white'/%3E%3Cpath d='M45 40v-5h10v5M40 50h20M40 60h20' stroke='white' stroke-width='2'/%3E%3C/svg%3E`,
+      
+      'Licores': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M35 25h30v15l-12 25v10h12v5H35v-5h12V65L35 40V25zm5 5v5h20v-5H40z' fill='white'/%3E%3C/svg%3E`
     };
     
     return svgMap[category] || svgMap['Todos'];

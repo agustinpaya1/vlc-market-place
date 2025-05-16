@@ -372,6 +372,13 @@ ion-segment.category-segment {
         object-fit: cover;
         padding: 0;
         transition: transform 0.2s ease;
+        
+        &[src$=".png"] {
+          width: 55%;
+          height: 55%;
+          object-fit: contain;
+          padding: 0;
+        }
       }
     }
     

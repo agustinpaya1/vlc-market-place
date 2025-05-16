@@ -1,25 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { 
-  IonHeader, 
-  IonToolbar, 
-  IonTitle, 
-  IonContent, 
-  IonButtons, 
-  IonButton, 
-  IonIcon, 
-  IonCard, 
-  IonCardContent,
-  IonLabel,
-  IonSegment,
-  IonSegmentButton,
-  IonProgressBar,
-  IonRow,
-  IonCol,
-  IonGrid,
-  ModalController
-} from '@ionic/angular/standalone';
+import {   IonHeader,   IonToolbar,   IonTitle,   IonContent,   IonButtons,   IonButton,   IonIcon,   IonCard,   IonCardContent,  IonLabel,  IonSegment,  IonSegmentButton,  IonProgressBar,  IonRow,  IonCol,  IonGrid,  ModalController,  ToastController} from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
   close, 
@@ -64,6 +46,18 @@ import {
 } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
 import { VlcoinService } from '../services/vlcoin.service';
+
+// Interface for Reward type
+interface Reward {
+  id: number;
+  title: string;
+  location: string;
+  image: string;
+  coins: number;
+  category: string;
+  displayTitle: boolean;
+  redeemed?: boolean;
+}
 
 @Component({
   selector: 'app-vlcoin-modal',
@@ -181,7 +175,7 @@ export class VlcoinModalComponent implements OnInit {
   ];
   
   // Datos de recompensas
-  rewards = [
+  rewards: Reward[] = [
     {
       id: 1,
       title: '5€ Frutas/Verduras',
@@ -189,7 +183,8 @@ export class VlcoinModalComponent implements OnInit {
       image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/recompensas//Screenshot%202025-05-10%20at%2022.31.50.png',
       coins: 200,
       category: 'Mercado Central',
-      displayTitle: false
+      displayTitle: false,
+      redeemed: false
     },
     {
       id: 2,
@@ -198,7 +193,8 @@ export class VlcoinModalComponent implements OnInit {
       image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/recompensas//Screenshot%202025-05-10%20at%2022.32.07.png',
       coins: 350,
       category: 'Mercado Ruzafa',
-      displayTitle: false
+      displayTitle: false,
+      redeemed: false
     },
     {
       id: 3,
@@ -207,7 +203,8 @@ export class VlcoinModalComponent implements OnInit {
       image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/recompensas//Screenshot%202025-05-10%20at%2022.32.40.png',
       coins: 150,
       category: 'Tiendas Chinas',
-      displayTitle: false
+      displayTitle: false,
+      redeemed: false
     },
     {
       id: 4,
@@ -216,7 +213,8 @@ export class VlcoinModalComponent implements OnInit {
       image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/recompensas//Screenshot%202025-05-10%20at%2022.32.20.png',
       coins: 400,
       category: 'Mercado Central',
-      displayTitle: false
+      displayTitle: false,
+      redeemed: false
     },
     {
       id: 5,
@@ -225,7 +223,8 @@ export class VlcoinModalComponent implements OnInit {
       image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/recompensas//Screenshot%202025-05-10%20at%2022.32.51.png',
       coins: 300,
       category: 'Tiendas Chinas',
-      displayTitle: false
+      displayTitle: false,
+      redeemed: false
     },
     {
       id: 6,
@@ -234,7 +233,8 @@ export class VlcoinModalComponent implements OnInit {
       image: 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/recompensas//Screenshot%202025-05-10%20at%2022.33.02.png',
       coins: 250,
       category: 'Mercado Ruzafa',
-      displayTitle: false
+      displayTitle: false,
+      redeemed: false
     }
   ];
   
@@ -244,7 +244,8 @@ export class VlcoinModalComponent implements OnInit {
   constructor(
     private modalCtrl: ModalController,
     private authService: AuthService,
-    private vlcoinService: VlcoinService
+    private vlcoinService: VlcoinService,
+    private toastCtrl: ToastController
   ) {
     addIcons({
       close,
@@ -325,39 +326,112 @@ export class VlcoinModalComponent implements OnInit {
   // Método para participar en un reto
   async participateInChallenge(challengeId: number) {
     console.log('Participando en reto:', challengeId);
-    // Implementar lógica para participar en reto
+    
+    // Buscar el reto por ID
+    const challenge = this.challenges.find(c => c.id === challengeId);
+    if (!challenge) return;
+    
+    // Actualizar el estado del reto para mostrar como "participando"
+    challenge.progress.current = 1; // Marca al menos 1 como completado
+    
+    // Si es el reto del Mercado Central (ID 1), mostrar un mensaje de éxito
+    if (challengeId === 1) {
+      const toast = await this.toastCtrl.create({
+        message: '¡Te has unido al Reto del Mercado Central!',
+        duration: 2000,
+        position: 'bottom',
+        color: 'success'
+      });
+      await toast.present();
+    }
+    
+    // Forzar actualización de la UI
+    this.challenges = [...this.challenges];
   }
   
-  // Método para canjear una recompensa
-  async redeemReward(rewardId: number) {
-    console.log('Canjeando recompensa:', rewardId);
+  // Método para canjear una recompensa  
+  async redeemReward(rewardId: number, event?: any) {    
+    console.log('Canjeando recompensa:', rewardId);    
     
-    // Buscar la recompensa seleccionada
-    const reward = this.rewards.find(r => r.id === rewardId);
-    if (!reward) return;
+    // Buscar la recompensa seleccionada    
+    const reward = this.rewards.find(r => r.id === rewardId);    
+    if (!reward) return;    
     
-    // Obtener el usuario actual
-    const user = await this.authService.user$.toPromise();
-    if (!user || !user.id) return;
+    // Verificar que hay saldo suficiente    
+    if (this.vlcoinBalance < reward.coins) {      
+      const errorToast = await this.toastCtrl.create({        
+        message: `No tienes suficientes VLCoins para canjear esta recompensa`,        
+        duration: 2000,        
+        position: 'bottom',        
+        color: 'danger'      
+      });      
+      await errorToast.present();      
+      return;    
+    }    
     
-    // Verificar si tiene suficientes VLCoins
-    if (this.vlcoinBalance < reward.coins) {
-      console.error('No tienes suficientes VLCoins para canjear esta recompensa');
-      return;
-    }
+    // Marcar como canjeado    
+    reward.redeemed = true;    
     
-    // Restar VLCoins (ejemplo de implementación)
-    const success = await this.vlcoinService.subtractVlcoins(user.id, reward.coins);
-    if (success) {
-      console.log(`Recompensa canjeada: ${reward.title}`);
-      // Aquí se implementaría lógica adicional como guardar el canje en la base de datos,
-      // emitir un comprobante, etc.
+    // Actualizar el saldo visual con animación    
+    this.animateVLCoinDecrease(reward.coins);    
+    
+    // Mostrar mensaje de éxito    
+    const toast = await this.toastCtrl.create({      
+      message: `¡Has canjeado con éxito ${reward.title} en ${reward.location}!`,      
+      duration: 2500,      
+      position: 'bottom',      
+      color: 'success'    
+    });    
+    await toast.present();    
+    
+    // Forzar actualización de la UI para que se reflejen los cambios    
+    this.rewards = [...this.rewards];  
+  }    
+  
+  // Método para animar la disminución de VLCoins  
+  private animateVLCoinDecrease(amount: number) {    
+    // Guardar el valor original para la animación    
+    const startValue = this.vlcoinBalance;    
+    const endValue = startValue - amount;    
+    const duration = 1000; // 1 segundo de duración    
+    const fps = 60; // Frames por segundo    
+    const steps = duration / 1000 * fps; // Cantidad de pasos en la animación    
+    const decrementPerStep = amount / steps; // Cuánto decrementar en cada paso    
+    
+    // Obtener el elemento donde se muestra el saldo para añadir efectos visuales    
+    const balanceElement = document.querySelector('.balance-text');    
+    if (balanceElement) {      
+      balanceElement.classList.add('updating-balance');    
+    }    
+    
+    let currentStep = 0;    
+    
+    // Usar interval para animar    
+    const intervalId = setInterval(() => {      
+      currentStep++;      
       
-      // Mostrar un mensaje de éxito y cerrar el modal con la información de que se actualizó el balance
-      setTimeout(() => this.dismissModal(true), 1500);
-    }
+      if (currentStep <= steps) {        
+        // Calcular y actualizar el valor actual        
+        this.vlcoinBalance = Math.round(startValue - (decrementPerStep * currentStep));      
+      } else {        
+        // Asegurar que el valor final sea exacto        
+        this.vlcoinBalance = endValue;        
+        
+        // Remover clase de animación        
+        if (balanceElement) {          
+          balanceElement.classList.remove('updating-balance');          
+          balanceElement.classList.add('balance-updated');          
+          setTimeout(() => {            
+            balanceElement.classList.remove('balance-updated');          
+          }, 300);        
+        }        
+        
+        // Detener el interval        
+        clearInterval(intervalId);      
+      }    
+    }, 1000 / fps);  
   }
-
+  
   // Método para cerrar el modal
   dismissModal(balanceUpdated: boolean = false) {
     this.modalCtrl.dismiss({

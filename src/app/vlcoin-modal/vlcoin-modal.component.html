@@ -116,7 +116,7 @@
         
         <ion-progress-bar [value]="challenge.progress.current / challenge.progress.total"></ion-progress-bar>
         
-        <ion-button expand="block" color="primary" class="continue-button" (click)="participateInChallenge(challenge.id)">
+        <ion-button expand="block" [color]="challenge.progress.current > 0 ? 'success' : 'primary'" class="continue-button" (click)="participateInChallenge(challenge.id)">
           {{ challenge.progress.current > 0 ? 'CONTINUAR RETO' : 'PARTICIPAR' }}
         </ion-button>
       </ion-card-content>
@@ -143,10 +143,11 @@
             <div class="reward-content">
               <h5 class="reward-title">{{ reward.title }}</h5>
               <p class="reward-location">{{ reward.location }}</p>
-              <button class="reward-button" [ngClass]="{'insufficient': vlcoinBalance < reward.coins}" 
-                      [disabled]="vlcoinBalance < reward.coins"
-                      (click)="redeemReward(reward.id)">
-                {{ vlcoinBalance >= reward.coins ? 'CANJEAR' : 'INSUFICIENTES VL' }}
+              <button class="reward-button" 
+                      [ngClass]="{'insufficient': vlcoinBalance < reward.coins, 'redeemed': reward.redeemed}" 
+                      [disabled]="vlcoinBalance < reward.coins || reward.redeemed"
+                      (click)="redeemReward(reward.id, $event)">
+                {{ reward.redeemed ? '¡CANJEADO!' : (vlcoinBalance >= reward.coins ? 'CANJEAR' : 'INSUFICIENTES VL') }}
               </button>
             </div>
           </div>

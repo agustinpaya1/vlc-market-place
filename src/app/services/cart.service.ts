@@ -51,17 +51,12 @@ export class CartService {
   async addToCart(item: CartItem): Promise<boolean> {
     const user = await this.authService.getCurrentUser();
     if (!user) {
-      await this.notificationService.show({
-        message: 'Inicia sesión o regístrate para añadir productos al carrito',
-        type: 'warning',
-        duration: 3000,
-        action: {
-          text: 'Iniciar sesión',
-          handler: () => {
-            window.location.href = '/login';
-          }
+      await this.notificationService.showAuthRequired(
+        'Inicia sesión o regístrate para añadir productos al carrito', 
+        () => { 
+          window.location.href = '/login';
         }
-      });
+      );
       return false;
     }
 
@@ -71,10 +66,16 @@ export class CartService {
     if (existingItem) {
       existingItem.quantity += item.quantity;
       this.cartItems.next([...currentItems]);
-      await this.notificationService.showSuccess(`Cantidad actualizada: ${item.name} (${existingItem.quantity})`);
+      await this.notificationService.showSuccess(`Cantidad actualizada: ${item.name} (${existingItem.quantity})`, {
+        icon: 'cart',
+        duration: 1500
+      });
     } else {
       this.cartItems.next([...currentItems, item]);
-      await this.notificationService.showSuccess(`${item.name} añadido al carrito`);
+      await this.notificationService.showSuccess(`${item.name} añadido al carrito`, {
+        icon: 'cart',
+        duration: 1500
+      });
     }
     return true;
   }

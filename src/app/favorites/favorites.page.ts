@@ -628,11 +628,19 @@ export class FavoritesPage implements OnInit, ViewWillEnter {
     const user = await this.authService.getCurrentUser();
     if (!user) {
       this.toastController.create({
-        message: 'Debes de estar registrado para añadir a favoritos',
-        duration: 1200,
+        message: '<ion-icon name="lock-closed-outline"></ion-icon> Debes de estar registrado para añadir a favoritos',
+        duration: 2500,
         position: 'top',
-        color: 'success',
-        cssClass: 'subtle-toast'
+        color: 'primary',
+        cssClass: 'auth-required-toast',
+        buttons: [
+          {
+            text: 'Iniciar sesión',
+            handler: () => {
+              this.router.navigate(['/login']);
+            }
+          }
+        ]
       }).then(toast => toast.present());
       return;
     }
@@ -647,11 +655,11 @@ export class FavoritesPage implements OnInit, ViewWillEnter {
         this.favoriteStores = this.favoriteStores.filter(s => s.id !== id);
       }
       this.toastController.create({
-        message: 'Eliminado de favoritos',
-        duration: 1200,
+        message: `<ion-icon name="heart-dislike-outline"></ion-icon> Eliminado de favoritos`,
+        duration: 1500,
         position: 'top',
-        color: 'success',
-        cssClass: 'subtle-toast'
+        color: 'danger',
+        cssClass: 'subtle-toast toast-with-icon'
       }).then(toast => toast.present());
     } else {
       await this.supabaseService.addFavorite(user.id, id, type);
@@ -663,11 +671,11 @@ export class FavoritesPage implements OnInit, ViewWillEnter {
         if (!this.favoriteStores.some(s => s.id === id)) this.favoriteStores.push(item as Store);
       }
       this.toastController.create({
-        message: 'Añadido a favoritos',
-        duration: 1200,
+        message: `<ion-icon name="heart"></ion-icon> Añadido a favoritos`,
+        duration: 1500,
         position: 'top',
         color: 'success',
-        cssClass: 'subtle-toast'
+        cssClass: 'subtle-toast toast-with-icon'
       }).then(toast => toast.present());
     }
   }
