@@ -74,6 +74,8 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   // Siempre modo desarrollo para simular pagos
   private isDevelopment = true;
 
+  private trackerInterval: any;
+
   constructor(
     private modalCtrl: ModalController,
     private paymentService: PaymentService,
@@ -165,6 +167,9 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    if (this.trackerInterval) {
+      clearInterval(this.trackerInterval);
+    }
     this.paymentService.destroyCardElement();
   }
 
@@ -346,18 +351,50 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   initOrderTracker() {
-    // Configura el seguimiento del pedido
-    this.deliveryProgress = 25; // Comienza con el 25% completado
-    this.deliverySteps[0].completed = true; // Marcar el primer paso como completado
-    
-    // Configurar los tiempos estimados
+    // Reiniciar estados
+    this.deliveryProgress = 0;
+    this.deliverySteps.forEach(step => step.completed = false);
+    this.orderStatus = 'pending';
+    this.currentLocation = 'Tienda';
+    this.showOrderTracker = true;
+
+    // Simulación de los 4 pasos en 1 minuto (15s por paso)
+    let step = 0;
+    const totalSteps = this.deliverySteps.length;
+    const stepDuration = 15000; // 15 segundos por paso
+
+    this.trackerInterval = setInterval(() => {
+      if (step < totalSteps) {
+        this.deliverySteps[step].completed = true;
+        this.deliveryProgress = ((step + 1) / totalSteps) * 100;
+        // Actualizar estado y ubicación
+        switch (step) {
+          case 0:
+            this.orderStatus = 'pending';
+            this.currentLocation = 'Tienda';
+            break;
+          case 1:
+            this.orderStatus = 'processing';
+            this.currentLocation = 'Preparación';
+            break;
+          case 2:
+            this.orderStatus = 'shipped';
+            this.currentLocation = 'En camino';
+            break;
+          case 3:
+            this.orderStatus = 'delivered';
+            this.currentLocation = 'Entregado';
+            break;
+        }
+        step++;
+      } else {
+        clearInterval(this.trackerInterval);
+      }
+    }, stepDuration);
+
+    // Establecer tiempo estimado de entrega a 1 minuto desde ahora
     const now = new Date();
-    this.estimatedDeliveryTime = new Date(now.getTime() + 30 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    // Mostrar el seguimiento después de un breve retraso
-    setTimeout(() => {
-      this.showOrderTracker = true;
-    }, 1500);
+    this.estimatedDeliveryTime = new Date(now.getTime() + 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
 
   closeTracker() {
