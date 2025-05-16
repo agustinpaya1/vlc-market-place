@@ -273,25 +273,13 @@ ion-button[expand="block"] {
 .action-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.favorite-btn-modal {
-  background: rgba(255,255,255,0.85);
-  border: none;
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  cursor: pointer;
-  transition: background 0.2s;
-  margin-left: 0;
+  width: 100%;
+  margin-top: 18px;
+  margin-bottom: 15px;
 }
 
-.favorite-btn-modal:hover {
-  background: #ffeaea;
+.add-to-cart-btn {
+  width: 100%;
+  max-width: 280px;
 } 
