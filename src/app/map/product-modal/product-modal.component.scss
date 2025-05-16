@@ -138,6 +138,20 @@ ion-content {
   }
 }
 
+.action-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 8px;
+  margin-bottom: 15px;
+}
+
+.add-to-cart-btn {
+  width: 100%;
+  max-width: 280px;
+}
+
 ion-footer {
   ion-toolbar {
     --padding-top: 8px;
