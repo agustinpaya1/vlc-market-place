@@ -1,85 +1,84 @@
-import { Component, OnInit, ViewChild, NgZone, ChangeDetectorRef, OnDestroy } from '@angular/core';
-import { 
-  IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonChip,
-  IonCol,
-  IonContent, 
-  IonFabButton,
-  IonGrid,
-  IonHeader,
-  IonIcon,
-  IonLabel,
-  IonPopover,
-  IonRow,
-  IonSegment,
-  IonSegmentButton,
-  IonSpinner,
-  ModalController,
-  LoadingController,
-  AlertController
-} from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { addIcons } from 'ionicons';
-import { 
-  storefront, 
-  location, 
-  time, 
-  arrowForward, 
-  star, 
-  trendingUp, 
-  map, 
-  starHalf,
-  sunny,
-  moon, 
-  searchOutline,
-  search,
-  notifications, 
-  locationOutline, 
-  chevronDownOutline, 
-  notificationsOutline, 
-  optionsOutline, 
-  timeOutline, 
-  arrowForwardOutline,
-  camera,
-  chatbubbleEllipses,
-  shirtOutline,
-  pizzaOutline,
-  fishOutline,
-  basketOutline,
-  wineOutline,
-  leafOutline,
-  restaurantOutline,
-  fastFoodOutline,
-  waterOutline,
-  scanOutline,
-  walletOutline,
-  cash,
-  trash,
-  trophy,
-  gift,
-  ribbon,
-  pricetag,
-  cube,
-  calendar,
-  logInOutline
-} from 'ionicons/icons';
-import { SupabaseService } from '../services/supabase.service';
-import { AuthService } from '../services/auth.service';
-import { debounceTime, distinctUntilChanged, takeUntil, take } from 'rxjs/operators';
-import { Subject } from 'rxjs';
-import { ToastController } from '@ionic/angular/standalone';
-import { AiChatComponent } from '../ai-chat/ai-chat.component';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import {
+    AlertController,
+    IonButton,
+    IonCard,
+    IonCardHeader,
+    IonCardSubtitle,
+    IonCardTitle,
+    IonChip,
+    IonCol,
+    IonContent,
+    IonFabButton,
+    IonGrid,
+    IonHeader,
+    IonIcon,
+    IonLabel,
+    IonPopover,
+    IonRow,
+    IonSegment,
+    IonSegmentButton,
+    IonSpinner,
+    LoadingController,
+    ModalController,
+    ToastController
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+    arrowForward,
+    arrowForwardOutline,
+    basketOutline,
+    calendar,
+    camera,
+    cash,
+    chatbubbleEllipses,
+    chevronDownOutline,
+    cube,
+    fastFoodOutline,
+    fishOutline,
+    gift,
+    leafOutline,
+    location,
+    locationOutline,
+    logInOutline,
+    map,
+    moon,
+    notifications,
+    notificationsOutline,
+    optionsOutline,
+    pizzaOutline,
+    pricetag,
+    restaurantOutline,
+    ribbon,
+    scanOutline,
+    search,
+    searchOutline,
+    shirtOutline,
+    star,
+    starHalf,
+    storefront,
+    sunny,
+    time,
+    timeOutline,
+    trash,
+    trendingUp,
+    trophy,
+    walletOutline,
+    waterOutline,
+    wineOutline
+} from 'ionicons/icons';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, take, takeUntil } from 'rxjs/operators';
 import { createWorker } from 'tesseract.js';
-import { VlcoinModalComponent } from '../vlcoin-modal/vlcoin-modal.component';
+import { AiChatComponent } from '../ai-chat/ai-chat.component';
+import { AuthService } from '../services/auth.service';
+import { SupabaseService } from '../services/supabase.service';
 import { VlcoinService } from '../services/vlcoin.service';
+import { VlcoinModalComponent } from '../vlcoin-modal/vlcoin-modal.component';
 
 interface Product {
   id: string;
@@ -815,12 +814,19 @@ export class StoresPage implements OnInit, OnDestroy {
       
       await modal.present();
 
-      // Añadir efecto visual al icono
+      // Añadir efecto visual al icono y al contenedor
       const vlCoinIcon = document.querySelector('.wallet-button .vl-coin-icon');
+      const balanceDisplay = document.querySelector('.wallet-button .vlcoin-balance-display');
       if (vlCoinIcon) {
         vlCoinIcon.classList.add('wallet-pulse');
         setTimeout(() => {
           vlCoinIcon.classList.remove('wallet-pulse');
+        }, 800);
+      }
+      if (balanceDisplay) {
+        balanceDisplay.classList.add('wallet-pulse');
+        setTimeout(() => {
+          balanceDisplay.classList.remove('wallet-pulse');
         }, 800);
       }
       
@@ -1386,12 +1392,19 @@ export class StoresPage implements OnInit, OnDestroy {
       
       await modal.present();
       
-      // Añadir efecto visual al icono
+      // Añadir efecto visual al icono y al contenedor
       const vlCoinIcon = document.querySelector('.wallet-button .vl-coin-icon');
+      const balanceDisplay = document.querySelector('.wallet-button .vlcoin-balance-display');
       if (vlCoinIcon) {
         vlCoinIcon.classList.add('wallet-pulse');
         setTimeout(() => {
           vlCoinIcon.classList.remove('wallet-pulse');
+        }, 800);
+      }
+      if (balanceDisplay) {
+        balanceDisplay.classList.add('wallet-pulse');
+        setTimeout(() => {
+          balanceDisplay.classList.remove('wallet-pulse');
         }, 800);
       }
       
