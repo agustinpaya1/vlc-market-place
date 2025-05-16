@@ -105,46 +105,65 @@ export class LoginPage {
 
   async forgotPassword() {
     const alert = await this.alertController.create({
-      header: 'Reset Password',
+      header: 'Recuperar Contraseña',
       inputs: [
         {
           name: 'email',
           type: 'email',
-          placeholder: 'Enter your email'
+          placeholder: 'Ingresa tu correo electrónico'
         }
       ],
       buttons: [
         {
-          text: 'Cancel',
+          text: 'Cancelar',
           role: 'cancel'
         },
         {
-          text: 'Send Reset Link',
+          text: 'Enviar Enlace',
           handler: async (data) => {
             if (data.email) {
               try {
-                // Llamar al método de recuperación de contraseña de Supabase
+                // Mostrar indicador de carga
+                const loading = await this.alertController.create({
+                  message: 'Enviando enlace de recuperación...',
+                  backdropDismiss: false
+                });
+                await loading.present();
+                
+                // Crear una URL de redirección absoluta y correcta
+                const origin = window.location.origin;
+                const resetUrl = `${origin}/reset-password`;
+                
+                console.log('Enviando enlace de restablecimiento a:', data.email);
+                console.log('URL de redirección completa:', resetUrl);
+                
+                // Llamar al método de recuperación de contraseña de Supabase con opciones específicas
                 const { error } = await this.supabaseService.getClient().auth.resetPasswordForEmail(
                   data.email,
                   {
-                    redirectTo: `${window.location.origin}/reset-password`
+                    redirectTo: resetUrl
                   }
                 );
 
+                // Ocultar indicador de carga
+                await loading.dismiss();
+
                 if (error) {
-                  this.showAlert('Error', 'Failed to send reset link. Please try again.');
+                  console.error('Error al enviar enlace:', error);
+                  this.showAlert('Error', 'No se pudo enviar el enlace de recuperación. Por favor intenta nuevamente.');
                 } else {
+                  console.log('Enlace enviado exitosamente');
                   this.showAlert(
-                    'Success',
-                    'Password reset link has been sent to your email. Please check your inbox.'
+                    'Éxito',
+                    'Se ha enviado un enlace de recuperación a tu correo electrónico. Por favor revisa tu bandeja de entrada.'
                   );
                 }
               } catch (error) {
-                console.error('Password reset error:', error);
-                this.showAlert('Error', 'An unexpected error occurred. Please try again.');
+                console.error('Error en recuperación de contraseña:', error);
+                this.showAlert('Error', 'Ocurrió un error inesperado. Por favor intenta nuevamente.');
               }
             } else {
-              this.showAlert('Error', 'Please enter a valid email address');
+              this.showAlert('Error', 'Por favor ingresa una dirección de correo válida');
             }
           }
         }

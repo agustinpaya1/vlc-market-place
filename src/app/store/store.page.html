@@ -26,6 +26,9 @@
             <ion-icon name="cart"></ion-icon>
             <span *ngIf="cartItemsCount > 0" class="cart-indicator"></span>
           </ion-button>
+          <ion-button (click)="toggleFavoriteStore()" class="nav-button favorite-store-btn" fill="clear">
+            <ion-icon [name]="userFavoriteStore ? 'heart' : 'heart-outline'" color="danger"></ion-icon>
+          </ion-button>
         </div>
       </div>
 
@@ -73,6 +76,9 @@
         <ion-row>
           <ion-col size="6" size-md="4" size-lg="3" *ngFor="let product of filteredProducts; trackBy: trackProduct">
             <ion-card class="product-card" (click)="openProductModal(product)">
+              <button class="favorite-btn" (click)="toggleFavorite(product)">
+                <ion-icon [name]="isFavorite(product.id) ? 'heart' : 'heart-outline'" color="danger"></ion-icon>
+              </button>
               <ion-card-header>
                 <img [src]="product.imageUrl" 
                      (error)="handleImageError($event)" 

@@ -69,8 +69,7 @@ import {
   cube,
   calendar,
   logInOutline,
-  heart,
-  heartOutline
+  constructOutline
 } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
@@ -143,6 +142,21 @@ interface Store {
     IonPopover,
     IonSegment,
     IonSegmentButton
+  ],
+  styles: [
+    `
+    .subtle-toast {
+      --background: rgba(40, 167, 69, 0.95); /* verde sutil */
+      --color: #fff;
+      --border-radius: 12px;
+      --box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      font-size: 0.98em;
+      min-width: 120px;
+      max-width: 80vw;
+      text-align: center;
+      margin-top: 8px;
+    }
+    `
   ]
 })
 export class StoresPage implements OnInit, OnDestroy {
@@ -175,7 +189,7 @@ export class StoresPage implements OnInit, OnDestroy {
     'Orgánicos',
     'Vinos',
     'Gourmet',
-    'Delicatessen',
+    'Herramientas',
     'Especialidad'
   ];
   sortOptions = [
@@ -196,8 +210,7 @@ export class StoresPage implements OnInit, OnDestroy {
   isAuthenticated: boolean = false;
   private destroy$ = new Subject<void>();
 
-  // Añadir propiedad para almacenar los favoritos
-  favoriteStores: string[] = [];
+  userFavorites: string[] = [];
 
   constructor(
     private router: Router,
@@ -220,9 +233,7 @@ export class StoresPage implements OnInit, OnDestroy {
       arrowForwardOutline, camera, chatbubbleEllipses, shirtOutline, pizzaOutline,
       fishOutline, basketOutline, wineOutline, leafOutline, restaurantOutline,
       fastFoodOutline, waterOutline, scanOutline, walletOutline, cash, trash,
-      trophy, gift, ribbon, pricetag, cube, calendar, logInOutline,
-      // Asegurarnos de que los iconos de corazón estén registrados
-      heart, heartOutline
+      trophy, gift, ribbon, pricetag, cube, calendar, logInOutline, constructOutline
     });
 
     // Set up search functionality with improved debounce
@@ -274,6 +285,20 @@ export class StoresPage implements OnInit, OnDestroy {
     this.authService.user$.subscribe(async user => {
       if (user && user.id) {
         await this.vlcoinService.getVlcoinBalance(user.id);
+      }
+    });
+    
+    // Cargar favoritos del usuario si está autenticado
+    this.authService.user$.subscribe(async user => {
+      if (user && user.id) {
+        try {
+          const favStores = await this.supabaseService.getFavorites(user.id, 'store');
+          this.userFavorites = favStores.map((f: any) => f.store_id);
+        } catch (e) {
+          this.userFavorites = [];
+        }
+      } else {
+        this.userFavorites = [];
       }
     });
     
@@ -879,7 +904,8 @@ export class StoresPage implements OnInit, OnDestroy {
       'Orgánicos': 'leafOutline',
       'Vinos': 'wineOutline',
       'Gourmet': 'restaurantOutline',
-      'Delicatessen': 'pizzaOutline'
+      'Herramientas': 'constructOutline',
+      'Especialidad': 'pizzaOutline'
     };
     
     return iconMap[category] || 'storefront';
@@ -891,8 +917,10 @@ export class StoresPage implements OnInit, OnDestroy {
   private async showToast(message: string) {
     const toast = await this.toastController.create({
       message,
-      duration: 2000,
-      position: 'bottom'
+      duration: 1200,
+      position: 'top',
+      color: 'success',
+      cssClass: 'subtle-toast'
     });
     await toast.present();
   }
@@ -983,7 +1011,7 @@ export class StoresPage implements OnInit, OnDestroy {
       'Lácteos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M37 28c-1.1 0-1.7 1.2-1 2l4 4v36c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V34l4-4c.7-.8.1-2-1-2H37zm5 6h16v6H42v-6zm0 10h16v22H42V44z' fill='white'/%3E%3Ccircle cx='50' cy='34' r='3' fill='white'/%3E%3C/svg%3E`,
       'Orgánicos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M35 70c-2 0-5-2-5-5 0-15 10-28 20-35 8 5 15 15 17 25 1-5 4-10 8-13 0 10-3 20-10 28H35zm25-26c-2-5-6-10-10-13-7 5-15 15-15 27v2h28c-1-5-2-11-3-16z' fill='white'/%3E%3C/svg%3E`,
       'Gourmet': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M38 30c-1.1 0-2 .9-2 2v36c0 1.1.9 2 2 2s2-.9 2-2V51h20v17c0 1.1.9 2 2 2s2-.9 2-2V32c0-1.1-.9-2-2-2s-2 .9-2 2v15H40V32c0-1.1-.9-2-2-2zm12 24c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4z' fill='white'/%3E%3C/svg%3E`,
-      'Delicatessen': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M50 25c-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25zm0 44c-10.5 0-19-8.5-19-19s8.5-19 19-19 19 8.5 19 19-8.5 19-19 19zm8-19c0 4.4-3.6 8-8 8s-8-3.6-8-8 3.6-8 8-8 8 3.6 8 8z' fill='white'/%3E%3Cpath d='M36 36l28 28M36 64l28-28' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E`,
+      'Herramientas': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M50 25c-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25zm0 44c-10.5 0-19-8.5-19-19s8.5-19 19-19 19 8.5 19 19-8.5 19-19 19zm8-19c0 4.4-3.6 8-8 8s-8-3.6-8-8 3.6-8 8-8 8 3.6 8 8z' fill='white'/%3E%3Cpath d='M36 36l28 28M36 64l28-28' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E`,
       'Especialidad': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpolygon points='50,25 58,42 77,44 62,57 66,75 50,65 34,75 38,57 23,44 42,42' fill='white'/%3E%3C/svg%3E`
     };
     return svgMap[category] || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Ctext x='50' y='55' font-family='Arial, sans-serif' font-size='30' text-anchor='middle' fill='white' dominant-baseline='middle'%3E${category.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E`;
@@ -1101,7 +1129,7 @@ export class StoresPage implements OnInit, OnDestroy {
         location: 'C/ Colón, 25',
         openTime: '9:30 - 20:00',
         rating: 4.4,
-        categories: ['Delicatessen'],
+        categories: ['Herramientas'],
         hasOffers: false,
         distance: 1.3
       }
@@ -1431,35 +1459,27 @@ export class StoresPage implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // Verificar si una tienda está en favoritos
-  isStoreFavorite(storeId: string): boolean {
-    return this.favoritesService.isFavorite(storeId);
+  isFavorite(storeId: string): boolean {
+    return this.userFavorites.includes(storeId);
   }
 
-  // Alternar estado de favorito
-  toggleFavorite(event: Event, storeId: string): void {
-    event.stopPropagation(); // Evitar que el click se propague a la tarjeta de tienda
-    event.preventDefault(); // Evitar cualquier acción por defecto
-    
-    console.log(`Alternando favorito para tienda ${storeId}`);
-    
-    // Obtener el nombre de la tienda para un mensaje más descriptivo
-    const store = this.getStoreById(storeId);
-    const storeName = store ? store.name : 'Tienda';
-    
-    const isFavorite = this.favoritesService.toggleFavorite(storeId);
-    
-    console.log(`La tienda ${storeId} ahora está en favoritos:`, isFavorite);
-    
-    // Usar un mensaje simple para evitar problemas con HTML
-    if (isFavorite) {
-      this.showToast(`${storeName} añadida a favoritos`);
-    } else {
-      this.showToast(`${storeName} eliminada de favoritos`);
+  async toggleFavorite(store: any, event: Event) {
+    event.stopPropagation();
+    const user = await this.authService.getCurrentUser();
+    if (!user) {
+      this.showLoginRequiredToast('favoritos');
+      return;
     }
-    
-    // Forzar actualización de la interfaz
-    this.forceUpdate();
+    const storeId = store.id;
+    if (this.isFavorite(storeId)) {
+      await this.supabaseService.removeFavorite(user.id, storeId, 'store');
+      this.userFavorites = this.userFavorites.filter(id => id !== storeId);
+      this.showToast('Eliminado de favoritos');
+    } else {
+      await this.supabaseService.addFavorite(user.id, storeId, 'store');
+      this.userFavorites.push(storeId);
+      this.showToast('Añadido a favoritos');
+    }
   }
 }
 

@@ -7,6 +7,7 @@ import { SupabaseService } from '../services/supabase.service';
 import { CartService, CartItem } from '../services/cart.service';
 import { FavoritesService } from '../services/favorites.service';
 import { ProductModalComponent } from './product-modal/product-modal.component';
+import { AuthService } from '../services/auth.service';
 import { Product } from './product.interface';
 import { addIcons } from 'ionicons';
 import { chevronBack, heart, heartOutline, share, cart, star, location, time } from 'ionicons/icons';
@@ -30,6 +31,8 @@ export class StorePage implements OnInit {
   loadedProductsData = false;
   maxDiscount: number = 0;
   cartItems: CartItem[] = [];
+  userFavorites: string[] = [];
+  userFavoriteStore: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -38,6 +41,8 @@ export class StorePage implements OnInit {
     private loadingController: LoadingController,
     private toastController: ToastController,
     private cartService: CartService,
+    private modalCtrl: ModalController,
+    private authService: AuthService
     private modalCtrl: ModalController,
     private favoritesService: FavoritesService
   ) {
@@ -68,6 +73,28 @@ export class StorePage implements OnInit {
     this.cartService.getCartItems().subscribe((items: CartItem[]) => {
       this.cartItems = items;
       this.updateCartStatus();
+    });
+
+    // Cargar favoritos del usuario si está autenticado
+    this.authService.user$.subscribe(async user => {
+      if (user && user.id) {
+        try {
+          const favProducts = await this.supabaseService.getFavorites(user.id, 'product');
+          this.userFavorites = favProducts.map((f: any) => f.product_id);
+          // Favorito de tienda
+          const storeId = this.route.snapshot.paramMap.get('id');
+          if (storeId) {
+            const favStores = await this.supabaseService.getFavorites(user.id, 'store');
+            this.userFavoriteStore = favStores.some((f: any) => f.store_id === storeId);
+          }
+        } catch (e) {
+          this.userFavorites = [];
+          this.userFavoriteStore = false;
+        }
+      } else {
+        this.userFavorites = [];
+        this.userFavoriteStore = false;
+      }
     });
   }
 
@@ -161,9 +188,10 @@ export class StorePage implements OnInit {
   private async showNoProductsMessage() {
     const toast = await this.toastController.create({
       message: 'Esta tienda no tiene productos disponibles en este momento',
-      duration: 3000,
-      position: 'bottom',
-      color: 'warning'
+      duration: 1200,
+      position: 'top',
+      color: 'success',
+      cssClass: 'subtle-toast'
     });
     await toast.present();
   }
@@ -171,9 +199,10 @@ export class StorePage implements OnInit {
   private async showStoreNotFoundMessage() {
     const toast = await this.toastController.create({
       message: 'Tienda no encontrada',
-      duration: 3000,
-      position: 'bottom',
-      color: 'danger'
+      duration: 1200,
+      position: 'top',
+      color: 'success',
+      cssClass: 'subtle-toast'
     });
     await toast.present();
   }
@@ -181,9 +210,10 @@ export class StorePage implements OnInit {
   private async showErrorMessage() {
     const toast = await this.toastController.create({
       message: 'Error al cargar la tienda. Inténtalo de nuevo más tarde.',
-      duration: 3000,
-      position: 'bottom',
-      color: 'danger'
+      duration: 1200,
+      position: 'top',
+      color: 'success',
+      cssClass: 'subtle-toast'
     });
     await toast.present();
   }
@@ -226,9 +256,10 @@ export class StorePage implements OnInit {
     if (added) {
       const toast = await this.toastController.create({
         message: `${product.name} añadido al carrito`,
-        duration: 2000,
-        position: 'bottom',
-        color: 'success'
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
       });
       await toast.present();
     }
@@ -262,9 +293,10 @@ export class StorePage implements OnInit {
     if (data?.added) {
       const toast = await this.toastController.create({
         message: 'Producto añadido al carrito',
-        duration: 2000,
-        position: 'bottom',
-        color: 'success'
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
       });
       await toast.present();
     }
@@ -275,6 +307,40 @@ export class StorePage implements OnInit {
   }
 
   // Methods for the overlaid buttons
+  async toggleFavorite(product: Product) {
+    const user = await this.authService.getCurrentUser();
+    if (!user) {
+      this.toastController.create({
+        message: 'Debes iniciar sesión para usar favoritos',
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
+      }).then(toast => toast.present());
+      return;
+    }
+
+    if (this.isFavorite(product.id)) {
+      await this.supabaseService.removeFavorite(user.id, product.id, 'product');
+      this.userFavorites = this.userFavorites.filter(id => id !== product.id);
+      this.toastController.create({
+        message: 'Eliminado de favoritos',
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
+      }).then(toast => toast.present());
+    } else {
+      await this.supabaseService.addFavorite(user.id, product.id, 'product');
+      this.userFavorites = [...this.userFavorites, product.id];
+      this.toastController.create({
+        message: 'Añadido a favoritos',
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
+      }).then(toast => toast.present());
+    }
   toggleFavorite() {
     if (!this.store) return;
     
@@ -310,6 +376,45 @@ export class StorePage implements OnInit {
         duration: 2000,
         position: 'bottom',
         color: 'warning'
+      }).then(toast => toast.present());
+    }
+  }
+
+  isFavorite(productId: string): boolean {
+    return this.userFavorites && this.userFavorites.includes(productId);
+  }
+
+  async toggleFavoriteStore() {
+    const user = await this.authService.getCurrentUser();
+    if (!user || !this.store) {
+      this.toastController.create({
+        message: 'Debes iniciar sesión para usar favoritos',
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
+      }).then(toast => toast.present());
+      return;
+    }
+    if (this.userFavoriteStore) {
+      await this.supabaseService.removeFavorite(user.id, this.store.id, 'store');
+      this.userFavoriteStore = false;
+      this.toastController.create({
+        message: 'Tienda eliminada de favoritos',
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
+      }).then(toast => toast.present());
+    } else {
+      await this.supabaseService.addFavorite(user.id, this.store.id, 'store');
+      this.userFavoriteStore = true;
+      this.toastController.create({
+        message: 'Tienda añadida a favoritos',
+        duration: 1200,
+        position: 'top',
+        color: 'success',
+        cssClass: 'subtle-toast'
       }).then(toast => toast.present());
     }
   }

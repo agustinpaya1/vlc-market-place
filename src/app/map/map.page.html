@@ -10,6 +10,12 @@
   <!-- Mapa a pantalla completa -->
   <div id="map"></div>
 
+  <!-- Botón flotante para activar COL -->
+  <div class="col-button" *ngIf="isAuthenticated" [class.active]="modoCOLActivo" (click)="toggleModoCOL()">
+    <ion-icon [name]="modoCOLActivo ? 'close-outline' : 'compass-outline'"></ion-icon>
+    <span>{{ modoCOLActivo ? 'Cazador OFF' : 'Cazador ON' }}</span>
+  </div>
+
   <!-- Loading indicator -->
   <div class="loading-overlay" *ngIf="isLoading">
     <div class="loading-container">
@@ -81,82 +87,211 @@
   <div class="product-sheet" [ngClass]="isDarkTheme ? 'dark-theme' : 'light-theme'" [class.active]="isProductSheetActive" #productBottomSheet>
     <div class="product-sheet-handle">
       <div class="handle-bar"></div>
-      <ion-button fill="clear" class="close-button" (click)="hideProductSheet()">
-        <ion-icon name="close-outline"></ion-icon>
-      </ion-button>
-    </div>
-
-    <div class="product-sheet-header" *ngIf="selectedStore">
-      <h1>{{selectedStore.name}}</h1>
-      <p class="store-description">{{selectedStore.description || 'Tienda local en Valencia'}}</p>
-      
-      <div class="store-info">
-        <span class="address">
-          <ion-icon name="location-outline"></ion-icon>
-          {{selectedStore.address || selectedStore.location || 'Valencia, España'}}
-        </span>
-        <span class="phone" *ngIf="selectedStore.phone || selectedStore.contact_phone">
-          <ion-icon name="call-outline"></ion-icon>
-          {{selectedStore.phone || selectedStore.contact_phone}}
-        </span>
-      </div>
-      
-      <div class="view-details-button">
-        <ion-button expand="block" fill="outline" (click)="viewStoreDetails(selectedStore)">
-          Ver tienda completa
-          <ion-icon name="arrow-forward" slot="end"></ion-icon>
-        </ion-button>
+      <div class="product-sheet-actions">
+        <button class="cart-button" *ngIf="cartItemsCount > 0" (click)="goToCart()" title="Ver carrito" aria-label="Ver carrito">
+          <ion-icon name="cart-outline"></ion-icon>
+          <span class="cart-count">{{ cartItemsCount }}</span>
+        </button>
+        <button class="close-button" (click)="hideProductSheet()" title="Cerrar" aria-label="Cerrar">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
       </div>
     </div>
 
     <div class="product-sheet-content">
-      <h2>Productos</h2>
-      
-      <div class="products-list" *ngIf="!isLoading && storeProducts.length > 0; else noProductsTemplate">
-        <ion-card class="product-card" *ngFor="let product of storeProducts">
-          <div class="product-image">
-            <ion-img [src]="product.imageUrl || 'assets/product-placeholder.jpg'" (ionError)="$event.target.src = 'assets/product-placeholder.jpg'"></ion-img>
-            <div class="product-badge" *ngIf="product.isOffer">Oferta</div>
-          </div>
-          <ion-card-header>
-            <ion-card-title>{{product.name}}</ion-card-title>
-            <ion-card-subtitle>{{product.category}}</ion-card-subtitle>
-          </ion-card-header>
-          <ion-card-content>
-            <p class="product-description">{{product.description}}</p>
-            
-            <div class="product-footer">
-              <div class="price">
-                <span class="current-price">{{product.price | currency:'EUR':'symbol':'1.2-2'}}</span>
-                <span class="original-price" *ngIf="product.isOffer && product.offerPrice">
-                  {{product.offerPrice | currency:'EUR':'symbol':'1.2-2'}}
-                </span>
-              </div>
-              
-              <div class="stock" [class.low]="product.stock < 10">
-                <ion-icon name="checkmark-circle" *ngIf="product.stock > 0"></ion-icon>
-                <ion-icon name="close-circle" *ngIf="product.stock <= 0"></ion-icon>
-                {{product.stock > 0 ? 'En stock' : 'Agotado'}}
-              </div>
+      <div class="store-container" *ngIf="selectedStore">
+        <!-- Image with overlaid buttons -->
+        <div class="store-header-image-container">
+          <img [src]="selectedStore.imageUrl" (error)="handleImageError($event)" alt="Imagen de la tienda" loading="lazy" class="store-header-image">
+          
+          <!-- Navigation elements overlaid on image -->
+          <div class="header-buttons">
+            <ion-button (click)="hideProductSheet()" class="nav-button back-button">
+              <ion-icon name="chevron-back"></ion-icon>
+            </ion-button>
+            <div class="right-buttons">
+              <ion-button class="nav-button share-button">
+                <ion-icon name="share"></ion-icon>
+              </ion-button>
+              <ion-button class="nav-button cart-button">
+                <ion-icon name="cart"></ion-icon>
+              </ion-button>
             </div>
-          </ion-card-content>
-        </ion-card>
+          </div>
+
+          <!-- Store name overlay at bottom of image -->
+          <div class="store-title-overlay">
+            <h1>{{ selectedStore.name }}</h1>
+            <p>{{ selectedStore.description }}</p>
+          </div>
+        </div>
+
+        <div class="store-details-card">
+          <div class="rating-row">
+            <div class="rating">
+              <ion-icon name="star" color="warning"></ion-icon>
+              <span>{{ selectedStore.rating || '4.5' }}/5</span>
+            </div>
+
+            <div class="categories">
+              <ion-chip *ngFor="let category of selectedStore.categories || [selectedStore.category]">{{ category }}</ion-chip>
+            </div>
+          </div>
+
+          <div class="store-info-row">
+            <div class="location-info">
+              <ion-icon name="location" color="tertiary"></ion-icon>
+              <span>{{ selectedStore.location || selectedStore.address }}</span>
+            </div>
+            
+            <div class="time-info">
+              <ion-icon name="time" color="tertiary"></ion-icon>
+              <span>{{ selectedStore.openTime || selectedStore.open_time }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="products-section">
+          <h3>Productos</h3>
+          <ion-searchbar placeholder="Buscar productos" class="products-searchbar"></ion-searchbar>
+
+          <ion-grid>
+            <ion-row>
+              <ion-col size="6" size-md="4" size-lg="3" *ngFor="let product of storeProducts">
+                <ion-card class="product-card">
+                  <ion-card-header>
+                    <img [src]="product.imageUrl || product.image_url" 
+                         (error)="handleImageError($event)" 
+                         alt="Imagen de producto" 
+                         title="{{product.name}}"
+                         loading="lazy" 
+                         width="100%" 
+                         height="140">
+                    <div *ngIf="product.offerPrice && product.price" class="discount-badge">
+                      -{{ ((100 - (product.offerPrice / product.price) * 100) | number:'1.0-0') }}%
+                    </div>
+                  </ion-card-header>
+
+                  <ion-card-content>
+                    <h4>{{ product.name }}</h4>
+                    <div class="category">{{ product.category }}</div>
+                    <div class="description">{{ product.description }}</div>
+                    <div class="price-container">
+                      <ng-container *ngIf="product.offerPrice; else regularPrice">
+                        <span class="price has-offer">{{ product.price | currency:'EUR' }}</span>
+                        <span class="offer-price">{{ product.offerPrice | currency:'EUR' }}</span>
+                      </ng-container>
+                      <ng-template #regularPrice>
+                        <span class="price">{{ product.price | currency:'EUR' }}</span>
+                      </ng-template>
+                    </div>
+                    
+                    <div class="product-actions">
+                      <div class="quantity-controls" *ngIf="getProductQuantity(product.id) > 0">
+                        <button class="qty-btn minus" (click)="decrementQuantity(product)" title="Disminuir cantidad" aria-label="Disminuir cantidad">
+                          <ion-icon name="remove"></ion-icon>
+                        </button>
+                        <span class="qty-value">{{ getProductQuantity(product.id) }}</span>
+                        <button class="qty-btn plus" (click)="incrementQuantity(product)" title="Aumentar cantidad" aria-label="Aumentar cantidad">
+                          <ion-icon name="add"></ion-icon>
+                        </button>
+                      </div>
+                      <button class="add-to-cart-btn" *ngIf="getProductQuantity(product.id) === 0" (click)="addToCart(product)" title="Añadir al carrito" aria-label="Añadir al carrito">
+                        <ion-icon name="cart-outline"></ion-icon>
+                        Añadir
+                      </button>
+                    </div>
+                  </ion-card-content>
+                </ion-card>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+
+          <div class="empty-products" *ngIf="!isLoading && (!storeProducts || storeProducts.length === 0)">
+            <ion-icon name="basket-outline" size="large"></ion-icon>
+            <h4>No hay productos disponibles</h4>
+            <p>Esta tienda aún no ha añadido productos.</p>
+          </div>
+          
+          <div class="loading-products" *ngIf="isLoading">
+            <ion-skeleton-text animated style="width: 100%; height: 200px; margin-bottom: 16px;"></ion-skeleton-text>
+            <ion-skeleton-text animated style="width: 100%; height: 200px; margin-bottom: 16px;"></ion-skeleton-text>
+          </div>
+        </div>
       </div>
-      
-      <ng-template #noProductsTemplate>
-        <div class="empty-products" *ngIf="!isLoading">
-          <ion-icon name="cart-outline" size="large"></ion-icon>
-          <h3>No hay productos disponibles</h3>
-          <p>Esta tienda aún no ha añadido productos.</p>
-        </div>
-        
-        <div class="loading-products" *ngIf="isLoading">
-          <ion-skeleton-text animated style="width: 100%; height: 200px; margin-bottom: 16px;"></ion-skeleton-text>
-          <ion-skeleton-text animated style="width: 100%; height: 200px; margin-bottom: 16px;"></ion-skeleton-text>
-        </div>
-      </ng-template>
     </div>
   </div>
+
+  <!-- Pop-up de recompensa COL -->
+  <div class="col-reward-popup" *ngIf="recompensaSeleccionada" [class.active]="recompensaSeleccionada">
+    <div class="col-reward-content">
+      <div class="col-reward-header">
+        <h2>¡Tesoro encontrado!</h2>
+        <ion-button fill="clear" class="close-button" (click)="cerrarPopupRecompensa()">
+          <ion-icon name="close-outline"></ion-icon>
+        </ion-button>
+      </div>
+      <div class="col-reward-body">
+        <div class="col-reward-image">
+          <img src="assets/col-icons/treasure-chest.svg" alt="Tesoro">
+        </div>
+        <h3>{{ recompensaSeleccionada.titulo }}</h3>
+        <p class="col-reward-coins">+{{ recompensaSeleccionada.coins }} VLCoin</p>
+        <p class="col-reward-store" *ngIf="recompensaSeleccionada.tienda">En {{ recompensaSeleccionada.tienda }}</p>
+        
+        <!-- Información de distancia -->
+        <div class="col-reward-distance" *ngIf="recompensaSeleccionada && recompensaSeleccionada.distanciaAlUsuario !== undefined">
+          <div class="distance-indicator" 
+               [class.near]="recompensaSeleccionada.distanciaAlUsuario <= 50" 
+               [class.far]="recompensaSeleccionada.distanciaAlUsuario > 50">
+            <ion-icon [name]="recompensaSeleccionada.distanciaAlUsuario <= 50 ? 'checkmarkCircleOutline' : 'alertCircleOutline'"></ion-icon>
+            <span>{{ recompensaSeleccionada.distanciaAlUsuario }} metros</span>
+          </div>
+          <p class="distance-message" *ngIf="recompensaSeleccionada.distanciaAlUsuario > 50">
+            Debes acercarte a menos de 50 metros para canjear
+          </p>
+        </div>
+        
+        <ion-button expand="block" class="col-reward-button" (click)="canjearRecompensa(recompensaSeleccionada)"
+                    [disabled]="recompensaSeleccionada && recompensaSeleccionada.distanciaAlUsuario !== undefined && recompensaSeleccionada.distanciaAlUsuario > 50">
+          Canjear ahora
+        </ion-button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Pop-up de explicación del modo cazador -->
+  <div class="col-reward-popup" [class.active]="mostrarExplicacionCazador">
+    <div class="col-reward-content">
+      <div class="col-reward-header">
+        <h2>¡Modo Cazador Activado!</h2>
+        <ion-button fill="clear" class="close-button" (click)="cerrarExplicacionCazador()">
+          <ion-icon name="close-outline"></ion-icon>
+        </ion-button>
+      </div>
+      <div class="col-reward-body">
+        <div class="col-reward-image">
+          <img src="assets/col-icons/treasure-chest.svg" alt="Tesoro">
+        </div>
+        <h3>Cazador de Oportunidades Locales</h3>
+        <div class="col-explanation">
+          <p>Has activado el modo Cazador de Oportunidades Locales. Ahora podrás:</p>
+          <ul>
+            <li>Ver tesoros ocultos en el mapa</li>
+            <li>Acércate a menos de 50 metros de un tesoro para canjearlo</li>
+            <li>Gana VLCoins por cada tesoro que encuentres</li>
+            <li>Usa tus VLCoins para obtener descuentos y recompensas</li>
+          </ul>
+          <p>¡Explora la ciudad y encuentra todos los tesoros!</p>
+        </div>
+        
+        <ion-button expand="block" class="col-reward-button" (click)="cerrarExplicacionCazador()">
+          ¡Empezar a cazar!
+        </ion-button>
+      </div>
+    </div>
+  </div>
+  
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
   crossorigin=""></script>

@@ -40,6 +40,14 @@
   --popup-text-light: #121212;
   --popup-border-light: rgba(0, 0, 0, 0.1);
 
+  // Variables para el Cazador de Oportunidades Locales
+  --col-button-bg: rgba(255, 132, 0, 0.9);
+  --col-button-text: #ffffff;
+  --col-button-active-bg: rgba(255, 132, 0, 1);
+  --col-popup-bg: rgba(255, 255, 255, 0.98);
+  --col-popup-border: rgba(255, 132, 0, 0.3);
+  --col-popup-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+
   --color-bg-light: #fff;
   --color-bg-dark: #1e1e1e;
   --color-text-light: #121212;
@@ -62,6 +70,21 @@
   --color-popup-text-dark: #fff;
   --color-popup-border-light: #e0e0e0;
   --color-popup-border-dark: #333333;
+
+  // Variables dinámicas para modo claro/oscuro
+  --color-bg: var(--ion-background-color);
+  --color-text: var(--ion-text-color);
+  --color-card: var(--ion-card-background);
+  --color-border: var(--ion-border-color);
+  --color-muted: var(--ion-color-medium);
+  --color-accent: var(--ion-color-tertiary);
+  --color-success: var(--ion-color-success);
+  --color-danger: var(--ion-color-danger);
+  
+  // Sombras dinámicas
+  --shadow-small: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --shadow-large: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 :host-context(.light-theme) {
@@ -86,6 +109,9 @@
   --popup-bg: var(--color-popup-bg-dark);
   --popup-text: var(--color-popup-text-dark);
   --popup-border: var(--color-popup-border-dark);
+  --shadow-small: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-large: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 ion-header {
@@ -169,26 +195,31 @@ ion-content {
 
 .search-section {
   padding: 0 16px 12px;
-  background: var(--bottom-sheet-bg);
-  color: var(--bottom-sheet-text);
+  background: var(--ion-card-background);
+  color: var(--ion-text-color);
   position: sticky;
   top: 0;
   z-index: 3;
 
   ion-searchbar {
-    --background: var(--bottom-sheet-bg);
-    --color: var(--bottom-sheet-text);
-    --placeholder-color: var(--color-muted-light);
-    --icon-color: var(--color-accent-light);
+    --background: var(--ion-card-background);
+    --color: var(--ion-text-color);
+    --placeholder-color: var(--ion-color-medium);
+    --icon-color: var(--ion-color-tertiary);
     --border-radius: 8px;
     --box-shadow: none;
     margin: 0;
     transition: all var(--transition-speed) ease;
   }
 }
+
+:host-context(.dark-theme) .search-section {
+  background: var(--color-card-dark);
+}
+
 :host-context(.dark-theme) .search-section ion-searchbar {
-  --background: var(--bottom-sheet-bg);
-  --color: var(--bottom-sheet-text);
+  --background: var(--color-card-dark);
+  --color: var(--color-text-dark);
   --placeholder-color: var(--color-muted-dark);
   --icon-color: var(--color-accent-dark);
 }
@@ -207,8 +238,8 @@ ion-content {
   .store-item {
     display: flex;
     align-items: stretch;
-    background: var(--color-card, #fff) !important;
-    color: var(--color-text, #222) !important;
+    background: var(--ion-card-background) !important;
+    color: var(--ion-text-color) !important;
     border-radius: 12px;
     margin-bottom: 12px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -253,7 +284,7 @@ ion-content {
         font-weight: 600;
         z-index: 1;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        background: var(--color-success-light);
+        background: var(--ion-color-success);
         color: #fff;
       }
     }
@@ -274,7 +305,7 @@ ion-content {
       
       .category {
         font-size: 12px;
-        color: var(--color-accent-light);
+        color: var(--ion-color-tertiary);
         margin: 0 0 8px;
         transition: color var(--transition-speed) ease;
       }
@@ -285,20 +316,20 @@ ion-content {
         gap: 6px;
         margin: 4px 0;
         font-size: 12px;
-        color: var(--color-muted-light);
+        color: var(--ion-color-medium);
         
         ion-icon {
           font-size: 14px;
-          color: var(--color-muted-light);
+          color: var(--ion-color-medium);
           transition: color var(--transition-speed) ease;
         }
         
         &.distance {
-          color: var(--color-text-light);
+          color: var(--ion-text-color);
           font-weight: 500;
           
           ion-icon {
-            color: var(--color-accent-light);
+            color: var(--ion-color-tertiary);
           }
         }
       }
@@ -317,18 +348,18 @@ ion-content {
         span {
           font-weight: 600;
           font-size: 12px;
-          color: var(--color-text-light);
+          color: var(--ion-text-color);
         }
       }
     }
     
     &:hover .store-details {
       h2 {
-        color: var(--color-accent-light);
+        color: var(--ion-color-tertiary);
       }
       
       .distance ion-icon {
-        color: var(--color-accent-light);
+        color: var(--ion-color-tertiary);
       }
     }
   }
@@ -511,6 +542,7 @@ ion-range {
   width: 100vw;
   height: 100vh;
   z-index: 1;
+  background-color: var(--color-bg);
 }
 
 
@@ -520,237 +552,376 @@ ion-range {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 120px;
-  background: var(--color-card, #fff) !important;
+  height: var(--bottom-sheet-height-collapsed);
+  background: var(--ion-card-background) !important;
+  color: var(--ion-text-color) !important;
   border-radius: var(--bottom-sheet-radius) var(--bottom-sheet-radius) 0 0;
-  box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
+  box-shadow: var(--shadow-medium);
   z-index: 2;
-  transition: height var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1), 
-              transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+  transition: height var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+
   &.active {
-    height: 65vh;
+    height: var(--bottom-sheet-height-expanded);
   }
+
   &.reduced {
     height: 50px;
   }
-  &.dark-theme {
-    background: var(--color-card-dark, #232323) !important;
-    box-shadow: 0 -8px 32px rgba(0,0,0,0.32);
-  }
-  &.light-theme {
-    background: var(--bottom-sheet-bg-light);
-  }
+
   .bottom-sheet-handle {
     width: 100%;
-    height: 24px;
+    height: var(--bottom-sheet-handle-height);
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 8px 0;
     cursor: pointer;
+
     .handle-bar {
       width: 40px;
       height: 4px;
-      background: rgba(255, 255, 255, 0.4);
+      background: var(--ion-color-medium);
       border-radius: 10px;
-      transition: transform 0.2s ease-in-out;
-    }
-  }
-  .search-section {
-    padding: 0 16px 12px;
-    background: var(--bottom-sheet-bg);
-  }
-  .stores-list {
-    overflow-y: auto;
-    max-height: calc(65vh - 24px - 60px);
-    padding: 0 16px 20px;
-    .store-item {
-      display: flex;
-      align-items: stretch;
-      background: var(--color-card, #fff) !important;
-      color: var(--color-text, #222) !important;
-      border-radius: 12px;
-      margin-bottom: 12px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
-      &:active {
-        transform: scale(0.98);
-      }
-      .store-image {
-        width: 80px;
-        min-width: 80px;
-        position: relative;
-        overflow: hidden;
-        ion-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-        .store-status {
-          position: absolute;
-          top: 8px;
-          left: 8px;
-          font-size: 10px;
-          padding: 3px 6px;
-          border-radius: 4px;
-          font-weight: 600;
-          z-index: 1;
-          background: var(--color-success-light);
-          color: #fff;
-        }
-      }
-      .store-details {
-        flex: 1;
-        padding: 12px;
-        display: flex;
-        flex-direction: column;
-        h2 {
-          font-size: 16px;
-          font-weight: 600;
-          margin: 0 0 4px;
-          color: var(--ion-text-color);
-        }
-        .category {
-          font-size: 12px;
-          color: var(--color-accent-light);
-          margin: 0 0 8px;
-        }
-        p {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          margin: 4px 0;
-          font-size: 12px;
-          color: var(--color-muted-light);
-        }
-        .rating {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          margin-top: 4px;
-          ion-icon {
-            color: #ffc409;
-            font-size: 14px;
-          }
-          span {
-            font-weight: 600;
-            font-size: 12px;
-            color: var(--color-text-light);
-          }
-        }
-      }
-    }
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
-      text-align: center;
-      ion-icon {
-        font-size: 48px;
-        color: var(--color-muted-light);
-        margin-bottom: 16px;
-      }
-      h3 {
-        font-size: 18px;
-        font-weight: 500;
-        margin: 0 0 8px;
-      }
-      p {
-        font-size: 14px;
-        margin: 0;
-      }
-    }
-  }
-  .loading-stores {
-    padding: 16px;
-    ion-skeleton-text {
-      --border-radius: 12px;
-
+      opacity: 0.4;
     }
   }
 }
 
+:host-context(.dark-theme) .bottom-sheet {
+  background: var(--color-card-dark) !important;
+  color: var(--color-text-dark) !important;
+}
+
 // Product sheet y loading overlay (mantener para UI)
 .product-sheet {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
-  height: 0;
-  background: var(--color-card, #fff) !important;
+  right: 0;
+  background: var(--ion-background-color);
+  color: var(--ion-text-color);
   border-radius: var(--bottom-sheet-radius) var(--bottom-sheet-radius) 0 0;
-  box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
-  z-index: 3;
-  transition: height var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+  box-shadow: var(--shadow-large);
+  z-index: 1000;
+  transition: transform var(--transition-speed) ease;
+  max-height: 85vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+
   &.active {
-    height: 75vh;
+    transform: translateY(0);
   }
-  .product-sheet-handle {
-    width: 100%;
-    height: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 12px 16px;
+
+  .store-container {
     position: relative;
-    .handle-bar {
-      width: 40px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.4);
-      border-radius: 10px;
-    }
-    .close-button {
+    width: 100%;
+    animation: fadeIn 0.5s ease forwards;
+  }
+
+  /* Image with overlaid elements */
+  .store-header-image-container {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    overflow: hidden;
+    
+    &::after {
+      content: '';
       position: absolute;
-      right: 8px;
-      top: 8px;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+      pointer-events: none;
+    }
+  }
+
+  .store-header-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s ease;
+    
+    &:hover {
+      transform: scale(1.03);
+    }
+  }
+
+  /* Header buttons overlay */
+  .header-buttons {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 10;
+    animation: slideDown 0.5s ease forwards;
+    
+    .nav-button {
+      --background: rgba(0, 0, 0, 0.3);
+      --border-radius: 50%;
+      --padding-start: 8px;
+      --padding-end: 8px;
+      --padding-top: 8px;
+      --padding-bottom: 8px;
       height: 36px;
+      width: 36px;
+      margin: 0;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        --background: rgba(0, 0, 0, 0.5);
+        transform: scale(1.05);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+      
       ion-icon {
-        font-size: 20px;
-        color: rgba(255, 255, 255, 0.7);
+        font-size: 18px;
+        color: white;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+      }
+    }
+    
+    .right-buttons {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  /* Store title overlay */
+  .store-title-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px;
+    z-index: 5;
+    color: white;
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 24px;
+      font-weight: 700;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
+    
+    p {
+      margin: 0;
+      font-size: 14px;
+      opacity: 0.9;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  /* Store details card */
+  .store-details-card {
+    margin: -20px 16px 0;
+    padding: 16px;
+    background: var(--ion-card-background);
+    border-radius: 16px;
+    box-shadow: var(--shadow-medium);
+    position: relative;
+    z-index: 20;
+
+    .rating-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      
+      ion-icon {
+        color: #ffb400;
+        font-size: 18px;
+      }
+      
+      span {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ion-text-color);
+      }
+    }
+
+    .categories {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      
+      ion-chip {
+        margin: 0;
+        height: 24px;
+        font-size: 11px;
+        --background: rgba(var(--ion-color-tertiary-rgb), 0.1);
+        --color: var(--ion-color-tertiary);
+      }
+    }
+
+    .store-info-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .location-info, .time-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      
+      ion-icon {
+        font-size: 16px;
+        color: var(--ion-color-tertiary);
+      }
+      
+      span {
+        font-size: 14px;
+        color: var(--ion-text-color);
       }
     }
   }
-  .product-sheet-header {
-    padding: 0 20px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    h1 {
-      font-size: 22px;
-      font-weight: 700;
-      margin: 0 0 8px;
+
+  /* Products section */
+  .products-section {
+    padding: 16px;
+    animation: fadeIn 0.8s ease forwards;
+
+    h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 16px 0;
+      color: var(--color-text);
     }
-    .store-description {
-      font-size: 14px;
+
+    .products-searchbar {
+      --background: var(--color-card);
+      --box-shadow: var(--shadow-small);
+      --border-radius: 10px;
+      --placeholder-color: var(--color-muted);
+      --color: var(--color-text);
+      margin-bottom: 16px;
+    }
+
+    .product-card {
       margin: 0 0 16px;
-      line-height: 1.4;
-    }
-    .store-info {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 20px;
-      span {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        ion-icon {
-          font-size: 18px;
+      background: var(--color-card);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-small);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-medium);
+      }
+
+      ion-card-header {
+        padding: 0;
+        position: relative;
+        
+        img {
+          width: 100%;
+          height: 140px;
+          object-fit: cover;
+        }
+        
+        .discount-badge {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          background: var(--color-danger);
+          color: white;
+          font-size: 12px;
+          font-weight: 600;
+          padding: 4px 8px;
+          border-radius: 4px;
+        }
+      }
+      
+      ion-card-content {
+        padding: 12px;
+        color: var(--color-text);
+        
+        h4 {
+          margin: 0 0 4px;
+          font-size: 16px;
+          font-weight: 600;
+        }
+        
+        .category {
+          font-size: 12px;
+          color: var(--color-muted);
+          margin-bottom: 6px;
+        }
+        
+        .description {
+          font-size: 12px;
+          color: var(--color-muted);
+          margin-bottom: 8px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        
+        .price-container {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          
+          .price {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text);
+            
+            &.has-offer {
+              text-decoration: line-through;
+              color: var(--color-muted);
+              font-size: 14px;
+              font-weight: normal;
+            }
+          }
+          
+          .offer-price {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-danger);
+          }
         }
       }
     }
-    .view-details-button {
-      margin-top: 10px;
-      ion-button {
-        --border-radius: 12px;
-        font-weight: 500;
-        font-size: 14px;
-        letter-spacing: 0;
-      }
+  }
+
+  .empty-products {
+    padding: 40px 20px;
+    text-align: center;
+    
+    ion-icon {
+      font-size: 48px;
+      color: var(--color-muted);
+      margin-bottom: 16px;
+    }
+    
+    h4 {
+      font-size: 18px;
+      color: var(--color-text);
+      margin: 0 0 8px;
+    }
+    
+    p {
+      font-size: 14px;
+      color: var(--color-muted);
+      margin: 0;
     }
   }
   .product-sheet-content {
@@ -817,6 +988,7 @@ ion-range {
             text-overflow: ellipsis;
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
           }
           .product-footer {
@@ -881,6 +1053,37 @@ ion-range {
   }
 }
 
+:host-context(.dark-theme) .product-sheet {
+  background: var(--color-bg-dark) !important;
+  color: var(--color-text-dark) !important;
+}
+
+:host-context(.dark-theme) .product-sheet .store-details-card {
+  background: var(--color-card-dark) !important;
+}
+
+:host-context(.dark-theme) .product-sheet .store-details-card .rating span,
+:host-context(.dark-theme) .product-sheet .store-details-card .location-info span,
+:host-context(.dark-theme) .product-sheet .store-details-card .time-info span {
+  color: var(--color-text-dark) !important;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .loading-overlay {
   position: absolute;
   top: 0;
@@ -890,8 +1093,9 @@ ion-range {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(18, 18, 18, 0.8);
+  background: rgba(var(--ion-background-color-rgb), 0.8);
   z-index: 5;
+
   .loading-container {
     display: flex;
     flex-direction: column;
@@ -899,16 +1103,19 @@ ion-range {
     gap: 16px;
     padding: 24px;
     border-radius: 16px;
-    background-color: rgba(30, 30, 30, 0.8);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    background: var(--color-card);
+    box-shadow: var(--shadow-large);
+
     ion-spinner {
       width: 48px;
       height: 48px;
+      color: var(--color-accent);
     }
+
     span {
       font-size: 16px;
       font-weight: 500;
-      color: white;
+      color: var(--color-text);
     }
   }
 }
@@ -1036,6 +1243,7 @@ ion-fab {
 // 3. Offset para el mapa y el marcador cuando el bottom sheet está abierto
 #map {
   /* El mapa ocupa toda la pantalla, pero el centrado del marcador se ajusta en TS */
+  position: fixed; /* Asegurarse de que tiene al menos una propiedad */
 }
 
 // Títulos y textos principales en modo claro y oscuro
@@ -1075,5 +1283,838 @@ ion-fab {
   
   &:hover {
     background: var(--ion-color-primary-shade);
+  }
+}
+
+// Estilos para el Cazador de Oportunidades Locales (COL)
+.col-button {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background-color: var(--col-button-bg);
+  color: var(--col-button-text);
+  padding: 12px 16px;
+  border-radius: 50px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  font-weight: 500;
+  
+  ion-icon {
+    font-size: 20px;
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  &.active {
+    background-color: var(--col-button-active-bg);
+    box-shadow: 0 4px 16px rgba(255, 132, 0, 0.4);
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.col-reward-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-speed) ease, visibility var(--transition-speed) ease;
+  
+  &.active {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .col-reward-content {
+    width: 90%;
+    max-width: 360px;
+    background-color: var(--col-popup-bg);
+    border-radius: 20px;
+    box-shadow: var(--col-popup-shadow);
+    overflow: hidden;
+    transform: scale(0.9);
+    transition: transform var(--transition-speed) ease;
+    
+    .active & {
+      transform: scale(1);
+    }
+  }
+  
+  .col-reward-header {
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--col-popup-border);
+    
+    h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .close-button {
+      margin: 0;
+      --padding-start: 8px;
+      --padding-end: 8px;
+      height: 34px;
+      
+      ion-icon {
+        font-size: 24px;
+        color: #666;
+      }
+    }
+  }
+  
+  .col-reward-body {
+    padding: 24px;
+    text-align: center;
+    
+    .col-reward-image {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+    }
+    
+    h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .col-reward-coins {
+      font-size: 24px;
+      font-weight: 700;
+      color: #ff8400;
+      margin: 8px 0;
+    }
+    
+    .col-reward-store {
+      font-size: 14px;
+      color: #666;
+      margin: 8px 0 20px;
+    }
+    
+    .col-reward-button {
+      --background: var(--col-button-bg);
+      --background-activated: var(--col-button-active-bg);
+      --color: var(--col-button-text);
+      --border-radius: 50px;
+      margin-top: 12px;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+      
+      &:hover {
+        --background: var(--col-button-active-bg);
+      }
+    }
+  }
+}
+
+// Estilos mejorados para el popup de Leaflet
+:host ::ng-deep {
+  .leaflet-popup-content-wrapper {
+    padding: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-large);
+    background: var(--color-card);
+    max-width: 320px;
+    min-width: 280px; /* Asegurar un ancho mínimo para mantener las dimensiones originales */
+  }
+
+  .leaflet-popup-content {
+    margin: 0;
+    width: 100% !important;
+  }
+
+  .leaflet-popup-tip {
+    background: var(--color-card);
+  }
+
+  .marker-popup {
+    width: 100%;
+    background: var(--color-card);
+    color: var(--color-text);
+  }
+
+  .marker-popup-image {
+    position: relative;
+    width: 100%;
+    height: 160px;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+      
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+
+    .marker-popup-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      padding: 10px;
+      background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+      color: white;
+    }
+  }
+
+  .marker-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .status-badge {
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      background: rgba(0,0,0,0.4);
+      
+      &.open {
+        color: #4befa3;
+      }
+      
+      &.closed {
+        color: #f97171;
+      }
+    }
+  }
+
+  .marker-popup-info {
+    p {
+      margin: 3px 0;
+      font-size: 12px;
+      color: rgba(255,255,255,0.8);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      
+      .icon {
+        font-style: normal;
+      }
+    }
+  }
+
+  .marker-popup-actions {
+    display: flex;
+    padding: 12px;
+    width: 100%;
+    
+    .leaflet-popup-btn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      &.view-store {
+        background: var(--color-accent, #2a80ff);
+        color: white;
+        min-width: 220px; /* Asegurar que tiene la anchura mínima equivalente a los dos botones anteriores */
+        
+        &:hover {
+          background: var(--ion-color-tertiary-shade);
+        }
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+  }
+}
+
+// Añadir estilos para modo oscuro
+:host-context(.dark-theme) ::ng-deep {
+  .leaflet-popup-content-wrapper {
+    background: var(--color-card-dark);
+    min-width: 280px; /* Mantener consistencia con el modo claro */
+  }
+  
+  .leaflet-popup-tip {
+    background: var(--color-card-dark);
+  }
+
+  .marker-popup {
+    background: var(--color-card-dark);
+    color: var(--color-text-dark);
+  }
+  
+  .marker-popup-actions {
+    .leaflet-popup-btn {
+      &.view-store {
+        background: var(--color-accent-dark, #4befa3);
+        color: #1e1e1e;
+      }
+    }
+  }
+}
+
+// Estilos para marcadores personalizados con imágenes
+.custom-marker-icon {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  
+  .custom-marker {
+    width: 40px;
+    height: 50px;
+    position: relative;
+    transform-origin: center bottom;
+    transition: transform var(--transition-speed) ease-out;
+    
+    &:hover {
+      transform: scale(1.15);
+      z-index: 1000;
+    }
+    
+    .marker-base {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      
+      .marker-bg {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
+      }
+    }
+    
+    .marker-image {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+  }
+}
+
+// Estilos para el icono de cofre en el mapa
+.treasure-marker {
+  animation: bounce 1s infinite alternate ease-in-out;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  cursor: pointer !important;
+  z-index: 500 !important;
+  
+  &:hover {
+    filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.8));
+    transform: scale(1.1);
+  }
+}
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+
+// Estilos específicos para el popup de Leaflet para los tesoros
+.leaflet-popup-col-reward {
+  .leaflet-popup-content-wrapper {
+    background-color: var(--col-popup-bg);
+    border-radius: 12px;
+    box-shadow: var(--col-popup-shadow);
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  .leaflet-popup-content {
+    margin: 0;
+    padding: 0;
+    width: 200px !important;
+  }
+  
+  .leaflet-popup-tip {
+    background-color: var(--col-popup-bg);
+  }
+  
+  .col-popup-content {
+    padding: 16px;
+    text-align: center;
+    
+    h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .col-popup-coins {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ff8400;
+      margin: 8px 0;
+    }
+    
+    .col-popup-button {
+      display: block;
+      width: 100%;
+      background-color: var(--col-button-bg);
+      color: var(--col-button-text);
+      border: none;
+      border-radius: 50px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color var(--transition-speed) ease;
+      margin-top: 12px;
+      
+      &:hover {
+        background-color: var(--col-button-active-bg);
+      }
+    }
+  }
+}
+
+// Animación de pulso para los marcadores abiertos
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.custom-marker.open {
+  animation: pulse 2s infinite;
+  
+  &:hover {
+    animation: none;
+  }
+}
+
+.custom-marker.closed .marker-image {
+  // Aplicar un filtro gris a las imágenes de tiendas cerradas
+  filter: grayscale(0.5) brightness(0.9);
+}
+
+// Corrección para el warning de line-clamp
+.products-list .product-card ion-card-content .product-description {
+  font-size: 12px;
+  margin: 0 0 12px;
+  height: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.col-reward-distance {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: rgba(0, 0, 0, 0.05);
+  
+  .distance-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 6px 0;
+    
+    &.near {
+      color: #2da160;
+      ion-icon {
+        font-size: 20px;
+      }
+    }
+    
+    &.far {
+      color: #d11e48;
+      ion-icon {
+        font-size: 20px;
+      }
+    }
+  }
+  
+  .distance-message {
+    font-size: 13px;
+    color: #d11e48;
+    margin: 5px 0 0;
+    text-align: center;
+    font-style: italic;
+  }
+}
+
+.col-explanation {
+  text-align: left;
+  margin: 15px 0;
+  font-size: 14px;
+  color: #333;
+  
+  ul {
+    padding-left: 20px;
+    margin: 10px 0;
+    
+    li {
+      margin-bottom: 8px;
+      position: relative;
+      list-style-type: none;
+      
+      &:before {
+        content: "✓";
+        color: #ff8400;
+        font-weight: bold;
+        position: absolute;
+        left: -20px;
+      }
+    }
+  }
+  
+  p {
+    margin: 10px 0;
+    line-height: 1.4;
+  }
+}
+
+// Estilos para las acciones del producto y controles de cantidad
+.product-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  
+  .quantity-controls {
+    display: flex;
+    align-items: center;
+    background: var(--ion-color-light);
+    border-radius: 20px;
+    overflow: hidden;
+    height: 32px;
+    
+    .qty-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--ion-color-medium);
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background: rgba(0, 0, 0, 0.05);
+        color: var(--ion-color-primary);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+      
+      ion-icon {
+        font-size: 16px;
+      }
+    }
+    
+    .qty-value {
+      width: 24px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--ion-color-dark);
+    }
+  }
+  
+  .add-to-cart-btn {
+    height: 32px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 16px;
+    background: var(--color-success, var(--ion-color-success));
+    color: white;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: var(--ion-color-success-shade);
+      transform: translateY(-2px);
+    }
+    
+    &:active {
+      transform: scale(0.95);
+    }
+    
+    ion-icon {
+      font-size: 16px;
+    }
+  }
+}
+
+// Estilos para modo oscuro
+:host-context(.dark-theme) {
+  .product-actions {
+    .quantity-controls {
+      background: var(--ion-color-medium);
+      
+      .qty-btn {
+        color: var(--ion-color-light);
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+        }
+      }
+      
+      .qty-value {
+        color: white;
+      }
+    }
+    
+    .add-to-cart-btn {
+      background: var(--color-success-dark, #4befa3);
+      color: #1e1e1e;
+      
+      &:hover {
+        background: #3dd592;
+      }
+    }
+  }
+}
+
+// Estilos para las acciones en la cabecera del panel de productos
+.product-sheet-handle {
+  width: 100%;
+  height: var(--bottom-sheet-handle-height);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+
+  .handle-bar {
+    width: 40px;
+    height: 4px;
+    background: var(--ion-color-medium);
+    border-radius: 10px;
+    opacity: 0.4;
+    margin: 0 auto;
+  }
+
+  .product-sheet-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: absolute;
+    right: 16px;
+    top: 8px;
+    
+    .cart-button {
+      position: relative;
+      background: var(--color-primary, var(--ion-color-primary));
+      color: white;
+      border: none;
+      height: 36px;
+      width: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background: var(--ion-color-primary-shade);
+        transform: translateY(-2px);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+      
+      ion-icon {
+        font-size: 20px;
+      }
+      
+      .cart-count {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: var(--color-danger, var(--ion-color-danger));
+        color: white;
+        font-size: 10px;
+        font-weight: 600;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+    }
+    
+    .close-button {
+      background: rgba(0, 0, 0, 0.1);
+      color: var(--ion-color-medium);
+      border: none;
+      height: 36px;
+      width: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background: rgba(0, 0, 0, 0.2);
+        color: var(--ion-color-dark);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+      
+      ion-icon {
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+// Estilos para modo oscuro
+:host-context(.dark-theme) {
+  .product-sheet-handle {
+    .product-sheet-actions {
+      .cart-button {
+        background: var(--color-accent-dark, #4befa3);
+        color: #1e1e1e;
+        
+        .cart-count {
+          background: var(--color-danger-dark, #f97171);
+          color: #1e1e1e;
+        }
+      }
+      
+      .close-button {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--ion-color-light);
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.2);
+          color: white;
+        }
+      }
+    }
+  }
+}
+
+// Estilos para los marcadores de tienda
+.store-marker-icon {
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
+  transition: transform var(--transition-speed) ease-out;
+  transform-origin: center bottom;
+  
+  &:hover {
+    transform: scale(1.15);
+    z-index: 1000 !important;
+  }
+  
+  &.open {
+    animation: pulse 2s infinite;
+    
+    &:hover {
+      animation: none;
+    }
+  }
+  
+  &.closed {
+    // Aplicar un filtro gris a los marcadores de tiendas cerradas
+    filter: grayscale(0.5) brightness(0.9) drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
+  }
+}
+
+// Animación de pulso para los marcadores abiertos
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
   }
 } 
