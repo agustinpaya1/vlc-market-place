@@ -483,4 +483,37 @@ export class FavoritesPage implements OnInit, ViewWillEnter {
       // Si no, no navega
     }
   }
+
+  async runDiagnostic() {
+    try {
+      const toast = await this.toastController.create({
+        message: 'Comprobando sistema de favoritos...',
+        duration: 2000,
+        position: 'bottom',
+        color: 'tertiary'
+      });
+      await toast.present();
+      
+      // Recargar favoritos para asegurar que todo está funcionando
+      await this.loadFavorites();
+      
+      // Mostrar resultado del diagnóstico
+      const resultToast = await this.toastController.create({
+        message: 'Sistema de favoritos funcionando correctamente',
+        duration: 2000,
+        position: 'bottom',
+        color: 'success'
+      });
+      await resultToast.present();
+    } catch (error) {
+      console.error('Error en diagnóstico:', error);
+      const errorToast = await this.toastController.create({
+        message: 'Error en el sistema de favoritos',
+        duration: 2000,
+        position: 'bottom',
+        color: 'danger'
+      });
+      await errorToast.present();
+    }
+  }
 } 

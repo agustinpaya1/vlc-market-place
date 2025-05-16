@@ -430,6 +430,39 @@ $dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
   }
 }
 
+// Aplicar estilos específicos para el modo oscuro en la tarjeta de login
+:host-context(.dark-theme) {
+  .login-prompt-card {
+    background-color: $dark-surface;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    
+    h2 {
+      color: $dark-primary;
+    }
+    
+    p {
+      color: $dark-secondary-text;
+    }
+    
+    ion-button {
+      --background: #{$dark-primary};
+      --background-activated: #{color.adjust($dark-primary, $lightness: -10%)};
+    }
+    
+    .register-prompt {
+      color: $dark-secondary-text;
+      
+      a {
+        color: $dark-primary;
+      }
+    }
+  }
+
+  .large-profile-icon {
+    color: $dark-secondary-text;
+  }
+}
+
 .large-profile-icon {
   font-size: 64px;
   color: var(--ion-color-medium);

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, NavigationExtras } from '@angular/router';
@@ -35,6 +35,7 @@ import { trash, arrowBack, add, remove, checkmarkCircle, home, cartOutline, stor
 import { PaymentModalComponent } from '../payment-modal/payment-modal.component';
 import { SupabaseService } from '../services/supabase.service';
 import { Subscription } from 'rxjs';
+import { SettingsService } from '../services/settings.service';
 
 interface Store {
   id: string;
@@ -105,7 +106,10 @@ export class CarritoComponent implements OnInit, OnDestroy {
     private productService: ProductService,
     private router: Router,
     private modalCtrl: ModalController,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private settingsService: SettingsService,
+    private ngZone: NgZone,
+    private changeDetector: ChangeDetectorRef
   ) {
     addIcons({
       arrowBack, 
@@ -143,6 +147,18 @@ export class CarritoComponent implements OnInit, OnDestroy {
     
     // Guardar la suscripción para limpiarla después
     this.subscriptions.push(cartSubscription);
+
+    // Suscribirse a cambios en la configuración de tema
+    const themeSubscription = this.settingsService.getSettings().subscribe(settings => {
+      // Forzar detección de cambios cuando cambia el tema
+      this.ngZone.run(() => {
+        console.log('CarritoComponent - Theme settings changed:', settings.darkMode ? 'dark' : 'light');
+        this.changeDetector.detectChanges();
+      });
+    });
+    
+    // Añadir esta suscripción a la lista
+    this.subscriptions.push(themeSubscription);
   }
   
   ngOnDestroy() {
