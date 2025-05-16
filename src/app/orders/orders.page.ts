@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, LoadingController, AlertController, ModalController, AnimationController } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
-import { OrderService, Order } from '../services/order.service';
+import { OrderService, Order, OrderItem } from '../services/order.service';
 import { AuthService } from '../services/auth.service';
 import { OrderSummaryComponent } from './order-summary/order-summary.component';
 import { Router } from '@angular/router';
@@ -49,6 +49,15 @@ import { Router } from '@angular/router';
           <ion-icon name="log-in-outline" slot="start"></ion-icon>
           Iniciar sesión
         </ion-button>
+      </div>
+
+      <!-- Introductor del apartado -->
+      <div *ngIf="!loading && !error" class="orders-intro">
+        <div class="intro-card">
+          <ion-icon name="bag-handle"></ion-icon>
+          <h2>Tus Pedidos</h2>
+          <p>Gestiona e haz seguimiento a todos tus pedidos</p>
+        </div>
       </div>
 
       <!-- Filtros -->
@@ -107,6 +116,27 @@ import { Router } from '@angular/router';
               </div>
             </div>
 
+            <!-- Productos destacados del pedido -->
+            <div class="order-products" *ngIf="order.items && order.items.length > 0">
+              <div class="product-preview" *ngFor="let item of order.items.slice(0, 3)">
+                <div class="product-image-container">
+                  <ion-thumbnail *ngIf="item.product_info?.image_url" class="product-image">
+                    <img [src]="item.product_info?.image_url" alt="Imagen de producto">
+                  </ion-thumbnail>
+                  <div *ngIf="!item.product_info?.image_url" class="product-placeholder">
+                    <ion-icon name="cube-outline"></ion-icon>
+                  </div>
+                </div>
+                <div class="product-info">
+                  <span class="product-name">{{ item.product_info?.name || 'Producto' }}</span>
+                  <span class="product-quantity">x{{ item.quantity }}</span>
+                </div>
+              </div>
+              <div class="more-products" *ngIf="order.items.length > 3">
+                <span>+{{ order.items.length - 3 }} más</span>
+              </div>
+            </div>
+
             <div class="order-actions" *ngIf="order.status === 'pending'">
               <ion-button 
                 class="receive-button" 
@@ -123,7 +153,7 @@ import { Router } from '@angular/router';
       <!-- Estado vacío -->
       <div *ngIf="!loading && !error && orders.length === 0" class="empty-state">
         <div class="empty-animation">
-          <ion-icon name="bag"></ion-icon>
+          <ion-icon name="bag-handle"></ion-icon>
         </div>
         <h2>No tienes pedidos</h2>
         <p>Tus pedidos aparecerán aquí cuando realices una compra</p>
@@ -150,6 +180,13 @@ import { Router } from '@angular/router';
           ¿Necesitas ayuda con tus pedidos?
         </ion-button>
       </div>
+
+      <!-- Flotante de ayuda para incidencias -->
+      <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="help-fab">
+        <ion-fab-button color="tertiary" (click)="showIncidentsHelp()">
+          <ion-icon name="warning-outline"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
     </ion-content>
   `,
   styles: [`
@@ -161,6 +198,8 @@ import { Router } from '@angular/router';
       --accent-color: var(--ion-color-primary);
       --pending-color: #ffb74d;
       --delivered-color: #66bb6a;
+      --background-gradient: linear-gradient(180deg, #f5fdfd 0%, #e7f5f9 100%);
+      --card-background: #ffffff;
     }
 
     .header-toolbar {
@@ -176,7 +215,48 @@ import { Router } from '@angular/router';
     }
 
     .orders-content {
-      --background: #f8fafc;
+      --background: var(--background-gradient);
+      background-image: url('/assets/dots-pattern.svg');
+      background-repeat: repeat;
+      background-size: 900px;
+    }
+
+    .orders-intro {
+      padding: 20px 16px 10px;
+    }
+
+    .intro-card {
+      background-color: #ffffff;
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: var(--shadow-small);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .intro-card ion-icon {
+      font-size: 32px;
+      color: var(--ion-color-primary);
+      background-color: rgba(var(--ion-color-primary-rgb), 0.1);
+      padding: 12px;
+      border-radius: 50%;
+      margin-bottom: 8px;
+    }
+
+    .intro-card h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 8px 0 4px;
+      color: var(--ion-color-dark);
+    }
+
+    .intro-card p {
+      font-size: 14px;
+      color: var(--ion-color-medium);
+      margin: 0;
     }
 
     .filters-segment {
@@ -225,7 +305,7 @@ import { Router } from '@angular/router';
     }
 
     .order-card {
-      background: white;
+      background: var(--card-background);
       border-radius: var(--border-radius-large);
       overflow: hidden;
       box-shadow: var(--shadow-small);
@@ -322,6 +402,87 @@ import { Router } from '@angular/router';
       letter-spacing: -0.5px;
     }
 
+    .order-products {
+      display: flex;
+      align-items: center;
+      padding: 0 16px 12px;
+      gap: 10px;
+      overflow-x: auto;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .order-products::-webkit-scrollbar {
+      display: none;
+    }
+
+    .product-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 60px;
+      max-width: 70px;
+    }
+
+    .product-image-container {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .product-image {
+      width: 100%;
+      height: 100%;
+      --border-radius: 8px;
+    }
+
+    .product-placeholder {
+      width: 100%;
+      height: 100%;
+      background-color: #f0f0f0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .product-placeholder ion-icon {
+      font-size: 22px;
+      color: var(--ion-color-medium);
+    }
+
+    .product-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .product-name {
+      font-size: 11px;
+      color: var(--ion-color-dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .product-quantity {
+      font-size: 10px;
+      color: var(--ion-color-medium);
+    }
+
+    .more-products {
+      font-size: 11px;
+      color: var(--ion-color-medium);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+    }
+
     .order-actions {
       padding: 0 16px 16px;
       display: flex;
@@ -384,8 +545,8 @@ import { Router } from '@angular/router';
     }
 
     .empty-animation {
-      width: 80px;
-      height: 80px;
+      width: 120px;
+      height: 120px;
       background: rgba(var(--ion-color-primary-rgb), 0.1);
       border-radius: 50%;
       display: flex;
@@ -395,7 +556,7 @@ import { Router } from '@angular/router';
     }
 
     .empty-animation ion-icon {
-      font-size: 40px;
+      font-size: 60px;
       color: var(--ion-color-primary);
     }
 
@@ -403,8 +564,8 @@ import { Router } from '@angular/router';
     .error-state h2 {
       margin: 0 0 10px;
       color: var(--ion-color-dark);
-      font-size: 20px;
-      font-weight: 600;
+      font-size: 22px;
+      font-weight: 700;
     }
 
     .empty-state p, 
@@ -418,7 +579,7 @@ import { Router } from '@angular/router';
 
     .explore-button {
       --background: var(--ion-color-primary);
-      --border-radius: 14px;
+      --border-radius: 24px;
       --box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3);
       font-weight: 600;
       height: 44px;
@@ -478,6 +639,15 @@ import { Router } from '@angular/router';
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     }
 
+    .help-fab {
+      margin-bottom: 70px;
+      margin-right: 16px;
+    }
+
+    ion-fab-button {
+      --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
     :host ::ng-deep .help-selection-alert .alert-wrapper {
       border-radius: 20px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
@@ -515,6 +685,35 @@ import { Router } from '@angular/router';
       line-height: 28px;
       margin-right: 12px;
       font-weight: 700;
+    }
+
+    .incidents-help-alert .alert-sub-title {
+      color: rgba(255, 255, 255, 0.9) !important;
+      font-size: 16px !important;
+      font-weight: 500 !important;
+    }
+    .incidents-help-alert .alert-message {
+      max-height: 60vh !important;
+      overflow-y: auto !important;
+      padding: 16px !important;
+    }
+    .incidents-help-alert .alert-button-group {
+      padding: 12px !important;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    .incidents-help-alert .alert-button {
+      border-radius: 16px !important;
+      text-transform: none !important;
+      font-weight: 600 !important;
+      font-size: 14px !important;
+      padding: 12px 24px !important;
+      min-width: 120px !important;
+      color: var(--ion-color-primary) !important;
+    }
+    .incidents-help-alert .alert-button.alert-button-role-cancel {
+      color: var(--ion-color-medium) !important;
     }
   `],
   standalone: true,
@@ -637,16 +836,16 @@ export class OrdersPage implements OnInit {
   }
 
   getStoreNames(order: Order): string {
-    if (!order.store_info) return '';
+    if (!order.store_info) return 'Tienda sin especificar';
     
     // Obtener la lista de tiendas del pedido
     const stores = this.orderService.getStoreList(order);
     
-    if (stores.length === 0) return '';
+    if (stores.length === 0) return 'Tienda sin especificar';
     if (stores.length === 1) return stores[0].name || 'Tienda';
     
-    // Si hay más de una tienda, mostrar "Varias tiendas"
-    return 'Varias tiendas';
+    // Si hay más de una tienda, mostrar el nombre de la primera y cuántas más hay
+    return `${stores[0].name} y ${stores.length - 1} más`;
   }
 
   async showOrderSummary(orderId: string) {
@@ -754,5 +953,179 @@ export class OrdersPage implements OnInit {
     });
 
     await alert.present();
+  }
+
+  async showIncidentsHelp() {
+    const alert = await this.alertCtrl.create({
+      header: 'Incidencias con Pedidos',
+      cssClass: 'incidents-help-alert',
+      subHeader: 'Problemas frecuentes',
+      message: '',
+      buttons: [
+        {
+          text: 'Contactar Soporte',
+          handler: () => {
+            this.contactSupport();
+          }
+        },
+        {
+          text: 'Cerrar',
+          role: 'cancel'
+        }
+      ]
+    });
+
+    await alert.present();
+
+    // Crear y añadir el contenido dinámicamente
+    const alertElement = document.querySelector('.incidents-help-alert');
+    if (alertElement) {
+      // Crear contenedor principal
+      const messageContent = document.createElement('div');
+      messageContent.className = 'incidents-help';
+      
+      // Añadir elementos de incidencia
+      this.addIncidentItem(messageContent, 'time-outline', 'Mi pedido está retrasado', 
+        'Si tu pedido lleva más de 60 minutos en preparación, puedes contactar directamente con la tienda o con nuestro servicio de atención al cliente.');
+      
+      this.addIncidentItem(messageContent, 'alert-circle-outline', 'Producto en mal estado o incorrecto', 
+        'Si has recibido un producto en mal estado o diferente al solicitado, contacta con nuestro servicio al cliente en las próximas 24 horas.');
+      
+      this.addIncidentItem(messageContent, 'bag-remove-outline', 'Falta un producto en mi pedido', 
+        'Si falta algún producto en tu pedido, ponte en contacto con la tienda o servicio al cliente lo antes posible.');
+      
+      this.addIncidentItem(messageContent, 'cash-outline', 'Problema con el cobro', 
+        'Si has detectado un error en el cobro de tu pedido, contacta con nuestro servicio de atención al cliente adjuntando el comprobante.');
+      
+      this.addIncidentItem(messageContent, 'close-circle-outline', 'Quiero cancelar mi pedido', 
+        'Solo puedes cancelar pedidos que aún estén en estado "Pendiente". Contacta con nuestro servicio de atención al cliente para solicitar la cancelación.');
+      
+      // Agregar el contenido al mensaje del alerta
+      const alertMessage = alertElement.querySelector('.alert-message');
+      if (alertMessage) {
+        alertMessage.innerHTML = '';
+        alertMessage.appendChild(messageContent);
+      }
+      
+      // Añadir estilos
+      const style = document.createElement('style');
+      style.textContent = `
+        .incidents-help-alert .alert-wrapper {
+          max-width: 90% !important;
+          width: 500px !important;
+          border-radius: 24px !important;
+          overflow: hidden;
+        }
+        .incidents-help-alert .alert-head {
+          padding: 12px 16px !important;
+          background-color: var(--ion-color-primary);
+          color: white;
+        }
+        .incidents-help-alert .alert-title {
+          color: white !important;
+          font-size: 20px !important;
+          font-weight: 600 !important;
+        }
+        .incidents-help-alert .alert-sub-title {
+          color: rgba(255, 255, 255, 0.9) !important;
+          font-size: 16px !important;
+          font-weight: 500 !important;
+        }
+        .incidents-help-alert .alert-message {
+          max-height: 60vh !important;
+          overflow-y: auto !important;
+          padding: 16px !important;
+        }
+        .incidents-help {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .incident-item {
+          background-color: #f8f9fa;
+          border-radius: 16px;
+          padding: 14px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .incident-title {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 8px;
+        }
+        .incident-title ion-icon {
+          font-size: 24px;
+          color: var(--ion-color-primary);
+          background-color: rgba(var(--ion-color-primary-rgb), 0.1);
+          padding: 8px;
+          border-radius: 50%;
+        }
+        .incident-title strong {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--ion-color-dark);
+        }
+        .incident-item p {
+          margin: 0;
+          color: var(--ion-color-medium);
+          font-size: 14px;
+          line-height: 1.4;
+          padding-left: 42px;
+        }
+        .incidents-help-alert .alert-button-group {
+          padding: 12px !important;
+          display: flex;
+          justify-content: space-between;
+          border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .incidents-help-alert .alert-button {
+          border-radius: 16px !important;
+          text-transform: none !important;
+          font-weight: 600 !important;
+          font-size: 14px !important;
+          padding: 12px 24px !important;
+          min-width: 120px !important;
+          color: var(--ion-color-primary) !important;
+        }
+        .incidents-help-alert .alert-button.alert-button-role-cancel {
+          color: var(--ion-color-medium) !important;
+        }
+      `;
+      alertElement.appendChild(style);
+    }
+  }
+
+  /**
+   * Función auxiliar para crear elementos de incidencia
+   */
+  addIncidentItem(parent: HTMLElement, icon: string, title: string, description: string) {
+    const item = document.createElement('div');
+    item.className = 'incident-item';
+    
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'incident-title';
+    
+    const iconElement = document.createElement('ion-icon');
+    iconElement.setAttribute('name', icon);
+    
+    const strongTitle = document.createElement('strong');
+    strongTitle.textContent = title;
+    
+    const paragraph = document.createElement('p');
+    paragraph.textContent = description;
+    
+    titleDiv.appendChild(iconElement);
+    titleDiv.appendChild(strongTitle);
+    
+    item.appendChild(titleDiv);
+    item.appendChild(paragraph);
+    
+    parent.appendChild(item);
+  }
+
+  contactSupport() {
+    // Abre un modal o redirige a una página de contacto
+    // Por ahora, simplemente mostramos un mensaje
+    window.open('mailto:soporte@vlc-marketplace.com', '_blank');
   }
 } 
