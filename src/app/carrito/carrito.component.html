@@ -6,8 +6,8 @@
       </ion-button>
     </ion-buttons>
     <div class="header-content">
-      <img src="assets/icons/ai-logo.svg" alt="Logo" class="header-logo">
-      <ion-title>Mi Carrito</ion-title>
+      <img src="assets/vlc-logo.svg" alt="Logo" class="header-logo">
+      <ion-title>Carrito</ion-title>
     </div>
   </ion-toolbar>
 </ion-header>
@@ -16,7 +16,6 @@
   <div class="cart-header">
     <div class="cart-icon-container">
       <img src="assets/vlc-logo.svg" alt="Logo VLC" class="cart-logo">
-      <h2 class="cart-title">Mi Carrito</h2>
       <ion-button fill="clear" class="back-button" (click)="goBack()">
         <ion-icon name="arrowBack"></ion-icon>
       </ion-button>
@@ -48,15 +47,65 @@
   <div *ngIf="cartItems.length === 0 && !paymentSuccess" class="empty-cart">
     <ion-card>
       <ion-card-header>
-        <ion-icon name="cart-outline" class="empty-cart-icon"></ion-icon>
-        <ion-card-title>Tu carrito está vacío</ion-card-title>
-        <ion-card-subtitle>Agrega productos para comenzar a comprar</ion-card-subtitle>
+        <ion-card-title>
+          <ion-icon name="storefront" class="card-title-icon"></ion-icon>
+          Tiendas Disponibles
+        </ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <ion-button expand="block" color="primary" (click)="goBack()">
-          <ion-icon name="home" slot="start"></ion-icon>
-          Ir a Tiendas
-        </ion-button>
+        <!-- Lista de tiendas disponibles -->
+        <div class="stores-container">
+          <!-- Loading indicator -->
+          <div class="loading-overlay" *ngIf="isLoading">
+            <div class="loading-container">
+              <ion-spinner name="circular"></ion-spinner>
+              <span>Cargando tiendas...</span>
+            </div>
+          </div>
+          
+          <div class="stores-list" *ngIf="!isLoading">
+            <div *ngIf="stores.length === 0" class="empty-stores">
+              <ion-icon name="alert-circle-outline" size="large"></ion-icon>
+              <h3>No hay tiendas disponibles</h3>
+              <p>No se encontraron tiendas en este momento</p>
+            </div>
+            
+            <div *ngFor="let store of stores" class="store-card" (click)="navigateToStore(store)">
+              <div class="store-image">
+                <img [src]="store.imageUrl || 'assets/logo-placeholder.png'" (error)="handleImageError($event)" alt="Imagen de tienda">
+                <ion-badge [color]="store.isOpen ? 'success' : 'medium'" class="store-status">
+                  {{store.isOpen ? 'Abierto' : 'Cerrado'}}
+                </ion-badge>
+              </div>
+              <div class="store-content">
+                <h4>{{store.name}}</h4>
+                <p class="store-category">{{store.category || 'Tienda local'}}</p>
+                <div class="store-info-row">
+                  <span class="store-distance">
+                    <ion-icon name="locationSharp"></ion-icon>
+                    {{store.distance}} km
+                  </span>
+                  <span class="store-rating" *ngIf="store.rating">
+                    <ion-icon name="star"></ion-icon>
+                    {{store.rating | number:'1.1-1'}}
+                  </span>
+                </div>
+                <p class="store-address" *ngIf="store.address">
+                  <ion-icon name="home-outline"></ion-icon>
+                  {{store.address}}
+                </p>
+                <p class="store-schedule" *ngIf="store.open_time">
+                  <ion-icon name="time-outline"></ion-icon>
+                  {{store.open_time}}
+                </p>
+                <ion-button expand="block" color="primary" size="small" class="view-store-btn" (click)="navigateToStore(store); $event.stopPropagation()">
+                  Ver Productos
+                  <ion-icon name="chevron-forward" slot="end"></ion-icon>
+                </ion-button>
+              </div>
+            </div>
+          </div>
+        </div>
       </ion-card-content>
     </ion-card>
   </div>
@@ -94,7 +143,7 @@
             <ion-icon name="add"></ion-icon>
           </ion-button>
         </div>
-        <ion-button fill="clear" color="danger" (click)="removeItem(item.id)">
+        <ion-button fill="clear" color="danger" class="delete-button" (click)="removeItem(item.id)">
           <ion-icon name="trash"></ion-icon>
         </ion-button>
       </div>
