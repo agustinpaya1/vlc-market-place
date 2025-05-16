@@ -1,30 +1,33 @@
 // Variables de colores similares al perfil
-$color-primary: #02A396; // Verde azulado principal
-$color-secondary: #02877b; // Verde azulado más oscuro
-$color-bg: #EDF5F0; // Fondo claro verde-gris
-$color-text: #2C3E50; // Texto oscuro
-$color-light-text: #7F8C8D; // Texto claro
+$color-primary: var(--color-brand-primary, #02A396); // Verde azulado principal
+$color-secondary: var(--color-brand-secondary, #028090); // Verde azulado más oscuro
+$color-accent: var(--color-brand-light, #F0F3BD); // Color de acento
+$color-bg: var(--color-background, #f5f9f5); // Fondo claro más suave
+$color-text: var(--color-text-primary, #2c4a3e); // Texto oscuro
+$color-light-text: var(--color-text-secondary, #6b8a7c); // Texto claro
 $color-white: #FFFFFF; // Blanco
-$color-danger: #dc3545; // Color rojo para el botón de cerrar sesión
-$font-family: 'Roboto', sans-serif;
-$turquoise-light: #5fe3d0; // Color turquesa claro para botones
-$border-radius-small: 8px;
-$border-radius-medium: 25px;
-$spacing-sm: 8px;
-$spacing-md: 16px;
-$spacing-lg: 24px;
-$spacing-xl: 30px;
-$card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-$transition-speed: 0.3s;
+$color-danger: #e74c3c; // Color rojo para botones de eliminación
+$font-family: var(--ion-font-family, 'Roboto', sans-serif);
+$border-radius-small: var(--border-radius-small, 8px);
+$border-radius-medium: var(--border-radius-medium, 12px);
+$border-radius-large: var(--border-radius-large, 16px);
+$border-radius-circle: 50%;
+$spacing-xs: var(--spacing-xs, 4px);
+$spacing-sm: var(--spacing-sm, 8px);
+$spacing-md: var(--spacing-md, 16px);
+$spacing-lg: var(--spacing-lg, 24px);
+$card-shadow: var(--shadow-medium, 0 4px 12px rgba(0, 0, 0, 0.08));
+$button-shadow: 0 4px 8px rgba(2, 163, 150, 0.25);
+$transition-speed: var(--transition-normal, 0.3s);
 
 // Estilos para el encabezado con gradiente
 ion-content {
-  --background: linear-gradient(170deg, #{$color-primary} 30%, #{$color-bg} 30%);
+  --background: linear-gradient(170deg, #{$color-primary} 40%, #{$color-bg} 40%);
   --color: #{$color-text};
   font-family: $font-family;
   
   &::part(scroll) {
-    padding-bottom: 120px;
+    padding-bottom: 100px;
   }
 }
 
@@ -39,7 +42,7 @@ ion-header {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   padding-top: 40px;
 }
 
@@ -49,31 +52,42 @@ ion-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .cart-logo {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid $color-white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  margin-bottom: 15px;
+  width: 110px;
+  height: 110px;
+  border-radius: $border-radius-circle;
+  object-fit: contain; // Cambiado a contain para logotipos
+  border: 5px solid $color-white;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  margin-bottom: 18px;
+  transition: transform 0.3s ease;
+  background-color: $color-white;
+  padding: 5px;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
 }
 
 .cart-title {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: bold;
   margin-bottom: 5px;
   color: $color-white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .cart-info {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.95);
   margin-bottom: 15px;
-  font-size: 16px;
+  font-size: 17px;
+  font-weight: 500;
+  padding: 6px 16px;
+  background-color: rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
 }
 
 .back-button {
@@ -81,8 +95,15 @@ ion-header {
   top: 0;
   left: 0;
   color: $color-white;
-  --background: transparent;
+  --background: rgba(255, 255, 255, 0.15);
   z-index: 10;
+  border-radius: $border-radius-circle;
+  --border-radius: #{$border-radius-circle};
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    --background: rgba(255, 255, 255, 0.25);
+  }
 }
 
 // Estilo para la lista de elementos del carrito
@@ -92,58 +113,64 @@ ion-header {
   overflow: hidden;
   box-shadow: $card-shadow;
   background: transparent;
-  padding: 8px 0;
+  padding: 10px 0;
   
   .cart-item {
-    --background: #F8F9FA;
-    --border-radius: 25px;
+    --background: #{$color-white};
+    --border-radius: #{$border-radius-medium};
     --padding-start: 16px;
     --padding-end: 16px;
-    --padding-top: 8px;
-    --padding-bottom: 8px;
-    --min-height: 60px;
-    margin-bottom: 12px;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    --min-height: 70px;
+    margin-bottom: 14px;
     --border-width: 0;
     --highlight-color-focused: #{$color-primary};
     --inner-padding-end: 16px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-    border-radius: 25px;
-    margin-left: 8px;
-    margin-right: 8px;
+    box-shadow: var(--shadow-small, 0 2px 8px rgba(0, 0, 0, 0.1));
+    margin-left: 10px;
+    margin-right: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     
     &:last-child {
       margin-bottom: 0;
     }
     
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.08);
+    }
+    
     &.item-has-focus {
       --background: white;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     }
     
     ion-thumbnail {
-      --border-radius: 12px;
-      width: 60px;
-      height: 60px;
+      --border-radius: 14px;
+      width: 65px;
+      height: 65px;
       margin-right: 16px;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
       
       ion-img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        border-radius: 12px;
       }
     }
     
     ion-label {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 5px;
       
       h2 {
         color: $color-text;
-        font-weight: 500;
-        font-size: 15px;
-        margin-bottom: 2px;
+        font-weight: 600;
+        font-size: 16px;
+        margin-bottom: 4px;
       }
     }
   }
@@ -154,29 +181,36 @@ ion-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .quantity-controls {
   display: flex;
   align-items: center;
-  background: rgba(0, 0, 0, 0.03);
+  background-color: #f7f9fc;
   border-radius: 20px;
-  padding: 1px;
+  padding: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   
   ion-button {
-    --border-radius: 50%;
-    width: 28px;
-    height: 28px;
+    --padding-start: 3px;
+    --padding-end: 3px;
     margin: 0;
-    --padding-start: 0;
-    --padding-end: 0;
+    height: 28px;
+    width: 28px;
+    --border-radius: 50%;
+    
+    &:hover {
+      --background: rgba(0, 0, 0, 0.05);
+    }
   }
   
   ion-label {
-    min-width: 20px;
+    margin: 0 8px;
+    min-width: 24px;
     text-align: center;
-    font-size: 14px;
+    font-weight: 600;
+    color: $color-text;
   }
 }
 
@@ -189,14 +223,14 @@ ion-header {
   
   ion-card {
     width: 100%;
-    max-width: 400px;
+    max-width: 500px;
     text-align: center;
     border-radius: $border-radius-medium;
     box-shadow: $card-shadow;
     background: $color-white;
     
     ion-card-header {
-      padding-top: 30px;
+      padding-top: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -212,6 +246,9 @@ ion-header {
       color: $color-text;
       font-size: 20px;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
     ion-card-subtitle {
@@ -290,72 +327,90 @@ ion-header {
 .cart-unit-prices {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  margin-bottom: 2px;
+  gap: 6px;
+  margin-top: 3px;
 }
 
 .cart-price-old {
-  color: $color-light-text;
   text-decoration: line-through;
-  font-size: 0.9rem;
+  color: $color-light-text;
+  font-size: 13px;
+  opacity: 0.8;
 }
 
 .cart-price-new {
-  color: $color-primary;
-  font-size: 1.1rem;
   font-weight: 600;
+  color: $color-primary;
+  font-size: 15px;
   
   &.has-discount {
-    color: #e53935;
+    color: #e74c3c;
   }
+}
+
+.cart-unit-label {
+  font-size: 12px;
+  color: $color-light-text;
 }
 
 // Estilos para el pago exitoso
 .payment-success {
-  margin: 2rem 0;
-  
   ion-card {
-    text-align: center;
-    padding: 1rem;
-    background: rgba(40, 167, 69, 0.1);
-    border: 1px solid rgba(40, 167, 69, 0.5);
-    border-radius: $border-radius-medium;
+    border-radius: $border-radius-large;
+    margin: 20px 0;
+    box-shadow: var(--shadow-large, 0 6px 16px rgba(0, 0, 0, 0.15));
+    overflow: hidden;
+    background: $color-white;
+    transition: transform 0.3s ease;
     
-    .success-title {
+    &:hover {
+      transform: translateY(-5px);
+    }
+  }
+  
+  ion-card-header {
+    background-color: #f8f9fa;
+    padding: 20px;
+    
+    ion-card-title {
       display: flex;
       align-items: center;
-      justify-content: center;
-      color: #28a745;
+      gap: 10px;
+      color: #2ecc71;
+      font-size: 20px;
+      font-weight: 600;
       
       ion-icon {
-        font-size: 24px;
-        margin-right: 10px;
+        font-size: 28px;
       }
     }
+  }
+  
+  ion-card-content {
+    padding: 20px;
     
     p {
-      margin: 10px 0;
-      color: $color-text;
+      margin: 8px 0;
+      line-height: 1.5;
+    }
+  }
+  
+  .redirect-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #f1f1f1;
+    
+    p {
+      font-size: 14px;
+      color: $color-light-text;
     }
     
-    .redirect-message {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    ion-spinner {
       margin-top: 15px;
-      padding-top: 10px;
-      border-top: 1px dashed rgba(0, 0, 0, 0.1);
-      
-      p {
-        margin-bottom: 15px;
-        color: $color-light-text;
-      }
-      
-      ion-spinner {
-        width: 40px;
-        height: 40px;
-        color: $color-primary;
-      }
+      --color: #{$color-primary};
     }
   }
 }
@@ -511,30 +566,251 @@ ion-button[fill="clear"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  padding-right: 48px; // Espacio para el botón de retroceso
+  padding-right: 48px;
 }
 
 .header-logo {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
-}
-
-ion-toolbar {
-  --padding-start: 8px;
-  --padding-end: 8px;
+  border-radius: 50%;
+  background-color: white;
+  padding: 2px;
+  border: 2px solid $color-white;
 }
 
 ion-title {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 600;
-  color: var(--ion-color-dark);
+  color: $color-white;
 }
 
-// Espacio adicional en la parte inferior para evitar que las pestañas oculten contenido
+// Header del carrito más estilizado
+ion-toolbar {
+  --background: #{$color-primary};
+  --color: #{$color-white};
+  --border-width: 0;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  --min-height: 60px;
+  --padding-start: 10px;
+  --padding-end: 10px;
+  box-shadow: var(--shadow-small, 0 2px 8px rgba(0, 0, 0, 0.1));
+}
+
+// Aumentar espacio inferior
 .bottom-space {
   height: 80px;
   width: 100%;
+}
+
+// Estilo para el icono del título de la tarjeta
+.card-title-icon {
+  vertical-align: middle;
+  margin-right: 8px;
+  color: $color-primary;
+  font-size: 22px;
+}
+
+// Estilos para las tiendas
+.stores-container {
+  position: relative;
+  min-height: 200px;
+}
+
+.stores-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.store-card {
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+  
+  .store-image {
+    position: relative;
+    width: 100%;
+    height: 140px;
+    overflow: hidden;
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .store-status {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+  }
+  
+  .store-content {
+    padding: 16px;
+    
+    h4 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 600;
+      color: $color-text;
+    }
+    
+    .store-category {
+      color: $color-light-text;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    
+    .store-info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      
+      span {
+        display: flex;
+        align-items: center;
+        font-size: 13px;
+        
+        ion-icon {
+          margin-right: 4px;
+        }
+      }
+      
+      .store-distance {
+        color: $color-primary;
+      }
+      
+      .store-rating {
+        color: #ffa41b;
+      }
+    }
+    
+    .store-address, .store-schedule {
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      color: $color-light-text;
+      margin: 6px 0;
+      
+      ion-icon {
+        margin-right: 6px;
+        font-size: 15px;
+      }
+    }
+    
+    .view-store-btn {
+      margin-top: 12px;
+      --border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      --padding-top: 10px;
+      --padding-bottom: 10px;
+    }
+  }
+}
+
+.empty-stores {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  
+  ion-icon {
+    font-size: 48px;
+    color: $color-light-text;
+    margin-bottom: 16px;
+  }
+  
+  h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    color: $color-text;
+  }
+  
+  p {
+    color: $color-light-text;
+    font-size: 14px;
+  }
+}
+
+// Loading overlay
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 5;
+  border-radius: 15px;
+
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 24px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    ion-spinner {
+      width: 40px;
+      height: 40px;
+      color: $color-primary;
+    }
+
+    span {
+      font-size: 14px;
+      font-weight: 500;
+      color: $color-text;
+    }
+  }
+}
+
+// Mejorar botón de eliminar
+.delete-button {
+  --background: transparent;
+  --color: #{$color-danger};
+  --border-radius: 50%;
+  height: 36px;
+  width: 36px;
+  margin: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  transition: transform 0.2s ease;
+  
+  &::part(native) {
+    background: rgba(231, 76, 60, 0.08);
+  }
+  
+  &:hover {
+    transform: scale(1.1);
+    --color: #c0392b;
+  }
 } 

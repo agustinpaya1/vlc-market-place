@@ -2,11 +2,11 @@
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-button (click)="goBack()">
-        <ion-icon name="arrowBack" slot="icon-only"></ion-icon>
+        <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
     <div class="header-content">
-      <img src="assets/vlc-logo.svg" alt="Logo" class="header-logo">
+      <img src="https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/logoapp//logo.png" alt="Logo" class="header-logo" (error)="handleImageError($event)">
       <ion-title>Carrito</ion-title>
     </div>
   </ion-toolbar>
@@ -15,9 +15,9 @@
 <ion-content class="ion-padding">
   <div class="cart-header">
     <div class="cart-icon-container">
-      <img src="assets/vlc-logo.svg" alt="Logo VLC" class="cart-logo">
+      <img src="https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/logoapp//logo.png" alt="Logo VLC" class="cart-logo" (error)="handleImageError($event)">
       <ion-button fill="clear" class="back-button" (click)="goBack()">
-        <ion-icon name="arrowBack"></ion-icon>
+        <ion-icon name="arrow-back"></ion-icon>
       </ion-button>
     </div>
     <p *ngIf="cartItems.length > 0" class="cart-info">{{ totalItems }} artículos · Total: {{ totalPrice | currency:'EUR' }}</p>
@@ -29,7 +29,7 @@
     <ion-card>
       <ion-card-header>
         <ion-card-title class="success-title">
-          <ion-icon name="checkmarkCircle"></ion-icon>
+          <ion-icon name="checkmark-circle"></ion-icon>
           ¡Pago Exitoso!
         </ion-card-title>
       </ion-card-header>

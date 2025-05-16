@@ -381,7 +381,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
   handleImageError(event: Event) {
     const target = event.target as HTMLImageElement;
     if (target) {
-      target.src = 'assets/stores/default-store.jpg';
+      target.src = 'assets/logo-placeholder.png';
     }
   }
 } 
