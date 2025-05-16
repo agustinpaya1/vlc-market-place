@@ -53,7 +53,7 @@
         
         <!-- Simple botón para navegación directa -->
         <ion-button expand="block" color="primary" type="button" class="tracking-button" (click)="goToOrderTracking()">
-          Ver seguimiento
+          Volver al inicio
         </ion-button>
       </ion-card-content>
     </ion-card>
@@ -99,6 +99,12 @@
             <ion-icon name="card-outline"></ion-icon> Introduce los datos de la tarjeta
           </ion-text>
         </div>
+      </div>
+      <div class="info-message" style="margin-top: 8px;">
+        <ion-text color="success">
+          <ion-icon name="checkmark-circle"></ion-icon>
+          Para simular el pago, utiliza la tarjeta <b>4242 4242 4242 4242</b>
+        </ion-text>
       </div>
 
       <div *ngIf="errorMessage" class="error-message ion-padding-top">
