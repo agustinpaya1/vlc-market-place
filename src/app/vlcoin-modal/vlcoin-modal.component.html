@@ -16,7 +16,7 @@
       <div class="text-center">
         <p class="text-medium">Saldo Total</p>
         <div class="balance-amount">
-          <div class="v-coin-circle">V</div>
+          <img src="assets/icons/vlcoins.png" alt="Monedas VL" class="vl-coin-icon">
           <span class="balance-text">{{ vlcoinBalance }}</span>
         </div>
       </div>
@@ -83,7 +83,7 @@
               <p *ngIf="achievement.description" class="achievement-description">{{ achievement.description }}</p>
             </div>
             <div class="achievement-coins">
-              <div class="v-coin-circle small">V</div>
+              <img src="assets/icons/vlcoin.png" alt="Monedas VL" class="vl-coin-icon small">
               <span>{{ achievement.coins }}</span>
             </div>
           </div>
@@ -107,7 +107,7 @@
       <div class="challenge-image-container">
         <img [src]="challenge.image" alt="{{ challenge.title }}" class="challenge-image">
         <div class="challenge-coin-badge">
-          <div class="v-coin-circle">V</div>
+          <img src="assets/icons/vlcoin.png" alt="Monedas VL" class="vl-coin-icon">
           <span>{{ challenge.coins }}</span>
         </div>
       </div>
@@ -150,7 +150,7 @@
               <!-- Solo mostramos la imagen y el badge de monedas -->
               <img [src]="reward.image" alt="" class="reward-image">
               <div class="reward-coin-badge">
-                <div class="v-coin-circle">V</div>
+                <img src="assets/icons/vlcoin.png" alt="Monedas VL" class="vl-coin-icon">
                 <span>{{ reward.coins }}</span>
               </div>
             </div>

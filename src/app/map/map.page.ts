@@ -4,47 +4,47 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Platform, ToastController } from '@ionic/angular';
 import {
-  IonBadge,
-  IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonChip,
-  IonCol,
-  IonContent,
-  IonGrid,
-  IonHeader,
-  IonIcon,
-  IonImg,
-  IonRow,
-  IonSearchbar,
-  IonSkeletonText,
-  IonSpinner
+    IonBadge,
+    IonButton,
+    IonCard,
+    IonCardContent,
+    IonCardHeader,
+    IonChip,
+    IonCol,
+    IonContent,
+    IonGrid,
+    IonHeader,
+    IonIcon,
+    IonImg,
+    IonRow,
+    IonSearchbar,
+    IonSkeletonText,
+    IonSpinner
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
-  add,
-  alertCircleOutline,
-  arrowForward,
-  basketOutline,
-  callOutline,
-  cartOutline,
-  cartSharp,
-  checkmarkCircle,
-  checkmarkCircleOutline,
-  chevronBack,
-  closeCircle,
-  closeOutline,
-  compassOutline,
-  locationOutline,
-  locationSharp,
-  pricetagOutline,
-  remove,
-  share,
-  star,
-  storefrontOutline,
-  timeOutline,
-  timeSharp
+    add,
+    alertCircleOutline,
+    arrowForward,
+    basketOutline,
+    callOutline,
+    cartOutline,
+    cartSharp,
+    checkmarkCircle,
+    checkmarkCircleOutline,
+    chevronBack,
+    closeCircle,
+    closeOutline,
+    compassOutline,
+    locationOutline,
+    locationSharp,
+    pricetagOutline,
+    remove,
+    share,
+    star,
+    storefrontOutline,
+    timeOutline,
+    timeSharp
 } from 'ionicons/icons';
 import * as L from 'leaflet';
 import { Subscription } from 'rxjs';
@@ -211,30 +211,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     private cartService: CartService
   ) {
     // Añadimos solo los iconos importados explícitamente
-    addIcons({
-      locationOutline,
-      timeOutline,
-      star,
-      storefrontOutline,
-      cartOutline,
-      closeOutline,
-      chevronBack,
-      share,
-      remove,
-      add,
-      basketOutline,
-      locationSharp,
-      timeSharp,
-      cartSharp,
-      callOutline,
-      checkmarkCircle,
-      closeCircle,
-      pricetagOutline,
-      arrowForward,
-      compassOutline,
-      checkmarkCircleOutline,
-      alertCircleOutline
-    });
+    addIcons({locationOutline, timeOutline, star, storefrontOutline, cartOutline, closeOutline, chevronBack, share, locationSharp, timeSharp, cartSharp, callOutline, checkmarkCircle, closeCircle, pricetagOutline, arrowForward, compassOutline, checkmarkCircleOutline, alertCircleOutline, remove, add, basketOutline});
     
     this.subscriptions.push(
       this.authService.user$.subscribe(user => {
