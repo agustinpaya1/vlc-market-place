@@ -28,6 +28,7 @@ import { SupabaseService } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
 import { DeliverySuccessModalComponent } from '../delivery-success-modal/delivery-success-modal.component';
 import * as L from 'leaflet';
+// Import just for side-effects, the module will be loaded as external dependency
 import 'leaflet-routing-machine';
 import { addIcons } from 'ionicons';
 import { 
