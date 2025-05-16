@@ -203,8 +203,8 @@ import { StoreService } from '../services/store.service';
       <!-- Flotante de ayuda para incidencias -->
       <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="help-fab">
         <ion-fab-button color="tertiary" (click)="showIncidentsHelp()">
-          <div class="warning-icon-container">
-            <ion-icon name="warning"></ion-icon>
+          <div class="help-question-icon-container">
+            <span class="help-question-mark">?</span>
           </div>
         </ion-fab-button>
       </ion-fab>
@@ -792,16 +792,24 @@ import { StoreService } from '../services/store.service';
       color: var(--ion-color-medium) !important;
     }
 
-    .warning-icon-container {
+    .help-question-icon-container {
       display: flex;
       align-items: center;
       justify-content: center;
       width: 100%;
       height: 100%;
     }
-    
-    .warning-icon-container ion-icon {
-      font-size: 22px;
+    .help-question-mark {
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: white;
+      line-height: 1;
+      text-align: center;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   `],
   standalone: true,
