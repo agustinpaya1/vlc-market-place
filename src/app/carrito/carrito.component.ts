@@ -128,15 +128,20 @@ export class CarritoComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.cartService.getCartItems().subscribe((items: CartItem[]) => {
+    // Suscribirse a los cambios en el carrito
+    const cartSubscription = this.cartService.getCartItems().subscribe((items: CartItem[]) => {
       this.cartItems = items;
       this.calculateTotal();
       
       // Cargar tiendas si el carrito está vacío
-      if (this.cartItems.length === 0) {
+      if (this.cartItems.length === 0 && !this.paymentSuccess) {
+        console.log('Carrito vacío, cargando tiendas disponibles...');
         this.loadStores();
       }
     });
+    
+    // Guardar la suscripción para limpiarla después
+    this.subscriptions.push(cartSubscription);
   }
   
   ngOnDestroy() {
@@ -308,11 +313,22 @@ export class CarritoComponent implements OnInit, OnDestroy {
   }
 
   removeItem(productId: string) {
+    // Comprobar si es el último elemento
+    const isLastItem = this.cartItems.length === 1;
+    
+    // Eliminar el elemento del carrito
     this.cartService.removeFromCart(productId);
+    
+    // Si era el último elemento, asegurarse de que se cargan las tiendas
+    if (isLastItem) {
+      console.log('Se eliminó el último elemento del carrito');
+    }
   }
 
   clearCart() {
     this.cartService.clearCart();
+    // No es necesario cargar las tiendas aquí, ya que la suscripción a cartItems lo hará automáticamente
+    console.log('Carrito vaciado manualmente');
   }
 
   goBack(): void {
