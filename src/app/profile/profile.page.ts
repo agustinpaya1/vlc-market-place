@@ -366,4 +366,51 @@ export class ProfilePage implements OnInit, OnDestroy {
       console.error('URL Fetch Error:', fetchError);
     }
   }
+
+  async saveProfile() {
+    try {
+      await this.authService.updateUserProfile({
+        phone: this.user.phone,
+        address: this.user.address
+      });
+      const toast = await this.toastController.create({
+        message: 'Datos actualizados correctamente',
+        duration: 2000,
+        position: 'bottom',
+        color: 'success'
+      });
+      await toast.present();
+    } catch (error) {
+      const toast = await this.toastController.create({
+        message: 'Error al actualizar los datos',
+        duration: 2000,
+        position: 'bottom',
+        color: 'danger'
+      });
+      await toast.present();
+    }
+  }
+
+  async saveProfileField(field: 'phone' | 'address') {
+    try {
+      const update: any = {};
+      update[field] = this.user[field];
+      await this.authService.updateUserProfile(update);
+      const toast = await this.toastController.create({
+        message: (field === 'phone' ? 'Teléfono' : 'Dirección') + ' actualizado correctamente',
+        duration: 2000,
+        position: 'bottom',
+        color: 'success'
+      });
+      await toast.present();
+    } catch (error) {
+      const toast = await this.toastController.create({
+        message: 'Error al actualizar ' + (field === 'phone' ? 'el teléfono' : 'la dirección'),
+        duration: 2000,
+        position: 'bottom',
+        color: 'danger'
+      });
+      await toast.present();
+    }
+  }
 } 

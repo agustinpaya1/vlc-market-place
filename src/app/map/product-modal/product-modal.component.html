@@ -44,10 +44,12 @@
       </ion-button>
     </div>
 
-    <ion-button expand="block" (click)="addToCart()" [disabled]="quantity === 0">
-      <ion-icon name="cart" slot="start"></ion-icon>
-      {{ isInCart ? 'Actualizar carrito' : 'Añadir al carrito' }}
-    </ion-button>
+    <div class="action-row">
+      <ion-button expand="block" class="add-to-cart-btn" (click)="addToCart()" [disabled]="quantity === 0">
+        <ion-icon name="cart" slot="start"></ion-icon>
+        {{ isInCart ? 'Actualizar carrito' : 'Añadir al carrito' }}
+      </ion-button>
+    </div>
   </div>
 </ion-content>
 
