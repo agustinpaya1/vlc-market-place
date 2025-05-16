@@ -28,6 +28,14 @@ export const routes: Routes = [
     loadComponent: () => import('./reset-password/reset-password.page').then(m => m.ResetPasswordPage)
   },
   {
+    path: 'order-details/:id',
+    loadComponent: () => import('./order-details/order-details.page').then(m => m.OrderDetailsPage)
+  },
+  {
+    path: 'order-help',
+    loadComponent: () => import('./help/order-help/order-help.component').then(m => m.OrderHelpComponent)
+  },
+  {
     path: '**',
     redirectTo: 'tabs/stores'
   }
