@@ -1,25 +1,31 @@
 <ion-content class="ion-padding">
   <!-- Contenido cuando el usuario está autenticado -->
-  <div *ngIf="isAuthenticated">
+  <div *ngIf="isAuthenticated" class="hardware-accelerated">
     <div class="user-profile-header">
-      <div class="user-avatar-container">
+      <div class="user-avatar-container hardware-accelerated">
         <!-- User avatar with comprehensive error handling -->
         <ng-container *ngIf="user.photoUrl; else defaultAvatar">
           <img 
             [src]="user.photoUrl" 
-            class="user-avatar-image" 
+            class="user-avatar-image hardware-accelerated" 
             (error)="onImageError($event)"
             alt="Foto de perfil del usuario"
             loading="lazy"
             crossorigin="anonymous"
             referrerpolicy="no-referrer"
+            width="120"
+            height="120"
+            decoding="async"
           >
         </ng-container>
         <ng-template #defaultAvatar>
           <img 
             src="assets/default-profile.svg" 
-            class="user-avatar-image" 
+            class="user-avatar-image hardware-accelerated" 
             alt="Avatar por defecto"
+            width="120"
+            height="120"
+            loading="eager"
           >
         </ng-template>
         
@@ -44,7 +50,7 @@
         <!-- Botón de edición de perfil -->
         <ion-button 
           fill="clear" 
-          class="user-edit-button" 
+          class="user-edit-button hardware-accelerated" 
           (click)="editProfile()"
         >
           <ion-icon name="pencil" slot="icon-only"></ion-icon>
@@ -54,7 +60,7 @@
       <p class="user-email-text">{{ user.email }}</p>
     </div>
 
-    <ion-list lines="full" class="user-info-list">
+    <ion-list lines="full" class="user-info-list hardware-accelerated">
       <ion-item>
         <ion-icon name="call-outline" slot="start"></ion-icon>
         <ion-label>
@@ -72,32 +78,32 @@
       </ion-item>
     </ion-list>
 
-    <ion-list lines="full" class="user-menu-list">
-      <ion-item *ngFor="let item of menuItems" (click)="navigate(item.route)" detail>
+    <ion-list lines="full" class="user-menu-list hardware-accelerated">
+      <ion-item *ngFor="let item of menuItems; trackBy: trackById" (click)="navigate(item.route)" detail>
         <ion-icon [name]="item.icon" slot="start"></ion-icon>
         <ion-label>{{ item.label }}</ion-label>
       </ion-item>
     </ion-list>
 
     <div class="user-actions-container">
-      <ion-button expand="block" color="danger" class="logout-button" (click)="logout()">
+      <ion-button expand="block" color="danger" class="logout-button hardware-accelerated" (click)="logout()">
         CERRAR SESIÓN
       </ion-button>
     </div>
   </div>
 
   <!-- Contenido cuando el usuario NO está autenticado -->
-  <div *ngIf="!isAuthenticated" class="not-authenticated-container">
+  <div *ngIf="!isAuthenticated" class="not-authenticated-container hardware-accelerated">
     <div class="app-logo">
-      <img [src]="logoUrl" alt="VLC Marketplace" class="transparent-logo" (error)="onImageError($event)">
-      <h1>VLC Marketplace</h1>
+      <img [src]="logoUrl" alt="MercAU" class="transparent-logo hardware-accelerated" (error)="onImageError($event)" loading="eager" width="150" height="150">
+      <h1>MercAU</h1>
     </div>
     
-    <div class="login-prompt-card">
+    <div class="login-prompt-card hardware-accelerated">
       <ion-icon name="personCircle" class="large-profile-icon"></ion-icon>
       <h2>¡Bienvenido!</h2>
       <p>Inicia sesión para acceder a tu perfil, pedidos y más</p>
-      <ion-button expand="block" color="primary" (click)="goToLogin()">
+      <ion-button expand="block" color="primary" (click)="goToLogin()" class="hardware-accelerated">
         <ion-icon name="log-in-outline" slot="start"></ion-icon>
         Iniciar Sesión
       </ion-button>

@@ -49,7 +49,7 @@ export class SupabaseService {
     }
 
     try {
-      // Use memory storage to avoid browser lock issues
+      // Restauramos la configuración original para que funcione correctamente la autenticación
       this.supabaseInstance = createClient(
         environment.supabase.url, 
         environment.supabase.key, 
@@ -57,7 +57,7 @@ export class SupabaseService {
           auth: {
             persistSession: true,
             autoRefreshToken: true,
-            storage: this.memoryStorage
+            storage: localStorage
           },
           global: {
             headers: {
@@ -69,7 +69,7 @@ export class SupabaseService {
 
       // Ensure client is ready
       this.initSubject.next(true);
-      console.log('Supabase client initialized successfully with in-memory storage');
+      console.log('Supabase client initialized successfully with localStorage');
     } catch (error) {
       console.error('Error initializing Supabase client:', error);
       this.initSubject.error(error);

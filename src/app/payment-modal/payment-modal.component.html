@@ -1,8 +1,8 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Pago con Tarjeta</ion-title>
+    <ion-title>{{ showOrderTracker ? 'Seguimiento del Pedido' : 'Pago con Tarjeta' }}</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="cancel()">
+      <ion-button (click)="showOrderTracker ? closeTracker() : cancel()">
         <ion-icon name="close"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -10,6 +10,57 @@
 </ion-header>
 
 <ion-content class="ion-padding">
+  <!-- Vista de seguimiento del pedido (se muestra después del pago) -->
+  <div *ngIf="showOrderTracker" class="order-tracker-container">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>¡Pedido realizado con éxito!</ion-card-title>
+        <ion-card-subtitle>Pedido #{{ orderId.substring(0, 8) }}</ion-card-subtitle>
+      </ion-card-header>
+      
+      <ion-card-content>
+        <div class="delivery-estimate">
+          <ion-text color="primary">
+            <h2>Tiempo estimado de entrega: {{ estimatedDeliveryTime }}</h2>
+          </ion-text>
+          <p>Tu pedido está siendo procesado</p>
+        </div>
+        
+        <!-- Barra de progreso -->
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="deliveryProgress"></div>
+          </div>
+        </div>
+        
+        <!-- Pasos de la entrega -->
+        <div class="delivery-steps">
+          <div *ngFor="let step of deliverySteps; let i = index" class="step">
+            <div class="step-icon" [class.completed]="step.completed">
+              <ion-icon [name]="step.icon"></ion-icon>
+            </div>
+            <div class="step-info">
+              <p>{{ step.title }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Información adicional -->
+        <div class="additional-info">
+          <p><strong>Estado actual:</strong> {{ orderStatus | titlecase }}</p>
+          <p><strong>Ubicación:</strong> {{ currentLocation }}</p>
+        </div>
+        
+        <!-- Simple botón para navegación directa -->
+        <ion-button expand="block" color="primary" type="button" class="tracking-button" (click)="goToOrderTracking()">
+          Ver seguimiento
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+  
+  <!-- Vista original del pago (se oculta después del pago exitoso) -->
+  <div *ngIf="!showOrderTracker">
   <ion-card>
     <ion-card-header>
       <ion-card-title>Resumen de la Compra</ion-card-title>
@@ -78,4 +129,5 @@
       </div>
     </ion-card-content>
   </ion-card>
-</ion-content> 
+  </div>
+</ion-content>
