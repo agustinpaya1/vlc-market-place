@@ -131,12 +131,35 @@ ion-header {
   
   .wallet-button {
     position: relative;
+    --padding-start: 8px;
+    --padding-end: 8px;
+    min-width: auto;
+    width: auto;
+    
+    .vlcoin-balance-display {
+      display: flex;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 2px 10px 2px 6px;
+    }
     
     .vl-coin-icon {
-      width: 26px;
-      height: 26px;
+      width: 22px;
+      height: 22px;
       filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
       transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      margin-right: 5px;
+      border-radius: 0; /* Eliminar recorte circular */
+      background: transparent; /* Eliminar fondo */
+      object-fit: contain; /* Mantener proporciones */
+    }
+    
+    .vlcoin-balance {
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
     }
   }
   
@@ -156,6 +179,10 @@ ion-header {
     animation: walletPulse 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
   
+  .wallet-button .vlcoin-balance-display.wallet-pulse {
+    animation: balancePulse 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
   @keyframes walletPulse {
     0% {
       transform: scale(1);
@@ -168,6 +195,21 @@ ion-header {
     100% {
       transform: scale(1);
       filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+    }
+  }
+  
+  @keyframes balancePulse {
+    0% {
+      transform: scale(1);
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    50% {
+      transform: scale(1.05);
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+    100% {
+      transform: scale(1);
+      background-color: rgba(255, 255, 255, 0.2);
     }
   }
 }
@@ -671,24 +713,12 @@ ion-segment.category-segment {
       align-items: center;
       gap: 4px;
       
-      .v-coin-circle {
+      .vl-coin-icon.small {
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #f1c40f, #f39c12);
-        color: white;
-        font-weight: bold;
-        font-size: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 4px rgba(243, 156, 18, 0.3);
-        
-        &.small {
-          width: 16px;
-          height: 16px;
-          font-size: 9px;
-        }
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        margin-right: 4px;
       }
       
       span {
@@ -1001,19 +1031,14 @@ ion-col {
   }
 }
 
-/* Estilo para el círculo de VL Coin en notificaciones */
-.v-coin-circle.small {
+/* Estilo para el icono de VL Coin en notificaciones */
+.vl-coin-icon.small {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 18px;
   height: 18px;
-  background-color: #4BB08B;
-  color: white;
-  border-radius: 50%;
-  font-weight: bold;
-  font-size: 10px;
+  border-radius: 0; /* Eliminar recorte circular */
+  background: transparent; /* Eliminar fondo */
+  object-fit: contain; /* Mantener proporciones */
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   margin-right: 4px;
 }
