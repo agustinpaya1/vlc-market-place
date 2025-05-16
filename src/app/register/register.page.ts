@@ -10,12 +10,22 @@ import {
     IonLabel,
     IonSelect,
     IonSelectOption,
-    IonIcon
+    IonIcon,
+    IonSegment,
+    IonSegmentButton
 } from '@ionic/angular/standalone';
 import { AuthService, BusinessProfile } from '../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { addIcons } from 'ionicons';
-import { eyeOutline, eyeOffOutline, arrowBackOutline } from 'ionicons/icons';
+import { 
+  eyeOutline, 
+  eyeOffOutline, 
+  arrowBackOutline, 
+  informationCircleOutline, 
+  warningOutline,
+  personOutline,
+  briefcaseOutline
+} from 'ionicons/icons';
 
 @Component({
   selector: 'app-register',
@@ -31,7 +41,9 @@ import { eyeOutline, eyeOffOutline, arrowBackOutline } from 'ionicons/icons';
     IonLabel,
     IonSelect,
     IonSelectOption,
-    IonIcon
+    IonIcon,
+    IonSegment,
+    IonSegmentButton
   ],
   standalone: true
 })
@@ -46,7 +58,15 @@ export class RegisterPage {
     private router: Router,
     private alertController: AlertController
   ) {
-    addIcons({ eyeOutline, eyeOffOutline, arrowBackOutline });
+    addIcons({
+      eyeOutline, 
+      eyeOffOutline, 
+      arrowBackOutline, 
+      informationCircleOutline, 
+      warningOutline,
+      personOutline,
+      briefcaseOutline
+    });
     
     this.registerForm = this.formBuilder.group({
       type: ['user', Validators.required],
@@ -60,6 +80,7 @@ export class RegisterPage {
     });
 
     this.registerForm.get('type')?.valueChanges.subscribe(value => {
+      console.log('Tipo de usuario seleccionado:', value);
       this.showBusinessFields = value === 'business';
       this.updateValidators();
     });

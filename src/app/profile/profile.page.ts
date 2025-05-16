@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
@@ -22,9 +22,17 @@ import {
 } from 'ionicons/icons';
 import { ToastController } from '@ionic/angular';
 import { Subscription } from 'rxjs';
+import { Platform } from '@ionic/angular/standalone';
 
 interface ProfileUser extends User {
   name: string;
+}
+
+interface MenuItem {
+  id: string;
+  icon: string;
+  label: string;
+  route: string;
 }
 
 @Component({
@@ -32,7 +40,8 @@ interface ProfileUser extends User {
   templateUrl: './profile.page.html',
   styleUrls: ['./profile.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule]
+  imports: [IonicModule, CommonModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProfilePage implements OnInit, OnDestroy {
   user: ProfileUser = {
@@ -47,19 +56,24 @@ export class ProfilePage implements OnInit, OnDestroy {
   isAuthenticated = false;
   logoUrl: string = 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/logoapp//logo.png';
   private authSubscription: Subscription | null = null;
+  private resizeListener: () => void;
+  private animationFrameId: number | null = null;
 
-  menuItems = [
-    { icon: 'bag', label: 'Mis Pedidos', route: '/tabs/orders' },
-    { icon: 'heart', label: 'Favoritos', route: '/tabs/favorites' },
-    { icon: 'receipt', label: 'Facturas', route: '/tabs/invoices' },
-    { icon: 'settings', label: 'Configuración', route: '/tabs/settings' }
+  menuItems: MenuItem[] = [
+    { id: 'orders', icon: 'bag', label: 'Mis Pedidos', route: '/tabs/orders' },
+    { id: 'favorites', icon: 'heart', label: 'Favoritos', route: '/tabs/favorites' },
+    { id: 'invoices', icon: 'receipt', label: 'Facturas', route: '/tabs/invoices' },
+    { id: 'settings', icon: 'settings', label: 'Configuración', route: '/tabs/settings' }
   ];
 
   constructor(
     private router: Router,
     private authService: AuthService,
     private supabaseService: SupabaseService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private platform: Platform,
+    private ngZone: NgZone,
+    private changeDetector: ChangeDetectorRef
   ) {
     addIcons({
       personCircle,
@@ -76,6 +90,18 @@ export class ProfilePage implements OnInit, OnDestroy {
       camera
     });
     console.log('ProfilePage constructor called');
+    
+    // Optimización: manejar el resize de manera eficiente
+    this.resizeListener = () => {
+      if (this.animationFrameId !== null) {
+        cancelAnimationFrame(this.animationFrameId);
+      }
+      
+      this.animationFrameId = requestAnimationFrame(() => {
+        this.changeDetector.detectChanges();
+        this.animationFrameId = null;
+      });
+    };
   }
 
   ionViewWillEnter() {
@@ -85,6 +111,12 @@ export class ProfilePage implements OnInit, OnDestroy {
 
   ngOnInit() {
     console.log('ProfilePage - ngOnInit');
+    
+    // Optimización: Agregar event listener fuera de la zona de Angular
+    this.ngZone.runOutsideAngular(() => {
+      window.addEventListener('resize', this.resizeListener, { passive: true });
+    });
+    
     this.checkAuthStatus();
   }
 
@@ -93,6 +125,18 @@ export class ProfilePage implements OnInit, OnDestroy {
     if (this.authSubscription) {
       this.authSubscription.unsubscribe();
     }
+    
+    // Limpiar recursos
+    window.removeEventListener('resize', this.resizeListener);
+    
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
+  }
+
+  // Función de seguimiento para optimizar ngFor
+  trackById(index: number, item: MenuItem): string {
+    return item.id;
   }
 
   async checkAuthStatus() {
@@ -112,14 +156,20 @@ export class ProfilePage implements OnInit, OnDestroy {
     
     this.authSubscription = this.authService.user$.subscribe(user => {
       console.log('ProfilePage - Auth subscription update:', user);
-      this.isAuthenticated = !!user;
       
-      if (user) {
-        console.log('ProfilePage - User is authenticated:', user);
-        this.loadUserData(user);
-      } else {
-        console.log('ProfilePage - User is NOT authenticated');
-      }
+      // Ejecutar cambios dentro de la zona de Angular y disparar detección de cambios
+      this.ngZone.run(() => {
+        this.isAuthenticated = !!user;
+        
+        if (user) {
+          console.log('ProfilePage - User is authenticated:', user);
+          this.loadUserData(user);
+        } else {
+          console.log('ProfilePage - User is NOT authenticated');
+        }
+        
+        this.changeDetector.detectChanges();
+      });
     });
   }
 
@@ -133,6 +183,7 @@ export class ProfilePage implements OnInit, OnDestroy {
       address: userData.address || '',
       photoUrl: userData.photoUrl
     };
+    this.changeDetector.detectChanges();
   }
 
   editProfile() {

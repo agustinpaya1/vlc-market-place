@@ -9,13 +9,17 @@
     <p class="subtitle">Crea tu cuenta para comenzar</p>
 
     <form [formGroup]="registerForm" (ngSubmit)="register()" class="register-form">
-      <ion-item>
-        <ion-label position="stacked">Tipo de perfil</ion-label>
-        <ion-select formControlName="type" placeholder="Selecciona un tipo">
-          <ion-select-option value="user">Usuario</ion-select-option>
-          <ion-select-option value="business">Negocio</ion-select-option>
-        </ion-select>
-      </ion-item>
+      <ion-label class="segment-label">Tipo de perfil</ion-label>
+      <ion-segment formControlName="type" mode="ios" class="type-segment">
+        <ion-segment-button value="user" class="segment-button">
+          <ion-icon name="person-outline"></ion-icon>
+          <ion-label>Usuario</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="business" class="segment-button">
+          <ion-icon name="briefcase-outline"></ion-icon>
+          <ion-label>Negocio</ion-label>
+        </ion-segment-button>
+      </ion-segment>
 
       <ion-item>
         <ion-label position="stacked">Nombre completo</ion-label>
@@ -27,6 +31,12 @@
         <ion-input type="email" formControlName="email" placeholder="tucorreo@ejemplo.com"></ion-input>
       </ion-item>
 
+      <!-- Mensaje de requisitos de contraseña -->
+      <div class="password-requirements">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        <span>La contraseña debe tener al menos 6 caracteres</span>
+      </div>
+
       <ion-item>
         <ion-label position="stacked">Contraseña</ion-label>
         <ion-input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="********"></ion-input>
@@ -36,6 +46,16 @@
           (click)="togglePassword()">
         </ion-icon>
       </ion-item>
+      
+      <!-- Mensaje de error de contraseña -->
+      <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="password-error">
+        <div *ngIf="registerForm.get('password')?.errors?.['required']" class="error-message">
+          <ion-icon name="warning-outline"></ion-icon> La contraseña es obligatoria
+        </div>
+        <div *ngIf="registerForm.get('password')?.errors?.['minlength']" class="error-message">
+          <ion-icon name="warning-outline"></ion-icon> La contraseña debe tener al menos 6 caracteres
+        </div>
+      </div>
 
       <!-- Campos de negocio -->
       @if (showBusinessFields) {

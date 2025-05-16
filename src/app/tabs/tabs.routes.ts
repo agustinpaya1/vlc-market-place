@@ -47,6 +47,11 @@ export const routes: Routes = [
           import('../orders/orders.page').then((m) => m.OrdersPage),
       },
       {
+        path: 'order-tracking/:id',
+        loadComponent: () =>
+          import('../order-tracking/order-tracking.component').then((m) => m.OrderTrackingComponent),
+      },
+      {
         path: 'favorites',
         loadComponent: () =>
           import('../favorites/favorites.page').then((m) => m.FavoritesPage),

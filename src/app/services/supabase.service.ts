@@ -5,6 +5,14 @@ import { catchError, retry } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
 import { environment } from '../../environments/environment';
 
+interface MemoryStorage {
+  _storage: Map<string, string>;
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+  clear(): void;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -13,6 +21,21 @@ export class SupabaseService {
   private initSubject = new BehaviorSubject<boolean>(false);
   private initObservable$ = this.initSubject.asObservable();
   private bucketName = 'profile-photos';
+  private memoryStorage: MemoryStorage = {
+    _storage: new Map<string, string>(),
+    getItem: (key: string) => {
+      return this.memoryStorage._storage.get(key) || null;
+    },
+    setItem: (key: string, value: string) => {
+      this.memoryStorage._storage.set(key, value);
+    },
+    removeItem: (key: string) => {
+      this.memoryStorage._storage.delete(key);
+    },
+    clear: () => {
+      this.memoryStorage._storage.clear();
+    }
+  };
 
   constructor() {
     this.initializeSupabase();
@@ -26,8 +49,7 @@ export class SupabaseService {
     }
 
     try {
-      // Para abordar los problemas de cookies, usamos el flujo PKCE (más seguro)
-      // y localStorage para evitar cookies de terceros problemáticas
+      // Restauramos la configuración original para que funcione correctamente la autenticación
       this.supabaseInstance = createClient(
         environment.supabase.url, 
         environment.supabase.key, 
@@ -35,11 +57,7 @@ export class SupabaseService {
           auth: {
             persistSession: true,
             autoRefreshToken: true,
-            // Usar localStorage para almacenar la sesión
-            storage: localStorage,
-            // Usar el flujo PKCE (Proof Key for Code Exchange)
-            // que elimina la necesidad de cookies de terceros
-            flowType: 'pkce'
+            storage: localStorage
           },
           global: {
             headers: {
@@ -51,7 +69,7 @@ export class SupabaseService {
 
       // Ensure client is ready
       this.initSubject.next(true);
-      console.log('Supabase client initialized successfully with localStorage and PKCE flow');
+      console.log('Supabase client initialized successfully with localStorage');
     } catch (error) {
       console.error('Error initializing Supabase client:', error);
       this.initSubject.error(error);
