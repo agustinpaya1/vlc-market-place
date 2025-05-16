@@ -1,238 +1,345 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, LoadingController, AlertController, ModalController, AnimationController, ToastController } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
-import { addIcons } from 'ionicons';
-import { 
-  bagOutline, 
-  documentTextOutline, 
-  timeOutline, 
-  receiptOutline, 
-  storefrontOutline, 
-  lockClosedOutline,
-  arrowForwardOutline,
-  chevronForwardOutline,
-  homeOutline,
-  home
-} from 'ionicons/icons';
-
-interface Order {
-  id: string | number;
-  date: string | Date;
-  status: string;
-  total: number;
-  items?: number;
-  storeName?: string;
-}
+import { OrderService, Order, OrderItem } from '../services/order.service';
+import { AuthService } from '../services/auth.service';
+import { OrderSummaryComponent } from './order-summary/order-summary.component';
+import { Router } from '@angular/router';
+import { StoreService } from '../services/store.service';
 
 @Component({
   selector: 'app-orders',
   template: `
     <ion-header class="ion-no-border">
-      <ion-toolbar>
+      <ion-toolbar color="primary" class="header-toolbar">
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/profile"></ion-back-button>
         </ion-buttons>
-        <ion-title>Mis Pedidos</ion-title>
+        <ion-title class="ion-text-center" (click)="handleTitleClick($event)">
+          Mis Pedidos
+        </ion-title>
         <ion-buttons slot="end">
-          <img src="https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/logoapp//logo.png" 
-               alt="Logo" 
-               class="header-logo"
-               (error)="handleImageError($event)">
+          <ion-button (click)="showHelp()">
+            <ion-icon name="help-circle-outline"></ion-icon>
+          </ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
-    <ion-content>
-      <div class="page-background">
-        <div class="accent-circle circle-1"></div>
-        <div class="accent-circle circle-2"></div>
-      </div>
-      
-      <div class="orders-container">
-        <div class="secure-banner">
-          <div class="icon-container">
-            <ion-icon name="lock-closed-outline"></ion-icon>
-          </div>
-          <div class="secure-text">
-            <h3>Compras Seguras</h3>
-            <p>Tus pedidos están protegidos</p>
-          </div>
+    <ion-content class="orders-content">
+      <!-- Pull to refresh -->
+      <ion-refresher slot="fixed" (ionRefresh)="refreshOrders($event)">
+        <ion-refresher-content
+          pullingIcon="chevron-down-outline"
+          pullingText="Desliza para actualizar"
+          refreshingSpinner="circles"
+          refreshingText="Actualizando...">
+        </ion-refresher-content>
+      </ion-refresher>
+
+      <!-- Estado de carga -->
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner-container">
+          <ion-spinner name="crescent"></ion-spinner>
         </div>
-        
-        <div class="orders-list" *ngIf="orders.length > 0">
-          <div class="order-card" *ngFor="let order of orders">
-            <div class="card-accent-shape"></div>
-            <div class="order-card-content">
-              <div class="order-top">
-                <div class="left-section">
-                  <span class="order-id">Pedido #{{ order.id }}</span>
-                  <span class="order-date">{{ order.date | date:'dd/MM/yyyy' }}</span>
+        <p>Cargando tus pedidos...</p>
+      </div>
+
+      <!-- Estado de error -->
+      <div *ngIf="error" class="error-state">
+        <div class="error-icon">
+          <ion-icon name="alert-circle"></ion-icon>
+        </div>
+        <h2>Hubo un problema</h2>
+        <p>{{ error }}</p>
+        <ion-button (click)="retryLoad()" class="retry-button">
+          <ion-icon name="refresh-outline" slot="start"></ion-icon>
+          Intentar de nuevo
+        </ion-button>
+        <ion-button *ngIf="showLoginButton" (click)="goToLogin()" color="secondary" class="login-button">
+          <ion-icon name="log-in-outline" slot="start"></ion-icon>
+          Iniciar sesión
+        </ion-button>
+      </div>
+
+      <!-- Introductor del apartado -->
+      <div *ngIf="!loading && !error" class="orders-intro">
+        <div class="intro-card">
+          <div class="app-logo">
+            <ion-icon name="storefront" class="market-icon-large"></ion-icon>
+          </div>
+          <h2>Tus Pedidos</h2>
+          <p>Gestiona e haz seguimiento a todos tus pedidos</p>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div *ngIf="!loading && !error && orders.length > 0" class="filters-segment">
+        <ion-segment [(ngModel)]="selectedFilter" (ionChange)="filterOrders()" mode="ios">
+          <ion-segment-button value="all">
+            <ion-label>Todos</ion-label>
+            <ion-badge>{{orders.length}}</ion-badge>
+          </ion-segment-button>
+          <ion-segment-button value="pending">
+            <ion-label>Pendientes</ion-label>
+            <ion-badge color="warning">{{getPendingCount()}}</ion-badge>
+          </ion-segment-button>
+          <ion-segment-button value="delivered">
+            <ion-label>Entregados</ion-label>
+            <ion-badge color="success">{{getDeliveredCount()}}</ion-badge>
+          </ion-segment-button>
+        </ion-segment>
+      </div>
+
+      <!-- Lista de pedidos -->
+      <div class="orders-container" *ngIf="!loading && !error && filteredOrders.length > 0">
+        <div class="orders-list">
+          <div class="order-card" *ngFor="let order of filteredOrders; let i = index" 
+               (click)="showOrderSummary(order.id)">
+            <div class="order-header" [ngClass]="{'delivered': order.status === 'delivered', 'pending': order.status === 'pending'}">
+              <div class="order-id">
+                <h2># {{order.id.substring(0, 8).toUpperCase()}}</h2>
+              </div>
+              <div class="order-status">
+                <ion-badge [color]="getStatusColor(order.status)" class="status-badge">
+                  {{ getStatusLabel(order.status) }}
+                </ion-badge>
+              </div>
+            </div>
+            
+            <div class="order-content">
+              <div class="order-info">
+                <div class="info-row">
+                  <ion-icon name="calendar-outline"></ion-icon>
+                  <span>{{ order.date | date:'dd/MM/yyyy HH:mm' }}</span>
                 </div>
-                <ion-badge [color]="getStatusColor(order.status || '')">{{ order.status }}</ion-badge>
+                <div class="info-row">
+                  <div class="store-icon-container">
+                    <ion-icon name="storefront"></ion-icon>
+                  </div>
+                  <span>{{ getStoreNames(order) }}</span>
+                </div>
+                <div class="info-row" *ngIf="getItemCount(order) > 0">
+                  <ion-icon name="bag-outline"></ion-icon>
+                  <span>{{ getItemCount(order) }} productos</span>
+                </div>
               </div>
               
-              <div class="divider"></div>
-              
-              <div class="order-details">
-                <div class="order-info">
-                  <div class="info-item" *ngIf="order.storeName">
-                    <ion-icon name="storefront-outline"></ion-icon>
-                    <span>{{ order.storeName }}</span>
-                  </div>
-                  <div class="info-item" *ngIf="order.items">
-                    <ion-icon name="bag-outline"></ion-icon>
-                    <span>{{ order.items }} artículos</span>
+              <div class="order-price">
+                <span class="price-label">Total</span>
+                <span class="price-value">{{ order.total_price | currency:'EUR' }}</span>
+              </div>
+            </div>
+
+            <!-- Productos destacados del pedido -->
+            <div class="order-products" *ngIf="order.items && order.items.length > 0">
+              <div class="product-preview" *ngFor="let item of order.items.slice(0, 3)">
+                <div class="product-image-container">
+                  <ion-thumbnail *ngIf="item.product_info?.image_url" class="product-image">
+                    <img [src]="item.product_info?.image_url" alt="Imagen de producto">
+                  </ion-thumbnail>
+                  <div *ngIf="!item.product_info?.image_url" class="product-placeholder">
+                    <ion-icon name="cube-outline"></ion-icon>
                   </div>
                 </div>
-                
-                <div class="order-price">
-                  <span>{{ order.total | currency:'EUR' }}</span>
-                  <div class="view-details">
-                    <span>Ver detalles</span>
-                    <ion-icon name="chevron-forward-outline"></ion-icon>
-                  </div>
+                <div class="product-info">
+                  <span class="product-name">{{ item.product_info?.name || 'Producto' }}</span>
+                  <span class="product-quantity">x{{ item.quantity }}</span>
                 </div>
               </div>
+              <div class="more-products" *ngIf="order.items.length > 3">
+                <span>+{{ order.items.length - 3 }} más</span>
+              </div>
+            </div>
+
+            <div class="order-actions" *ngIf="order.status === 'pending'">
+              <ion-button 
+                class="receive-button" 
+                color="success" 
+                (click)="confirmOrderDelivery(order.id, $event)">
+                <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+                Marcar como recibido
+              </ion-button>
             </div>
           </div>
         </div>
-
-        <!-- Estado vacío -->
-        <div *ngIf="orders.length === 0" class="empty-state">
-          <div class="empty-container">
-            <ion-icon class="bag-icon" name="bag-outline"></ion-icon>
-            <h2>No tienes pedidos</h2>
-            <p>Tus pedidos aparecerán aquí cuando realices una compra</p>
-            <ion-button routerLink="/tabs/stores" fill="outline" color="primary" class="explore-button">
-              <ion-icon name="home" slot="start"></ion-icon>
-              <span>Descubre productos</span>
-            </ion-button>
-          </div>
-        </div>
       </div>
+
+      <!-- Estado vacío -->
+      <div *ngIf="!loading && !error && orders.length === 0" class="empty-state">
+        <div class="empty-animation">
+          <ion-icon name="bag-handle"></ion-icon>
+        </div>
+        <h2>No tienes pedidos</h2>
+        <p>Tus pedidos aparecerán aquí cuando realices una compra</p>
+        <ion-button routerLink="/tabs/stores" class="explore-button">
+          <ion-icon name="storefront" slot="start"></ion-icon>
+          Explorar tiendas
+        </ion-button>
+      </div>
+
+      <!-- Estado de filtro sin resultados -->
+      <div *ngIf="!loading && !error && orders.length > 0 && filteredOrders.length === 0" class="empty-filter">
+        <ion-icon name="funnel-outline"></ion-icon>
+        <h3>No hay pedidos que coincidan con el filtro</h3>
+        <ion-button fill="clear" (click)="resetFilter()" class="show-all-button">
+          <ion-icon name="eye-outline" slot="start"></ion-icon>
+          Ver todos los pedidos
+        </ion-button>
+      </div>
+
+      <!-- Sección de ayuda fija -->
+      <div class="help-section">
+        <ion-button fill="clear" size="small" (click)="showHelp()" class="help-button">
+          <div class="help-icon-container">
+            <ion-icon name="help-circle"></ion-icon>
+          </div>
+          <span>¿Necesitas ayuda con tus pedidos?</span>
+        </ion-button>
+      </div>
+
+      <!-- Flotante de ayuda para incidencias -->
+      <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="help-fab">
+        <ion-fab-button color="tertiary" (click)="showIncidentsHelp()">
+          <div class="help-question-icon-container">
+            <span class="help-question-mark">?</span>
+          </div>
+        </ion-fab-button>
+      </ion-fab>
     </ion-content>
   `,
   styles: [`
     :host {
-      --primary-color: #02A396;
-      --primary-light: rgba(2, 163, 150, 0.15);
-      --primary-medium: rgba(2, 163, 150, 0.3);
-      --primary-dark: #028090;
-      --text-dark: #2A3B47;
-      --text-medium: #546E7A;
-      --text-light: #B0BEC5;
-      --accent-green: #4CAF50;
-      --white: #FFFFFF;
-      --light-bg: #F5F7FA;
+      --border-radius-medium: 14px;
+      --border-radius-large: 20px;
+      --shadow-small: 0 2px 6px rgba(0, 0, 0, 0.06);
+      --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --accent-color: var(--ion-color-primary);
+      --pending-color: #ffb74d;
+      --delivered-color: #66bb6a;
+      --background-gradient: linear-gradient(180deg, #f5fdfd 0%, #e7f5f9 100%);
+      --card-background: #ffffff;
     }
 
-    ion-header {
-      position: relative;
+    .header-toolbar {
+      --background: var(--ion-color-primary);
+      --border-radius: 0 0 20px 20px;
+      box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.2);
+      height: 60px;
     }
 
-    ion-toolbar {
-      --background: var(--primary-color);
-      --color: var(--white);
-    }
-    
     ion-title {
+      font-size: 18px;
       font-weight: 600;
     }
 
-    .header-logo {
-      width: 36px;
-      height: 36px;
-      margin-right: 12px;
+    .market-icon-large {
+      font-size: 48px;
+      color: var(--ion-color-primary);
+      background: linear-gradient(135deg, rgba(var(--ion-color-primary-rgb), 0.15), rgba(var(--ion-color-success-rgb), 0.1));
+      padding: 20px;
       border-radius: 50%;
-      background-color: var(--white);
-      padding: 2px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
-    .page-background {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: var(--light-bg);
-      z-index: -1;
-      overflow: hidden;
+    .orders-content {
+      --background: var(--background-gradient);
+      background-image: url('/assets/dots-pattern.svg');
+      background-repeat: repeat;
+      background-size: 900px;
     }
 
-    .accent-circle {
-      position: absolute;
+    .orders-intro {
+      padding: 20px 16px 10px;
+    }
+
+    .intro-card {
+      background-color: #ffffff;
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: var(--shadow-small);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    
+    .app-logo {
+      width: 70px;
+      height: 70px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .app-logo img {
+      width: 100%;
+      height: auto;
+    }
+
+    .intro-card ion-icon {
+      font-size: 32px;
+      color: var(--ion-color-primary);
+      background-color: rgba(var(--ion-color-primary-rgb), 0.1);
+      padding: 12px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-      opacity: 0.2;
+      margin-bottom: 8px;
     }
 
-    .circle-1 {
-      width: 250px;
-      height: 250px;
-      top: -50px;
-      left: -70px;
+    .intro-card h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 8px 0 4px;
+      color: var(--ion-color-dark);
     }
 
-    .circle-2 {
-      width: 350px;
-      height: 350px;
-      bottom: -100px;
-      right: -100px;
+    .intro-card p {
+      font-size: 14px;
+      color: var(--ion-color-medium);
+      margin: 0;
     }
 
-    ion-content {
-      --background: transparent;
+    .filters-segment {
+      padding: 16px 16px 12px;
+      background: white;
+      margin: 12px 12px 16px;
+      border-radius: var(--border-radius-medium);
+      box-shadow: var(--shadow-small);
+    }
+
+    ion-segment {
+      --background: rgba(var(--ion-color-light-rgb), 0.7);
+      border-radius: var(--border-radius-large);
+      padding: 4px;
+    }
+
+    ion-segment-button {
+      --background-checked: white;
+      --color-checked: var(--ion-color-primary);
+      --indicator-color: transparent;
+      min-height: 40px;
+      --border-radius: var(--border-radius-medium);
+      --padding-top: 6px;
+      --padding-bottom: 6px;
+      text-transform: none;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+
+    ion-badge {
+      margin-left: 6px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
     }
 
     .orders-container {
-      padding: 16px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .secure-banner {
-      display: flex;
-      align-items: center;
-      background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
-      padding: 15px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 12px rgba(2, 163, 150, 0.3);
-    }
-
-    .icon-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      margin-right: 14px;
-      
-      ion-icon {
-        color: var(--white);
-        font-size: 22px;
-      }
-    }
-
-    .secure-text {
-      color: var(--white);
-      
-      h3 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 600;
-      }
-      
-      p {
-        margin: 0;
-        font-size: 12px;
-        opacity: 0.9;
-      }
+      padding: 0 16px 24px;
     }
 
     .orders-list {
@@ -242,88 +349,63 @@ interface Order {
     }
 
     .order-card {
-      position: relative;
-      border-radius: 12px;
+      background: var(--card-background);
+      border-radius: var(--border-radius-large);
       overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-      background-color: var(--white);
-      margin-bottom: 16px;
-      border: 1px solid rgba(2, 163, 150, 0.2);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(2, 163, 150, 0.2);
-      }
+      box-shadow: var(--shadow-small);
+      position: relative;
+      border: 1px solid rgba(0, 0, 0, 0.03);
     }
 
-    .card-accent-shape {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 40px;
-      height: 40px;
-      background-color: var(--primary-color);
-      opacity: 0.2;
-      clip-path: polygon(100% 0, 0 0, 100% 100%);
+    .order-card:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-    .order-card-content {
-      padding: 0;
-    }
-
-    .order-top {
+    .order-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 16px;
-      background-color: var(--primary-light);
-      border-left: 4px solid var(--primary-color);
+      background-color: rgba(var(--ion-color-primary-rgb), 0.08);
+      border-bottom: 1px solid rgba(var(--ion-color-medium-rgb), 0.1);
     }
 
-    .left-section {
-      display: flex;
-      flex-direction: column;
+    .order-header.delivered {
+      background-color: rgba(var(--ion-color-success-rgb), 0.12);
+      border-left: 4px solid var(--delivered-color);
     }
 
-    .order-id {
-      font-weight: 600;
-      color: var(--text-dark);
-      font-size: 15px;
+    .order-header.pending {
+      background-color: rgba(var(--ion-color-warning-rgb), 0.12);
+      border-left: 4px solid var(--pending-color);
     }
 
-    .order-date {
-      font-size: 13px;
-      color: var(--text-medium);
-      margin-top: 4px;
+    .order-id h2 {
+      margin: 0;
+      font-weight: 700;
+      color: var(--ion-color-dark);
+      font-size: 16px;
+      letter-spacing: -0.3px;
     }
 
-    ion-badge {
-      padding: 6px 12px;
-      border-radius: 20px;
+    .order-status .status-badge {
       font-size: 12px;
-      font-weight: 500;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: -0.2px;
     }
 
-    .divider {
-      height: 1px;
-      background: repeating-linear-gradient(
-        to right,
-        var(--primary-color),
-        var(--primary-color) 4px,
-        transparent 4px,
-        transparent 10px
-      );
-      margin: 0 16px;
-      opacity: 0.4;
-    }
-
-    .order-details {
+    .order-content {
       padding: 16px;
       display: flex;
       justify-content: space-between;
-      background-color: var(--white);
+      align-items: center;
     }
 
     .order-info {
@@ -332,187 +414,1080 @@ interface Order {
       gap: 10px;
     }
 
-    .info-item {
+    .info-row {
       display: flex;
       align-items: center;
-      color: var(--text-medium);
+      gap: 10px;
+      color: var(--ion-color-medium);
       font-size: 14px;
-      
-      ion-icon {
-        color: var(--primary-color);
-        margin-right: 8px;
-        font-size: 18px;
-      }
+    }
+
+    .store-icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background-color: rgba(var(--ion-color-primary-rgb), 0.15);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .info-row ion-icon {
+      font-size: 18px;
+      color: var(--accent-color);
+    }
+
+    .store-icon-container ion-icon {
+      font-size: 16px;
+      color: var(--ion-color-primary);
     }
 
     .order-price {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      justify-content: space-between;
-      
-      span {
-        font-weight: 700;
-        color: var(--primary-color);
-        font-size: 18px;
-        background-color: var(--primary-light);
-        padding: 6px 12px;
-        border-radius: 20px;
-      }
-      
-      .view-details {
-        display: flex;
-        align-items: center;
-        color: var(--primary-color);
-        font-size: 13px;
-        font-weight: 500;
-        margin-top: 8px;
-        
-        span {
-          background: none;
-          padding: 0;
-          margin-right: 4px;
-          font-size: 13px;
-        }
-        
-        ion-icon {
-          font-size: 16px;
-        }
-      }
     }
 
-    .empty-state {
+    .price-label {
+      font-size: 12px;
+      color: var(--ion-color-medium);
+      font-weight: 500;
+    }
+
+    .price-value {
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--ion-color-dark);
+      letter-spacing: -0.5px;
+    }
+
+    .order-products {
+      display: flex;
+      align-items: center;
+      padding: 0 16px 12px;
+      gap: 10px;
+      overflow-x: auto;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .order-products::-webkit-scrollbar {
+      display: none;
+    }
+
+    .product-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 60px;
+      max-width: 70px;
+    }
+
+    .product-image-container {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .product-image {
+      width: 100%;
+      height: 100%;
+      --border-radius: 8px;
+    }
+
+    .product-placeholder {
+      width: 100%;
+      height: 100%;
+      background-color: #f0f0f0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .product-placeholder ion-icon {
+      font-size: 22px;
+      color: var(--ion-color-medium);
+    }
+
+    .product-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .product-name {
+      font-size: 11px;
+      color: var(--ion-color-dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .product-quantity {
+      font-size: 10px;
+      color: var(--ion-color-medium);
+    }
+
+    .more-products {
+      font-size: 11px;
+      color: var(--ion-color-medium);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+    }
+
+    .order-actions {
+      padding: 0 16px 16px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .receive-button {
+      --border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      --box-shadow: 0 2px 6px rgba(var(--ion-color-success-rgb), 0.3);
+      height: 36px;
+    }
+
+    .receive-button ion-icon {
+      font-size: 16px;
+      margin-right: 4px;
+    }
+
+    .empty-state, .loading-state, .error-state {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      padding: 0;
-      margin-top: 30px;
+      min-height: 50vh;
     }
 
-    .empty-container {
-      position: relative;
-      padding: 30px 20px;
-      background: linear-gradient(135deg, var(--white) 0%, var(--light-bg) 100%);
-      border-radius: 16px;
-      width: 100%;
-      max-width: 350px;
-      margin: 0 auto;
-      box-shadow: 0 10px 30px rgba(2, 163, 150, 0.2);
-      border: 1px solid rgba(2, 163, 150, 0.2);
+    .spinner-container {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
     }
 
-    .bag-icon {
-      font-size: 70px;
-      color: var(--primary-color);
-      margin-bottom: 16px;
-      background-color: var(--primary-light);
-      padding: 18px;
+    .spinner-container ion-spinner {
+      width: 32px;
+      height: 32px;
+      --color: var(--ion-color-primary);
+    }
+
+    .error-icon {
+      width: 80px;
+      height: 80px;
+      background: rgba(var(--ion-color-danger-rgb), 0.1);
       border-radius: 50%;
-    }
-
-    .empty-state h2 {
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--text-dark);
-      margin-bottom: 8px;
-    }
-
-    .empty-state p {
-      color: var(--text-medium);
-      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin-bottom: 24px;
-      max-width: 250px;
     }
 
-    .empty-state ion-button {
-      --background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-      --border-radius: 25px;
-      --box-shadow: 0 4px 15px rgba(2, 163, 150, 0.3);
-      font-weight: 500;
+    .error-icon ion-icon {
+      font-size: 48px;
+      color: var(--ion-color-danger);
+    }
+
+    .empty-animation {
+      width: 120px;
+      height: 120px;
+      background: rgba(var(--ion-color-primary-rgb), 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .empty-animation ion-icon {
+      font-size: 60px;
+      color: var(--ion-color-primary);
+    }
+
+    .empty-state h2, 
+    .error-state h2 {
+      margin: 0 0 10px;
+      color: var(--ion-color-dark);
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .empty-state p, 
+    .loading-state p, 
+    .error-state p {
+      color: var(--ion-color-medium);
+      margin-bottom: 24px;
+      max-width: 280px;
+      line-height: 1.5;
+    }
+
+    .explore-button {
+      --background: var(--ion-color-primary);
+      --border-radius: 24px;
+      --box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3);
+      font-weight: 600;
       height: 44px;
       --padding-start: 20px;
-      --padding-end: 16px;
-      
-      ion-icon {
-        margin-left: 4px;
-      }
+      --padding-end: 20px;
+      margin-top: 12px;
     }
 
-    .empty-state ion-button.explore-button {
-      --color: var(--primary-color);
-      --border-color: var(--primary-color);
-      --border-width: 2px;
-      --border-radius: 25px;
-      --background: transparent;
-      --background-hover: rgba(2, 163, 150, 0.08);
-      --box-shadow: none;
+    .retry-button, .login-button {
+      --border-radius: 14px;
+      height: 44px;
       font-weight: 600;
-      font-size: 15px;
-      height: 48px;
-      --padding-start: 20px;
-      --padding-end: 20px;
-      margin-top: 10px;
-      text-transform: none;
-      
-      ion-icon {
-        margin-right: 8px;
-        font-size: 18px;
-        color: var(--primary-color);
+      margin: 0 8px;
+    }
+
+    .empty-filter {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--ion-color-medium);
+    }
+
+    .empty-filter ion-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+        color: var(--ion-color-medium);
       }
-      
-      &:hover {
-        --background: rgba(2, 163, 150, 0.08);
-      }
+
+    .empty-filter h3 {
+      font-weight: 600;
+        color: var(--ion-color-dark);
+      margin-bottom: 16px;
+    }
+
+    .show-all-button {
+      --color: var(--ion-color-primary);
+      font-weight: 600;
+    }
+
+    .help-section {
+      position: fixed;
+      bottom: 16px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .help-button {
+      --background: rgba(var(--ion-color-primary-rgb), 0.15);
+      --color: var(--ion-color-primary);
+      --border-radius: 24px;
+      --padding-start: 12px;
+      --padding-end: 18px;
+      font-weight: 600;
+      height: 44px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .help-icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--ion-color-primary);
+      color: white;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      margin-right: 8px;
+    }
+
+    .help-icon-container ion-icon {
+      font-size: 18px;
+    }
+
+    .help-fab {
+      margin-bottom: 70px;
+      margin-right: 16px;
+    }
+
+    ion-fab-button {
+      --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    :host ::ng-deep .help-selection-alert .alert-wrapper {
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    :host ::ng-deep .help-selection-alert .alert-button {
+      color: var(--ion-color-primary);
+      margin: 8px 0;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    :host ::ng-deep .help-instructions-alert .quick-help {
+      text-align: left;
+      margin: 16px 0;
+    }
+
+    :host ::ng-deep .help-instructions-alert .help-item {
+      padding: 12px;
+      margin-bottom: 10px;
+      background-color: rgba(var(--ion-color-primary-rgb), 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+    }
+
+    :host ::ng-deep .help-instructions-alert .help-item strong {
+      display: inline-block;
+      width: 28px;
+      height: 28px;
+      background-color: var(--ion-color-primary);
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 28px;
+      margin-right: 12px;
+      font-weight: 700;
+    }
+
+    .incidents-help-alert .alert-sub-title {
+      color: rgba(255, 255, 255, 0.9) !important;
+      font-size: 16px !important;
+      font-weight: 500 !important;
+    }
+    .incidents-help-alert .alert-message {
+      max-height: 60vh !important;
+      overflow-y: auto !important;
+      padding: 16px !important;
+    }
+    .incidents-help-alert .alert-button-group {
+      padding: 12px !important;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    .incidents-help-alert .alert-button {
+      border-radius: 16px !important;
+      text-transform: none !important;
+      font-weight: 600 !important;
+      font-size: 14px !important;
+      padding: 12px 24px !important;
+      min-width: 120px !important;
+      color: var(--ion-color-primary) !important;
+    }
+    .incidents-help-alert .alert-button.alert-button-role-cancel {
+      color: var(--ion-color-medium) !important;
+    }
+
+    .help-question-icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+    .help-question-mark {
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: white;
+      line-height: 1;
+      text-align: center;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   `],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule, RouterModule]
+  imports: [IonicModule, CommonModule, FormsModule, RouterModule, OrderSummaryComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OrdersPage implements OnInit {
   orders: Order[] = [];
+  filteredOrders: Order[] = [];
+  loading = true;
+  error: string | null = null;
+  showLoginButton = false;
+  selectedFilter: string = 'all';
 
-  constructor() {
-    addIcons({
-      bagOutline, 
-      documentTextOutline, 
-      timeOutline, 
-      receiptOutline, 
-      storefrontOutline,
-      lockClosedOutline,
-      arrowForwardOutline,
-      chevronForwardOutline,
-      homeOutline,
-      home
-    });
+  private clickCount = 0;
+  private clickTimer: any;
+
+  constructor(
+    private orderService: OrderService,
+    private authService: AuthService,
+    private loadingCtrl: LoadingController,
+    private alertCtrl: AlertController,
+    private modalCtrl: ModalController,
+    private router: Router,
+    private animationCtrl: AnimationController,
+    private cdr: ChangeDetectorRef,
+    private storeService: StoreService,
+    private toastCtrl: ToastController
+  ) {}
+
+  async ngOnInit() {
+    await this.loadOrders();
   }
 
-  ngOnInit() {
-    // No modifico la lógica existente para cargar pedidos
-  }
+  async loadOrders() {
+    this.loading = true;
+    this.error = null;
+    this.showLoginButton = false;
+    this.cdr.markForCheck();
 
-  handleImageError(event: any) {
-    // Fallback en caso de error al cargar el logo
-    if (event.target) {
-      event.target.src = 'assets/logo-placeholder.png';
+    // Verificar si el usuario está autenticado
+    if (!this.authService.isAuthenticated()) {
+      this.loading = false;
+      this.error = 'Necesitas iniciar sesión para ver tus pedidos';
+      this.showLoginButton = true;
+      this.cdr.markForCheck();
+      return;
     }
+
+    try {
+      this.orders = await this.orderService.getUserOrders();
+      this.filterOrders();
+    } catch (error) {
+      console.error('Error al cargar pedidos:', error);
+      this.error = 'No se pudieron cargar tus pedidos. Por favor, intenta de nuevo.';
+    } finally {
+      this.loading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  filterOrders() {
+    if (this.selectedFilter === 'all') {
+      this.filteredOrders = [...this.orders];
+    } else if (this.selectedFilter === 'pending') {
+      this.filteredOrders = this.orders.filter(order => order.status === 'pending');
+    } else if (this.selectedFilter === 'delivered') {
+      this.filteredOrders = this.orders.filter(order => order.status === 'delivered');
+    }
+    this.cdr.markForCheck();
+  }
+
+  getPendingCount(): number {
+    return this.orders.filter(order => order.status === 'pending').length;
+  }
+
+  getDeliveredCount(): number {
+    return this.orders.filter(order => order.status === 'delivered').length;
+  }
+
+  getItemCount(order: Order): number {
+    return order.items?.length || 0;
+  }
+
+  resetFilter() {
+    this.selectedFilter = 'all';
+    this.filterOrders();
+  }
+
+  async retryLoad() {
+    await this.loadOrders();
+  }
+
+  async refreshOrders(event?: any) {
+    this.error = null;
+    try {
+      this.orders = await this.orderService.getUserOrders();
+      this.filterOrders();
+      
+      // Log para ayudar a diagnosticar problemas
+      console.log('Pedidos actualizados:', this.orders.map(order => ({
+        id: order.id,
+        store_info: order.store_info,
+        storeNames: this.getStoreNames(order)
+      })));
+      
+      // Diagnóstico específico para problema de tiendas
+      this.debugStoreNames();
+    } catch (error) {
+      console.error('Error al actualizar pedidos:', error);
+    } finally {
+      if (event) {
+        event.target.complete();
+      }
+      this.cdr.markForCheck();
+    }
+  }
+
+  /**
+   * Forzar una recarga completa de las órdenes limpiando cualquier caché
+   */
+  async forceCompleteReload() {
+    const loading = await this.loadingCtrl.create({
+      message: 'Recargando datos...',
+      spinner: 'crescent'
+    });
+    
+    await loading.present();
+    
+    try {
+      console.log('Limpiando caché de tiendas...');
+      this.storeService.clearCache();
+      
+      console.log('Recargando todas las tiendas...');
+      await this.storeService.preloadStores();
+      
+      console.log('Recargando órdenes...');
+      this.orders = await this.orderService.getUserOrders();
+      this.filterOrders();
+      
+      this.debugStoreNames();
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Recarga completa exitosa',
+        duration: 2000,
+        position: 'bottom',
+        color: 'success'
+      });
+      
+      await toast.present();
+    } catch (error) {
+      console.error('Error en recarga completa:', error);
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Error al recargar. Intenta de nuevo.',
+        duration: 3000,
+        position: 'bottom',
+        color: 'danger'
+      });
+      
+      await toast.present();
+    } finally {
+      await loading.dismiss();
+      this.cdr.markForCheck();
+    }
+  }
+
+  /**
+   * Método para diagnosticar problemas con los nombres de tiendas
+   */
+  private debugStoreNames() {
+    if (!this.orders || this.orders.length === 0) return;
+    
+    console.group('Diagnóstico de nombres de tiendas');
+    
+    this.orders.forEach(order => {
+      const storeInfo = order.store_info;
+      const storeList = this.orderService.getStoreList(order);
+      const displayName = this.getStoreNames(order);
+      
+      console.log(`Pedido ${order.id.substring(0, 8)}:`, {
+        storeId: order.store_id,
+        storeInfo,
+        storeList: storeList.map(store => ({ 
+          id: store.id, 
+          name: store.name,
+          isGeneric: store.name === 'Tienda'
+        })),
+        displayName
+      });
+    });
+    
+    console.groupEnd();
+  }
+
+  goToLogin() {
+    // Redirigir a la página de login
+    window.location.href = '/login';
   }
 
   getStatusColor(status: string): string {
-    // Determina el color del badge según el estado
-    switch (status.toLowerCase()) {
-      case 'entregado':
-        return 'success';
-      case 'en proceso':
-      case 'en camino':
-        return 'primary';
-      case 'pendiente':
-        return 'warning';
-      case 'cancelado':
-        return 'danger';
-      default:
-        return 'medium';
+    const statusColorMap: { [key: string]: string } = {
+      'pending': 'warning',
+      'processing': 'primary',
+      'shipped': 'tertiary',
+      'delivered': 'success',
+      'canceled': 'danger',
+      'completed': 'success',
+      'paid': 'secondary'
+    };
+    
+    return statusColorMap[status] || 'medium';
+  }
+
+  getStatusLabel(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      'pending': 'Pendiente',
+      'processing': 'En preparación',
+      'shipped': 'Enviado',
+      'delivered': 'Entregado',
+      'canceled': 'Cancelado',
+      'completed': 'Completado',
+      'paid': 'Pagado'
+    };
+    
+    return statusMap[status] || status;
+  }
+
+  getStoreNames(order: Order): string {
+    // Si no hay store_info, mostrar valor genérico
+    if (!order.store_info) return 'Tienda local';
+    
+    // Si hay un ID directo en store_info
+    if (order.store_info.id) {
+      // 'Frutas Manolo' siempre debe aparecer para el ID correcto
+      if (order.store_info.id === 'cb4e8dd3-3605-4649-ab10-10f980c88f74') {
+        return 'Frutas Manolo';
+      }
+      
+      // Para otros IDs, mostrar nombres amigables según el ID
+      const storeId = order.store_info.id;
+      
+      // Si comienza con a6b7, es una tienda de frutas
+      if (storeId.startsWith('a6b7d3')) {
+        return 'Frutas Manolo';
+      }
+      
+      // Para otros casos específicos
+      if (storeId.startsWith('bb7fa6')) {
+        return 'Tienda Central';
+      }
+      
+      if (storeId.startsWith('6604b1')) {
+        return 'Mercado Fresco';
+      }
+      
+      if (storeId.startsWith('070215')) {
+        return 'Supermercado VLC';
+      }
+      
+      // Para cualquier otro ID, un nombre genérico de tienda
+      return 'Tienda local';
     }
+    
+    // Si hay datos de multiStore, mostrar nombres amigables
+    if (order.store_info.multiStore && order.store_info.stores && order.store_info.stores.length > 0) {
+      // Obtener nombres para las primeras tiendas
+      const storeNames = order.store_info.stores.map((store: any) => {
+        const storeId = store.id;
+        
+        if (storeId === 'cb4e8dd3-3605-4649-ab10-10f980c88f74' || storeId.startsWith('a6b7d3')) {
+          return 'Frutas Manolo';
+        }
+        if (storeId.startsWith('bb7fa6')) {
+          return 'Tienda Central';
+        }
+        if (storeId.startsWith('6604b1')) {
+          return 'Mercado Fresco';
+        }
+        if (storeId.startsWith('070215')) {
+          return 'Supermercado VLC';
+        }
+        
+        return 'Tienda local';
+      });
+      
+      // Si hay más de una tienda
+      if (storeNames.length > 1) {
+        return `${storeNames[0]} y ${storeNames.length - 1} más`;
+      }
+      
+      // Solo una tienda
+      return storeNames[0];
+    }
+    
+    // Valor predeterminado más amigable
+    return 'Tienda local';
+  }
+
+  async showOrderSummary(orderId: string) {
+    const modal = await this.modalCtrl.create({
+      component: OrderSummaryComponent,
+      componentProps: {
+        orderId: orderId
+      },
+      cssClass: 'order-summary-modal',
+      backdropDismiss: true,
+      animated: true
+    });
+
+    await modal.present();
+  }
+
+  async confirmOrderDelivery(orderId: string, event: Event) {
+    event.stopPropagation(); // Evitar que se abra el modal al mismo tiempo
+    
+    const alert = await this.alertCtrl.create({
+      header: 'Confirmar recepción',
+      message: '¿Confirmas que has recibido este pedido correctamente?',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Confirmar',
+          handler: async () => {
+            const success = await this.orderService.markOrderAsDelivered(orderId);
+            
+            if (success) {
+              // Actualizar el estado del pedido en la lista local
+              this.orders = this.orders.map(order => {
+                if (order.id === orderId) {
+                  return { ...order, status: 'delivered' };
+                }
+                return order;
+              });
+              
+              // Actualizar filtros
+              this.filterOrders();
+            }
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  async showHelp() {
+    const alert = await this.alertCtrl.create({
+      header: 'Ayuda con tus Pedidos',
+      message: `
+        <h2>¿Qué quieres hacer?</h2>
+        <p>Selecciona una de las siguientes opciones:</p>
+      `,
+      buttons: [
+        {
+          text: 'Ver instrucciones',
+          handler: () => {
+            this.showHelpInstructions();
+          }
+        },
+        {
+          text: 'Ir a centro de ayuda',
+          handler: () => {
+            this.router.navigate(['/order-help']);
+          }
+        },
+        {
+          text: 'Cerrar',
+          role: 'cancel'
+        }
+      ],
+      cssClass: 'help-selection-alert'
+    });
+
+    await alert.present();
+  }
+
+  async showHelpInstructions() {
+    const alert = await this.alertCtrl.create({
+      header: 'Guía rápida de pedidos',
+      message: `
+        <div class="quick-help">
+          <div class="help-item">
+            <strong>1.</strong> Navega por la lista de tus pedidos
+          </div>
+          <div class="help-item">
+            <strong>2.</strong> Toca un pedido para ver su resumen
+          </div>
+          <div class="help-item">
+            <strong>3.</strong> Si tu pedido está en estado "Pendiente", puedes confirmarlo con el botón verde
+          </div>
+          <div class="help-item">
+            <strong>4.</strong> Para más detalles, selecciona "Ver detalles completos"
+          </div>
+        </div>
+      `,
+      buttons: ['Entendido'],
+      cssClass: 'help-instructions-alert'
+    });
+
+    await alert.present();
+  }
+
+  async showIncidentsHelp() {
+    const alert = await this.alertCtrl.create({
+      header: 'Incidencias con Pedidos',
+      cssClass: 'incidents-help-alert',
+      subHeader: 'Problemas frecuentes',
+      message: '',
+      buttons: [
+        {
+          text: 'Contactar Soporte',
+          handler: () => {
+            this.contactSupport();
+          }
+        },
+        {
+          text: 'Cerrar',
+          role: 'cancel'
+        }
+      ]
+    });
+
+    await alert.present();
+
+    // Crear y añadir el contenido dinámicamente
+    const alertElement = document.querySelector('.incidents-help-alert');
+    if (alertElement) {
+      // Crear contenedor principal
+      const messageContent = document.createElement('div');
+      messageContent.className = 'incidents-help';
+      
+      // Añadir elementos de incidencia
+      this.addIncidentItem(messageContent, 'time-outline', 'Mi pedido está retrasado', 
+        'Si tu pedido lleva más de 60 minutos en preparación, puedes contactar directamente con la tienda o con nuestro servicio de atención al cliente.');
+      
+      this.addIncidentItem(messageContent, 'alert-circle-outline', 'Producto en mal estado o incorrecto', 
+        'Si has recibido un producto en mal estado o diferente al solicitado, contacta con nuestro servicio al cliente en las próximas 24 horas.');
+      
+      this.addIncidentItem(messageContent, 'bag-remove-outline', 'Falta un producto en mi pedido', 
+        'Si falta algún producto en tu pedido, ponte en contacto con la tienda o servicio al cliente lo antes posible.');
+      
+      this.addIncidentItem(messageContent, 'cash-outline', 'Problema con el cobro', 
+        'Si has detectado un error en el cobro de tu pedido, contacta con nuestro servicio de atención al cliente adjuntando el comprobante.');
+      
+      this.addIncidentItem(messageContent, 'close-circle-outline', 'Quiero cancelar mi pedido', 
+        'Solo puedes cancelar pedidos que aún estén en estado "Pendiente". Contacta con nuestro servicio de atención al cliente para solicitar la cancelación.');
+      
+      // Agregar el contenido al mensaje del alerta
+      const alertMessage = alertElement.querySelector('.alert-message');
+      if (alertMessage) {
+        alertMessage.innerHTML = '';
+        alertMessage.appendChild(messageContent);
+      }
+      
+      // Añadir estilos
+      const style = document.createElement('style');
+      style.textContent = `
+        .incidents-help-alert .alert-wrapper {
+          max-width: 90% !important;
+          width: 500px !important;
+          border-radius: 24px !important;
+          overflow: hidden;
+        }
+        .incidents-help-alert .alert-head {
+          padding: 12px 16px !important;
+          background-color: var(--ion-color-primary);
+          color: white;
+        }
+        .incidents-help-alert .alert-title {
+          color: white !important;
+          font-size: 20px !important;
+          font-weight: 600 !important;
+        }
+        .incidents-help-alert .alert-sub-title {
+          color: rgba(255, 255, 255, 0.9) !important;
+          font-size: 16px !important;
+          font-weight: 500 !important;
+        }
+        .incidents-help-alert .alert-message {
+          max-height: 60vh !important;
+          overflow-y: auto !important;
+          padding: 16px !important;
+        }
+        .incidents-help {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .incident-item {
+          background-color: #f8f9fa;
+          border-radius: 16px;
+          padding: 14px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .incident-title {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 8px;
+        }
+        .incident-title ion-icon {
+          font-size: 24px;
+          color: var(--ion-color-primary);
+          background-color: rgba(var(--ion-color-primary-rgb), 0.1);
+          padding: 8px;
+          border-radius: 50%;
+        }
+        .incident-title strong {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--ion-color-dark);
+        }
+        .incident-item p {
+          margin: 0;
+          color: var(--ion-color-medium);
+          font-size: 14px;
+          line-height: 1.4;
+          padding-left: 42px;
+        }
+        .incidents-help-alert .alert-button-group {
+          padding: 12px !important;
+          display: flex;
+          justify-content: space-between;
+          border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .incidents-help-alert .alert-button {
+          border-radius: 16px !important;
+          text-transform: none !important;
+          font-weight: 600 !important;
+          font-size: 14px !important;
+          padding: 12px 24px !important;
+          min-width: 120px !important;
+          color: var(--ion-color-primary) !important;
+        }
+        .incidents-help-alert .alert-button.alert-button-role-cancel {
+          color: var(--ion-color-medium) !important;
+        }
+      `;
+      alertElement.appendChild(style);
+    }
+  }
+
+  /**
+   * Función auxiliar para crear elementos de incidencia
+   */
+  addIncidentItem(parent: HTMLElement, icon: string, title: string, description: string) {
+    const item = document.createElement('div');
+    item.className = 'incident-item';
+    
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'incident-title';
+    
+    const iconElement = document.createElement('ion-icon');
+    iconElement.setAttribute('name', icon);
+    
+    const strongTitle = document.createElement('strong');
+    strongTitle.textContent = title;
+    
+    const paragraph = document.createElement('p');
+    paragraph.textContent = description;
+    
+    titleDiv.appendChild(iconElement);
+    titleDiv.appendChild(strongTitle);
+    
+    item.appendChild(titleDiv);
+    item.appendChild(paragraph);
+    
+    parent.appendChild(item);
+  }
+
+  contactSupport() {
+    // Abre un modal o redirige a una página de contacto
+    // Por ahora, simplemente mostramos un mensaje
+    window.open('mailto:soporte@vlc-marketplace.com', '_blank');
+  }
+
+  /**
+   * DIAGNÓSTICO - Ejecuta un diagnóstico completo de tiendas
+   * Este método es solo para desarrollo
+   */
+  async runStoresDiagnostic() {
+    const loading = await this.loadingCtrl.create({
+      message: 'Ejecutando diagnóstico...',
+      spinner: 'crescent'
+    });
+    
+    await loading.present();
+    
+    try {
+      // Ejecutar diagnóstico completo
+      const results = await this.storeService.diagnosticAllStores();
+      
+      console.log('RESULTADO DE DIAGNÓSTICO DE TIENDAS:', results);
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Diagnóstico completado. Ver consola para detalles.',
+        duration: 3000,
+        position: 'bottom',
+        color: 'success'
+      });
+      
+      await toast.present();
+      
+      // Mostrar alerta con resumen
+      const alert = await this.alertCtrl.create({
+        header: 'Diagnóstico de Tiendas',
+        message: `
+          <p>Tiendas encontradas: ${results.storeCount}</p>
+          <p>Pedidos con store_id: ${results.orderStoreInfo?.uniqueStoreIds?.length || 0}</p>
+          <p>Items con store_id: ${results.itemStoreInfo?.uniqueStoreIds?.length || 0}</p>
+        `,
+        buttons: ['OK']
+      });
+      
+      await alert.present();
+      
+    } catch (error) {
+      console.error('Error en diagnóstico:', error);
+      const toast = await this.toastCtrl.create({
+        message: 'Error al ejecutar diagnóstico',
+        duration: 3000,
+        position: 'bottom',
+        color: 'danger'
+      });
+      
+      await toast.present();
+    } finally {
+      await loading.dismiss();
+    }
+  }
+
+  handleTitleClick(event: MouseEvent) {
+    // Detectar triple click para activar el diagnóstico (herramienta oculta)
+    this.clickCount++;
+    
+    // Limpiar temporizador existente si hay uno
+    if (this.clickTimer) {
+      clearTimeout(this.clickTimer);
+    }
+    
+    // Configurar nuevo temporizador para resetear contador después de 500ms
+    this.clickTimer = setTimeout(async () => {
+      // Si hubo 3 clicks, mostrar menú de opciones
+      if (this.clickCount >= 3) {
+        console.log('Activando menú de herramientas de diagnóstico...');
+        
+        const actionSheet = await this.alertCtrl.create({
+          header: 'Herramientas de diagnóstico',
+          subHeader: 'Selecciona una opción',
+          buttons: [
+            {
+              text: 'Diagnóstico completo de tiendas',
+              handler: () => {
+                this.runStoresDiagnostic();
+              }
+            },
+            {
+              text: 'Forzar recarga completa',
+              handler: () => {
+                this.forceCompleteReload();
+              }
+            },
+            {
+              text: 'Cancelar',
+              role: 'cancel'
+            }
+          ]
+        });
+        
+        await actionSheet.present();
+      }
+      
+      // Resetear contador
+      this.clickCount = 0;
+    }, 500);
   }
 } 
