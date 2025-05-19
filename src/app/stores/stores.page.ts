@@ -1,32 +1,31 @@
+import { Component, OnInit, ViewChild, NgZone, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { 
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonChip,
+  IonCol,
+  IonContent, 
+  IonFabButton,
+  IonGrid,
+  IonHeader,
+  IonIcon,
+  IonLabel,
+  IonPopover,
+  IonRow,
+  IonSegment,
+  IonSegmentButton,
+  IonSpinner,
+  ModalController,
+  LoadingController,
+  AlertController
+} from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import {
-    AlertController,
-    IonButton,
-    IonCard,
-    IonCardHeader,
-    IonCardSubtitle,
-    IonCardTitle,
-    IonChip,
-    IonCol,
-    IonContent,
-    IonFabButton,
-    IonGrid,
-    IonHeader,
-    IonIcon,
-    IonLabel,
-    IonPopover,
-    IonRow,
-    IonSegment,
-    IonSegmentButton,
-    IonSpinner,
-    LoadingController,
-    ModalController,
-    ToastController
-} from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
   heartOutline, 
@@ -79,14 +78,17 @@ import {
   musicalNotesOutline,
   beerOutline
 } from 'ionicons/icons';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, take, takeUntil } from 'rxjs/operators';
-import { createWorker } from 'tesseract.js';
-import { AiChatComponent } from '../ai-chat/ai-chat.component';
-import { AuthService } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
-import { VlcoinService } from '../services/vlcoin.service';
+import { AuthService } from '../services/auth.service';
+import { FavoritesService } from '../services/favorites.service';
+import { debounceTime, distinctUntilChanged, takeUntil, take } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { ToastController } from '@ionic/angular/standalone';
+import { AiChatComponent } from '../ai-chat/ai-chat.component';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { createWorker } from 'tesseract.js';
 import { VlcoinModalComponent } from '../vlcoin-modal/vlcoin-modal.component';
+import { VlcoinService } from '../services/vlcoin.service';
 
 interface Product {
   id: string;
@@ -220,6 +222,7 @@ export class StoresPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   userFavorites: string[] = [];
+  favoriteStores: any[] = []; // Array para almacenar tiendas favoritas completas
 
   constructor(
     private router: Router,
@@ -231,8 +234,10 @@ export class StoresPage implements OnInit, OnDestroy {
     private loadingController: LoadingController,
     private alertController: AlertController,
     private authService: AuthService,
-    private vlcoinService: VlcoinService
+    private vlcoinService: VlcoinService,
+    private favoritesService: FavoritesService // Inyectar servicio de favoritos
   ) {
+    // Registrar iconos importantes para la aplicación
     addIcons({
       heartOutline, heart, storefront, location, time, arrowForward, star, trendingUp, map, starHalf,
       sunny, moon, notifications, searchOutline, search, locationOutline,
@@ -266,6 +271,15 @@ export class StoresPage implements OnInit, OnDestroy {
         // Clear notifications if not authenticated
         this.notifications = [];
         this.notificationCount = 0;
+      }
+    });
+
+    // Suscribirse a los cambios en favoritos
+    this.favoritesService.getFavorites().pipe(takeUntil(this.destroy$)).subscribe(favorites => {
+      this.favoriteStores = favorites;
+      // Si hay datos cargados, actualizar la vista
+      if (!this.isLoading && this.filteredStores.length > 0) {
+        this.forceUpdate();
       }
     });
   }
@@ -828,19 +842,12 @@ export class StoresPage implements OnInit, OnDestroy {
       
       await modal.present();
 
-      // Añadir efecto visual al icono y al contenedor
+      // Añadir efecto visual al icono
       const vlCoinIcon = document.querySelector('.wallet-button .vl-coin-icon');
-      const balanceDisplay = document.querySelector('.wallet-button .vlcoin-balance-display');
       if (vlCoinIcon) {
         vlCoinIcon.classList.add('wallet-pulse');
         setTimeout(() => {
           vlCoinIcon.classList.remove('wallet-pulse');
-        }, 800);
-      }
-      if (balanceDisplay) {
-        balanceDisplay.classList.add('wallet-pulse');
-        setTimeout(() => {
-          balanceDisplay.classList.remove('wallet-pulse');
         }, 800);
       }
       
@@ -1188,9 +1195,20 @@ export class StoresPage implements OnInit, OnDestroy {
    */
   private forceUpdate() {
     this.zone.run(() => {
-      // This will trigger change detection
+      console.log('Forzando actualización de la UI');
+      // Esto desencadenará la detección de cambios
       this.changeDetector.detectChanges();
-      console.log('Forced UI update with new filters');
+      
+      // Aplicar una pequeña animación a los botones de favoritos
+      setTimeout(() => {
+        const favoriteButtons = document.querySelectorAll('.favorite-button');
+        favoriteButtons.forEach(button => {
+          button.classList.add('highlight');
+          setTimeout(() => {
+            button.classList.remove('highlight');
+          }, 500);
+        });
+      }, 100);
     });
   }
 
@@ -1403,17 +1421,27 @@ export class StoresPage implements OnInit, OnDestroy {
     }
     
     // Mostrar un toast con un icono que indique el tipo de notificación
-    this.showToastWithIcon('Abriendo detalles...', iconName, color);
+    this.showToastWithIcon(
+      `Abriendo detalles...`, 
+      iconName,
+      color
+    );
   }
   
   // Método para mostrar un toast con icono
   private async showToastWithIcon(message: string, iconName: string, color: string) {
     const toast = await this.toastController.create({
-      message: `<ion-icon name="${iconName}" color="${color}"></ion-icon> ${message}`,
-      duration: 1000,
+      message: message,
+      duration: 2000,
       position: 'bottom',
-      cssClass: 'toast-with-icon',
-      color: 'light'
+      cssClass: `toast-with-icon toast-icon-${color}`,
+      color: 'light',
+      buttons: [
+        {
+          side: 'start',
+          icon: iconName
+        }
+      ]
     });
     
     await toast.present();
@@ -1432,19 +1460,12 @@ export class StoresPage implements OnInit, OnDestroy {
       
       await modal.present();
       
-      // Añadir efecto visual al icono y al contenedor
+      // Añadir efecto visual al icono
       const vlCoinIcon = document.querySelector('.wallet-button .vl-coin-icon');
-      const balanceDisplay = document.querySelector('.wallet-button .vlcoin-balance-display');
       if (vlCoinIcon) {
         vlCoinIcon.classList.add('wallet-pulse');
         setTimeout(() => {
           vlCoinIcon.classList.remove('wallet-pulse');
-        }, 800);
-      }
-      if (balanceDisplay) {
-        balanceDisplay.classList.add('wallet-pulse');
-        setTimeout(() => {
-          balanceDisplay.classList.remove('wallet-pulse');
         }, 800);
       }
       

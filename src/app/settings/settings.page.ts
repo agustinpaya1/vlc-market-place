@@ -36,7 +36,14 @@ export class SettingsPage implements OnInit {
   }
 
   ngOnInit() {
-    // Inicialización simple
+    // Verificar si el usuario está autenticado
+    this.authService.user$.subscribe(user => {
+      if (!user) {
+        console.log('Usuario no autenticado en configuración');
+      } else {
+        console.log('Usuario autenticado en configuración:', user.email);
+      }
+    });
   }
 
   async openHelp() {

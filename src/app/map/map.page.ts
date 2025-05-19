@@ -182,24 +182,8 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   private cartSubscription: Subscription | null = null;
   cartItemsCount = 0;
 
-  @HostListener('window:matchMedia')
-  onColorSchemeChange() {
-    const newColorScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (this.isDarkTheme !== newColorScheme) {
-      this.isDarkTheme = newColorScheme;
-      this.updateThemeClasses();
-      
-      // Actualizar el tile layer del mapa y los marcadores
-      this.updateMapTileLayer();
-      
-      // Forzar la actualización de los componentes de interfaz después del cambio de tema
-      setTimeout(() => {
-        if (this.leafletMap) {
-          this.leafletMap.invalidateSize();
-        }
-      }, 300);
-    }
-  }
+
+  
 
   constructor(
     private platform: Platform,
@@ -892,26 +876,16 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
 
     // Crear el mapa
     const map = L.map('map').setView([39.469, -0.376], 14);
-    
+    const corner1 = L.latLng(39.3, -0.5);  // Suroeste
+    const corner2 = L.latLng(39.6, -0.2);  // Noreste
+    map.setMaxBounds(L.latLngBounds(corner1, corner2));
     // Definir ambos tile layers
     this.lightTileLayer = L.tileLayer(`https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=nd6CeZ7IspRMBLuVFPiI`, {
       attribution: '&copy; <a href=\"https://www.maptiler.com/copyright/\">MapTiler</a> &copy; OpenStreetMap contributors',
       maxZoom: 20
     });
     
-    this.darkTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '©CartoDB',
-      maxZoom: 20
-    });
-    
-    // Agregar el tile layer adecuado según el tema actual
-    if (this.isDarkTheme) {
-      this.darkTileLayer.addTo(map);
-      this.currentTileLayer = this.darkTileLayer;
-    } else {
-      this.lightTileLayer.addTo(map);
-      this.currentTileLayer = this.lightTileLayer;
-    }
+    this.lightTileLayer.addTo(map);
     
     this.leafletMap = map;
     this.addStoreMarkersToMap();

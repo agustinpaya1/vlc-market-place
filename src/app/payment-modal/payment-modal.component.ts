@@ -75,7 +75,10 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   private isDevelopment = true;
 
   private trackerInterval: any;
+<<<<<<< HEAD
   private trackerTimeouts: any[] = [];
+=======
+>>>>>>> origin/main
 
   constructor(
     private modalCtrl: ModalController,
@@ -171,9 +174,12 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.trackerInterval) {
       clearInterval(this.trackerInterval);
     }
+<<<<<<< HEAD
     // Limpiar timeouts
     this.trackerTimeouts.forEach(t => clearTimeout(t));
     this.trackerTimeouts = [];
+=======
+>>>>>>> origin/main
     this.paymentService.destroyCardElement();
   }
 
@@ -362,6 +368,7 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
     this.currentLocation = 'Tienda';
     this.showOrderTracker = true;
 
+<<<<<<< HEAD
     // Simulación de los 4 pasos en 1 minuto
     // Paso 0: recibido (0s)
     // Paso 1: preparación (10s)
@@ -403,6 +410,41 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
       this.orderStatus = 'delivered';
       this.currentLocation = 'Entregado';
     }, accumulated));
+=======
+    // Simulación de los 4 pasos en 1 minuto (15s por paso)
+    let step = 0;
+    const totalSteps = this.deliverySteps.length;
+    const stepDuration = 15000; // 15 segundos por paso
+
+    this.trackerInterval = setInterval(() => {
+      if (step < totalSteps) {
+        this.deliverySteps[step].completed = true;
+        this.deliveryProgress = ((step + 1) / totalSteps) * 100;
+        // Actualizar estado y ubicación
+        switch (step) {
+          case 0:
+            this.orderStatus = 'pending';
+            this.currentLocation = 'Tienda';
+            break;
+          case 1:
+            this.orderStatus = 'processing';
+            this.currentLocation = 'Preparación';
+            break;
+          case 2:
+            this.orderStatus = 'shipped';
+            this.currentLocation = 'En camino';
+            break;
+          case 3:
+            this.orderStatus = 'delivered';
+            this.currentLocation = 'Entregado';
+            break;
+        }
+        step++;
+      } else {
+        clearInterval(this.trackerInterval);
+      }
+    }, stepDuration);
+>>>>>>> origin/main
 
     // Establecer tiempo estimado de entrega a 1 minuto desde ahora
     const now = new Date();

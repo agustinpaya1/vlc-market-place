@@ -25,7 +25,9 @@ export class LocationsPage implements OnInit, AfterViewInit {
     private supabaseService: SupabaseService
   ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    console.log('Inicializando página de ubicaciones');
+  }
 
   ngAfterViewInit() {
     setTimeout(() => {
