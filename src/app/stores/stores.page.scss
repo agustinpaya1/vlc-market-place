@@ -372,7 +372,6 @@ ion-segment.category-segment {
         object-fit: cover;
         padding: 0;
         transition: transform 0.2s ease;
-<<<<<<< HEAD
         
         &[src$=".png"] {
           width: 55%;
@@ -380,8 +379,6 @@ ion-segment.category-segment {
           object-fit: contain;
           padding: 0;
         }
-=======
->>>>>>> origin/main
       }
     }
     

@@ -24,6 +24,8 @@ import {
 } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
+import { Router } from '@angular/router';
+import { Location } from '@angular/common';
 
 // Interfaz para el objeto de orden
 interface OrderObject {
@@ -58,6 +60,7 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' = 'pending';
   estimatedDeliveryTime: string = '';
   currentLocation: string = 'Tienda';
+  pickupTrackingCode: string = '';
   
   // Valores para la barra de progreso
   deliveryProgress: number = 0;
@@ -75,16 +78,15 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   private isDevelopment = true;
 
   private trackerInterval: any;
-<<<<<<< HEAD
   private trackerTimeouts: any[] = [];
-=======
->>>>>>> origin/main
 
   constructor(
     private modalCtrl: ModalController,
     private paymentService: PaymentService,
     private supabaseService: SupabaseService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router,
+    private location: Location
   ) {
     // Registramos todos los iconos necesarios con nombres correctos para Ionic
     addIcons({ 
@@ -174,13 +176,10 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.trackerInterval) {
       clearInterval(this.trackerInterval);
     }
-<<<<<<< HEAD
     // Limpiar timeouts
     this.trackerTimeouts.forEach(t => clearTimeout(t));
     this.trackerTimeouts = [];
-=======
->>>>>>> origin/main
-    this.paymentService.destroyCardElement();
+
   }
 
   cancel() {
@@ -209,6 +208,8 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
       
       this.paymentSuccess = true;
       this.paymentId = 'dev_' + Math.random().toString(36).substring(2, 15);
+      // Generar código de seguimiento inventado
+      this.pickupTrackingCode = 'VLCPICK-' + Math.random().toString(36).substring(2, 10).toUpperCase();
       
       // 1. Obtener el usuario actual
       const user = await this.authService.getCurrentUser();
@@ -368,49 +369,6 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
     this.currentLocation = 'Tienda';
     this.showOrderTracker = true;
 
-<<<<<<< HEAD
-    // Simulación de los 4 pasos en 1 minuto
-    // Paso 0: recibido (0s)
-    // Paso 1: preparación (10s)
-    // Paso 2: en camino (25s)
-    // Paso 3: entregado (25s)
-    const steps = [0, 10000, 25000, 25000]; // Duración de cada paso en ms
-    let accumulated = 0;
-    const totalSteps = this.deliverySteps.length;
-
-    // Paso 0: recibido (inmediato)
-    this.deliverySteps[0].completed = true;
-    this.deliveryProgress = 25;
-    this.orderStatus = 'pending';
-    this.currentLocation = 'Tienda';
-
-    // Paso 1: preparación (a los 10s)
-    accumulated += steps[1];
-    this.trackerTimeouts.push(setTimeout(() => {
-      this.deliverySteps[1].completed = true;
-      this.deliveryProgress = 50;
-      this.orderStatus = 'processing';
-      this.currentLocation = 'Preparación';
-    }, accumulated));
-
-    // Paso 2: en camino (a los 35s)
-    accumulated += steps[2];
-    this.trackerTimeouts.push(setTimeout(() => {
-      this.deliverySteps[2].completed = true;
-      this.deliveryProgress = 75;
-      this.orderStatus = 'shipped';
-      this.currentLocation = 'En camino';
-    }, accumulated));
-
-    // Paso 3: entregado (a los 60s)
-    accumulated += steps[3];
-    this.trackerTimeouts.push(setTimeout(() => {
-      this.deliverySteps[3].completed = true;
-      this.deliveryProgress = 100;
-      this.orderStatus = 'delivered';
-      this.currentLocation = 'Entregado';
-    }, accumulated));
-=======
     // Simulación de los 4 pasos en 1 minuto (15s por paso)
     let step = 0;
     const totalSteps = this.deliverySteps.length;
@@ -444,7 +402,6 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
         clearInterval(this.trackerInterval);
       }
     }, stepDuration);
->>>>>>> origin/main
 
     // Establecer tiempo estimado de entrega a 1 minuto desde ahora
     const now = new Date();
@@ -466,5 +423,19 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
       success: true,
       navigate: true
     }, 'success');
+  }
+
+  // Nuevo método para abrir la página de recogida
+  goToPickupOrder() {
+    // Navegar a la página de QR de recogida
+    this.router.navigate([
+      '/pickup',
+      this.pickupTrackingCode
+    ], {
+      queryParams: {
+        orderId: this.orderId,
+        orderDetails: `Total: ${this.totalAmount} €`
+      }
+    });
   }
 } 

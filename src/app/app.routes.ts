@@ -36,6 +36,10 @@ export const routes: Routes = [
     loadComponent: () => import('./help/order-help/order-help.component').then(m => m.OrderHelpComponent)
   },
   {
+    path: 'pickup/:trackingCode',
+    loadComponent: () => import('./orders/pickup-order.component').then(m => m.PickupOrderComponent)
+  },
+  {
     path: '**',
     redirectTo: 'tabs/stores'
   }

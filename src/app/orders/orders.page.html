@@ -1,0 +1,22 @@
+            <div class="order-actions">
+              <ion-button 
+                *ngIf="order.status === 'pending'"
+                class="receive-button" 
+                color="success" 
+                (click)="confirmOrderDelivery(order.id, $event)">
+                <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+                Marcar como recibido
+              </ion-button>
+              <ion-button 
+                class="qr-button" 
+                color="primary" 
+                [routerLink]="['/pickup', 'VLCPICK-' + order.id.substring(0,8).toUpperCase()]"
+                [queryParams]="{ orderId: order.id, orderDetails: 'Total: ' + (order.total_price | currency:'EUR') }">
+                <ion-icon name="qr-code-outline" slot="start"></ion-icon>
+                Ver QR para recoger
+              </ion-button>
+            </div> 
+
+<ion-card color="warning" style="margin: 16px; text-align: center; font-size: 18px; font-weight: bold;">
+  PRUEBA DE CAMBIO: Si ves esto, la app está actualizando correctamente.
+</ion-card> 
