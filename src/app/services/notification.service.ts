@@ -39,7 +39,7 @@ export class NotificationService {
     
     let message = options.message;
     if (options.icon) {
-      message = `<ion-icon name="${options.icon}"></ion-icon> ${message}`;
+      message = `<ion-icon name="${options.icon}" style="margin-right: 8px; font-size: 1.2em; vertical-align: middle;"></ion-icon>${message}`;
     }
 
     const toast = await this.toastController.create({
@@ -47,7 +47,7 @@ export class NotificationService {
       duration: duration,
       position: position,
       color: color,
-      cssClass: `subtle-toast toast-${type} ${options.icon ? 'toast-with-icon' : ''}`,
+      cssClass: `app-notification toast-${type} ${options.icon ? 'toast-with-icon' : ''}`,
       buttons: options.action ? [
         {
           text: options.action.text,
@@ -65,7 +65,7 @@ export class NotificationService {
       message,
       type: 'success',
       icon: options.icon || 'checkmark-circle',
-      duration: options.duration || 2000,
+      duration: options.duration || 1500,
       position: options.position || 'top',
       action: options.action
     });

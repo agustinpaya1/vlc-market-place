@@ -21,7 +21,7 @@ export interface QRCode {
   providedIn: 'root'
 })
 export class QRCodeService {
-  constructor(private supabase: SupabaseService) {}
+  constructor(private supabaseService: SupabaseService) {}
 
   private generateKeyPair(): { publicKey: string; privateKey: string } {
     // Generar una clave privada aleatoria
@@ -58,7 +58,7 @@ export class QRCodeService {
         }
       };
 
-      const { data: qrCode, error } = await this.supabase.getClient()
+      const { data: qrCode, error } = await this.supabaseService.getClient()
         .from('qr_codes')
         .insert(qrData)
         .select()
@@ -80,51 +80,66 @@ export class QRCodeService {
     }
   }
 
-  async validateQRCode(code: string, privateKey: string): Promise<boolean> {
+  async validateQRCode(orderId: string, code: string, privateKey?: string): Promise<boolean> {
     try {
-      // Buscar el código QR
-      const { data: qrCode, error } = await this.supabase.getClient()
-        .from('qr_codes')
-        .select('*')
-        .eq('code', code)
-        .single();
-
-      if (error || !qrCode) {
-        console.error('QR code not found');
-        return false;
-      }
-
-      // Verificar si el código es válido
-      if (!qrCode.is_valid) {
-        console.error('QR code is no longer valid');
-        return false;
-      }
-
-      // Verificar la clave privada
-      const providedKeyHash = this.hashPrivateKey(privateKey);
-      if (providedKeyHash !== qrCode.private_key_hash) {
-        // Incrementar el contador de intentos fallidos
-        await this.supabase.getClient()
+      // Si se proporciona clave privada, usar la validación con clave
+      if (privateKey) {
+        const { data: qrCode, error } = await this.supabaseService.getClient()
           .from('qr_codes')
-          .update({ 
-            validation_attempts: qrCode.validation_attempts + 1,
-            is_valid: qrCode.validation_attempts < 2 // Invalidar después de 3 intentos
+          .select('*')
+          .eq('code', code)
+          .single();
+
+        if (error || !qrCode) {
+          console.error('QR code not found');
+          return false;
+        }
+
+        // Verificar si el código es válido
+        if (!qrCode.is_valid) {
+          console.error('QR code is no longer valid');
+          return false;
+        }
+
+        // Verificar la clave privada
+        const providedKeyHash = this.hashPrivateKey(privateKey);
+        if (providedKeyHash !== qrCode.private_key_hash) {
+          // Incrementar el contador de intentos fallidos
+          await this.supabaseService.getClient()
+            .from('qr_codes')
+            .update({ 
+              validation_attempts: qrCode.validation_attempts + 1,
+              is_valid: qrCode.validation_attempts < 2 // Invalidar después de 3 intentos
+            })
+            .eq('id', qrCode.id);
+
+          return false;
+        }
+
+        // Marcar como usado
+        await this.supabaseService.getClient()
+          .from('qr_codes')
+          .update({
+            used_at: new Date().toISOString(),
+            is_valid: false
           })
           .eq('id', qrCode.id);
 
-        return false;
+        return true;
       }
-
-      // Marcar como usado
-      await this.supabase.getClient()
+      
+      // Validación simple sin clave privada
+      const { data, error } = await this.supabaseService.getClient()
         .from('qr_codes')
-        .update({
-          used_at: new Date().toISOString(),
-          is_valid: false
-        })
-        .eq('id', qrCode.id);
+        .select('is_valid, validation_attempts')
+        .eq('order_id', orderId)
+        .eq('code', code)
+        .single();
 
-      return true;
+      if (error) throw error;
+      if (!data) return false;
+
+      return data.is_valid && data.validation_attempts < 3;
     } catch (error) {
       console.error('Error validating QR code:', error);
       return false;
@@ -133,7 +148,7 @@ export class QRCodeService {
 
   async getQRCodeByOrderId(orderId: string): Promise<QRCode | null> {
     try {
-      const { data: qrCode, error } = await this.supabase.getClient()
+      const { data: qrCode, error } = await this.supabaseService.getClient()
         .from('qr_codes')
         .select('*')
         .eq('order_id', orderId)
@@ -148,6 +163,38 @@ export class QRCodeService {
     } catch (error) {
       console.error('Error in getQRCodeByOrderId:', error);
       return null;
+    }
+  }
+
+  async getQRCode(orderId: string): Promise<{ qr_code: string }> {
+    try {
+      const { data, error } = await this.supabaseService.getClient()
+        .from('qr_codes')
+        .select('code')
+        .eq('order_id', orderId)
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('QR code not found');
+
+      return { qr_code: data.code };
+    } catch (error) {
+      console.error('Error getting QR code:', error);
+      throw error;
+    }
+  }
+
+  async incrementValidationAttempt(orderId: string): Promise<void> {
+    try {
+      const { error } = await this.supabaseService.getClient()
+        .rpc('increment_qr_validation_attempt', {
+          order_id_param: orderId
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error incrementing validation attempt:', error);
+      throw error;
     }
   }
 } 

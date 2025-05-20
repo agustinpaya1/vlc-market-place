@@ -1047,9 +1047,6 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
         quantity: 1,
         imageUrl: product.imageUrl || product.image_url
       });
-      
-      // Eliminado el toast aquí para evitar notificación duplicada y mostrarla solo si el usuario está logueado
-      // El CartService ya maneja la notificación correctamente
     } catch (error) {
       console.error('Error al añadir producto al carrito:', error);
     }

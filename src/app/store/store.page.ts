@@ -244,24 +244,13 @@ export class StorePage implements OnInit {
   }
 
   async addToCart(product: Product) {
-    const added = await this.cartService.addToCart({
+    await this.cartService.addToCart({
       id: product.id,
       name: product.name,
       price: product.offerPrice || product.price,
       quantity: 1,
       imageUrl: product.imageUrl
     });
-
-    if (added) {
-      const toast = await this.toastController.create({
-        message: `${product.name} añadido al carrito`,
-        duration: 1200,
-        position: 'top',
-        color: 'success',
-        cssClass: 'subtle-toast'
-      });
-      await toast.present();
-    }
   }
 
   goToCart() {

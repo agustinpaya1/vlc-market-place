@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule, ModalController, AlertController, ToastController } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 import { Order, OrderService, OrderItem } from '../../services/order.service';
+import { QRCodeService } from '../../services/qr-code.service';
+import { QRCodeComponent } from 'angularx-qrcode';
 
 @Component({
   selector: 'app-order-summary',
@@ -54,6 +56,21 @@ import { Order, OrderService, OrderItem } from '../../services/order.service';
           </div>
         </div>
 
+        <!-- QR Code para pedidos pendientes -->
+        <div class="qr-section" *ngIf="order.status === 'pending' && qrCodeData">
+          <h2 class="section-title">Código QR para recoger</h2>
+          <div class="qr-container">
+            <qrcode 
+              [qrdata]="qrCodeData"
+              [width]="200"
+              [errorCorrectionLevel]="'H'"
+              [title]="'QR Code para pedido #' + order.id"
+            ></qrcode>
+            <p class="qr-instructions">Muestra este código QR en el establecimiento para recoger tu pedido</p>
+            <p class="qr-order-id">Pedido #{{ order.id.substring(0, 8).toUpperCase() }}</p>
+          </div>
+        </div>
+
         <!-- Tienda -->
         <div class="store-section" *ngIf="getStoreName()">
           <h2 class="section-title">{{ getStoreCount() > 1 ? 'Tiendas' : 'Tienda' }}</h2>
@@ -91,7 +108,7 @@ import { Order, OrderService, OrderItem } from '../../services/order.service';
         <!-- Botones de acción -->
         <div class="action-buttons">
           <ion-button expand="block" fill="outline" (click)="dismissModal()">
-            <ion-icon name="help-circle-outline" slot="start"></ion-icon>
+            <ion-icon name="close-circle-outline" slot="start"></ion-icon>
             CERRAR
           </ion-button>
         </div>
@@ -155,6 +172,37 @@ import { Order, OrderService, OrderItem } from '../../services/order.service';
       color: var(--ion-color-dark);
     }
 
+    .qr-section {
+      margin-bottom: 20px;
+      text-align: center;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .qr-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      
+      img {
+        width: 200px;
+        height: 200px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+    }
+
+    .qr-instructions {
+      color: var(--ion-color-medium);
+      font-size: 14px;
+      text-align: center;
+      margin: 0;
+    }
+
     .section-title {
       font-size: 18px;
       font-weight: 600;
@@ -198,102 +246,78 @@ import { Order, OrderService, OrderItem } from '../../services/order.service';
     }
 
     .order-info {
-      margin-bottom: 8px;
-    }
-
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-
-    .label {
-      color: var(--ion-color-medium);
-    }
-
-    .value {
-      font-weight: 500;
-    }
-
-    .total {
-      font-weight: 700;
-      color: var(--ion-color-primary);
-      font-size: 18px;
-    }
-
-    .status-badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      text-transform: uppercase;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .status-pending {
-      background-color: var(--ion-color-warning);
-      color: var(--ion-color-warning-contrast);
-    }
-
-    .status-processing {
-      background-color: var(--ion-color-primary);
-      color: var(--ion-color-primary-contrast);
-    }
-
-    .status-shipped {
-      background-color: var(--ion-color-tertiary);
-      color: var(--ion-color-tertiary-contrast);
-    }
-
-    .status-delivered, .status-completed {
-      background-color: var(--ion-color-success);
-      color: var(--ion-color-success-contrast);
-    }
-
-    .status-canceled {
-      background-color: var(--ion-color-danger);
-      color: var(--ion-color-danger-contrast);
-    }
-
-    .status-paid {
-      background-color: var(--ion-color-secondary);
-      color: var(--ion-color-secondary-contrast);
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+        
+        .label {
+          color: var(--ion-color-medium);
+        }
+        
+        .value {
+          font-weight: 500;
+          
+          &.status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 14px;
+            
+            &.status-pending {
+              background-color: rgba(var(--ion-color-warning-rgb), 0.15);
+              color: var(--ion-color-warning-shade);
+            }
+            
+            &.status-delivered {
+              background-color: rgba(var(--ion-color-success-rgb), 0.15);
+              color: var(--ion-color-success-shade);
+            }
+          }
+          
+          &.total {
+            color: var(--ion-color-dark);
+            font-size: 18px;
+            font-weight: 600;
+          }
+        }
+      }
     }
 
     .confirm-button {
-      margin-top: 16px;
-      margin-bottom: 8px;
-      --background: var(--ion-color-success);
-      font-weight: bold;
-      --border-radius: 10px;
-      height: 44px;
+      margin: 20px 0;
     }
 
     .action-buttons {
       margin-top: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
     }
 
-    ion-button {
-      --border-radius: 10px;
+    .qr-order-id {
       font-weight: 600;
+      color: var(--ion-color-dark);
+      margin-top: 8px;
     }
   `],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule, RouterModule]
+  imports: [IonicModule, CommonModule, FormsModule, RouterModule, QRCodeComponent]
 })
 export class OrderSummaryComponent implements OnInit {
   @Input() orderId: string = '';
   order: Order | null = null;
   loading: boolean = true;
   error: string | null = null;
+  qrCodeData: string | null = null;
 
   constructor(
     private modalCtrl: ModalController,
     private orderService: OrderService,
     private alertCtrl: AlertController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private qrCodeService: QRCodeService
   ) {}
 
   ngOnInit() {
@@ -301,25 +325,41 @@ export class OrderSummaryComponent implements OnInit {
   }
 
   async loadOrderSummary() {
-    this.loading = true;
-    this.error = null;
-
     try {
-      if (!this.orderId) {
-        throw new Error('ID de pedido no proporcionado');
-      }
-
-      this.order = await this.orderService.getOrderById(this.orderId);
+      this.loading = true;
+      this.error = null;
       
-      if (!this.order) {
+      // Cargar detalles del pedido
+      const orderDetails = await this.orderService.getOrderById(this.orderId);
+      if (!orderDetails) {
         throw new Error('No se pudo encontrar el pedido');
       }
-      
-      // La información de productos ya se carga automáticamente en el método getOrderById
-      
+      this.order = orderDetails;
+
+      // Si el pedido está pendiente, cargar el QR
+      if (this.order.status === 'pending') {
+        try {
+          const qrCode = await this.qrCodeService.getQRCodeByOrderId(this.orderId);
+          if (qrCode) {
+            // Crear un objeto con los datos necesarios para el QR
+            const qrData = {
+              orderId: qrCode.order_id,
+              code: qrCode.code,
+              publicKey: qrCode.public_key,
+              timestamp: new Date().toISOString()
+            };
+            this.qrCodeData = JSON.stringify(qrData);
+          } else {
+            console.warn('No se encontró el código QR para el pedido:', this.orderId);
+          }
+        } catch (qrError) {
+          console.error('Error al cargar el QR:', qrError);
+          // No mostramos error al usuario ya que el QR es opcional
+        }
+      }
     } catch (error) {
-      console.error('Error al cargar resumen del pedido:', error);
-      this.error = error instanceof Error ? error.message : 'Error al cargar el pedido';
+      console.error('Error al cargar el resumen del pedido:', error);
+      this.error = 'No se pudo cargar el resumen del pedido';
     } finally {
       this.loading = false;
     }

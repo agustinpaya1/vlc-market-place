@@ -147,22 +147,13 @@ export class MainPageComponent implements OnInit {
   }
 
   async addToCart(product: Product): Promise<void> {
-    const added = await this.cartService.addToCart({
+    await this.cartService.addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
       quantity: 1,
       imageUrl: product.imageUrl
     });
-    
-    if (added) {
-      const toast = await this.toastController.create({
-        message: `${product.name} ha sido añadido al carrito.`,
-        duration: 2000,
-        position: 'bottom'
-      });
-      await toast.present();
-    }
   }
 
   toggleCart() {
