@@ -301,8 +301,9 @@ export class AuthService {
     }
   }
 
-  isAuthenticated(): boolean {
-    return this.user.value !== null;
+  async isAuthenticated(): Promise<boolean> {
+    const user = await this.getCurrentUser();
+    return user !== null;
   }
 
   async getCurrentUser(): Promise<User | null> {

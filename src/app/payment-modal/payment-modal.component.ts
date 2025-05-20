@@ -15,24 +15,26 @@ import {
   bicycle,
   timer,
   checkmark,
-  // Nombres correctos para Ionic
   checkmarkOutline,
   checkmarkSharp,
   locationSharp,
   timerOutline,
-  bicycleOutline
+  bicycleOutline,
+  qrCodeOutline
 } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { QRCodeService } from '../services/qr-code.service';
+import { NotificationService } from '../services/notification.service';
+import { QRCodeComponent } from 'angularx-qrcode';
 
 // Interfaz para el objeto de orden
 interface OrderObject {
   user_id: string;
   total_price: number;
   status: string;
-  vlcoin_used: number;
   store_id?: string;
   delivery_latitude?: number;
   delivery_longitude?: number;
@@ -44,7 +46,12 @@ interface OrderObject {
   templateUrl: './payment-modal.component.html',
   styleUrls: ['./payment-modal.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule]
+  imports: [
+    CommonModule,
+    FormsModule,
+    IonicModule,
+    QRCodeComponent
+  ]
 })
 export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() cartItems: CartItem[] = [];
@@ -61,6 +68,11 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   estimatedDeliveryTime: string = '';
   currentLocation: string = 'Tienda';
   pickupTrackingCode: string = '';
+  
+  // QR code related properties
+  qrCodeData: string = '';
+  qrCodePrivateKey: string = '';
+  showQRCode: boolean = false;
   
   // Valores para la barra de progreso
   deliveryProgress: number = 0;
@@ -86,9 +98,10 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
     private supabaseService: SupabaseService,
     private authService: AuthService,
     private router: Router,
-    private location: Location
+    private location: Location,
+    private qrCodeService: QRCodeService,
+    private notificationService: NotificationService
   ) {
-    // Registramos todos los iconos necesarios con nombres correctos para Ionic
     addIcons({ 
       'checkmark-circle': checkmarkCircle,
       'card-outline': cardOutline, 
@@ -101,7 +114,8 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
       'checkmark-sharp': checkmarkSharp,
       'location-sharp': locationSharp,
       'timer-outline': timerOutline,
-      'bicycle-outline': bicycleOutline
+      'bicycle-outline': bicycleOutline,
+      'qr-code-outline': qrCodeOutline
     });
   }
 
@@ -187,175 +201,112 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async processPayment() {
-    // Asegurar modo desarrollo para evitar errores de Stripe
-    this.isDevelopment = true;
-    
-    // Simplificar validaciones
-    if (this.vlcoinsToUse < 0) {
-      this.errorMessage = 'Cantidad de VLCoins no puede ser negativa.';
-      return;
-    }
+    if (this.isLoading) return;
     
     this.isLoading = true;
     this.errorMessage = '';
-    
+
     try {
-      // Simular un pago exitoso independientemente de la tarjeta introducida
-      console.log('Simulando pago exitoso con cualquier tarjeta');
+      console.log('Iniciando proceso de pago...');
       
-      // Breve pausa para simular procesamiento
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      this.paymentSuccess = true;
-      this.paymentId = 'dev_' + Math.random().toString(36).substring(2, 15);
-      // Generar código de seguimiento inventado
-      this.pickupTrackingCode = 'VLCPICK-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-      
-      // 1. Obtener el usuario actual
       const user = await this.authService.getCurrentUser();
-      if (!user || !user.id) {
-        this.errorMessage = 'No se pudo obtener el usuario autenticado.';
-        this.isLoading = false;
-        return;
+      if (!user) {
+        throw new Error('Usuario no autenticado');
       }
-      
-      // 1.5 Verificar si el usuario tiene VLCoins (intenta ver si existe la tabla)
-      try {
-        const { data: existing } = await this.supabaseService.getClient()
-          .from('vlcoin')
-          .select('id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-          
-        if (!existing) {
-          console.log('Creando cuenta VLCoin para el usuario:', user.id);
-          await this.supabaseService.getClient()
-            .from('vlcoin')
-            .insert({ user_id: user.id, balance: 0 });
-        }
-      } catch (vlcoinErr) {
-        // Si hay error con vlcoin, continuamos con el proceso
-        console.warn('No se pudo verificar la cuenta VLCoin:', vlcoinErr);
+
+      console.log('Usuario autenticado:', user.id);
+
+      // Validar items del carrito
+      if (!this.cartItems || this.cartItems.length === 0) {
+        throw new Error('El carrito está vacío');
       }
-      
-      // 2. Guardar el pedido en Supabase
-      try {
-        console.log('Creando pedido en Supabase para usuario:', user.id);
-        
-        // Coordenadas para posible uso (ahora las almacenamos por separado)
-        const deliveryLatitude = 39.482686033242544;
-        const deliveryLongitude = -0.346761123456372;
-        
-        // Obtener el store_id del primer item y formatearlo correctamente
-        let storeId = null;
-        if (this.cartItems.length > 0 && this.cartItems[0]?.id) {
-          // Intentar obtener el ID de la tienda del formato item-id
-          const storeIdRaw = this.cartItems[0].id.split('-')[0];
-          
-          // Verificar si es un UUID válido
-          if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(storeIdRaw)) {
-            storeId = storeIdRaw; // Ya es un UUID válido
-          } else if (/^[0-9a-f]{8,32}$/i.test(storeIdRaw)) {
-            // Convertir a formato UUID si es posible
-            try {
-              // Formatear como UUID si tiene suficientes caracteres
-              const paddedId = storeIdRaw.padEnd(32, '0');
-              storeId = `${paddedId.slice(0,8)}-${paddedId.slice(8,12)}-${paddedId.slice(12,16)}-${paddedId.slice(16,20)}-${paddedId.slice(20)}`;
-            } catch (e) {
-              console.warn('No se pudo formatear el store_id como UUID:', e);
-              storeId = null;
-            }
-          } else {
-            console.warn('El ID de la tienda no tiene un formato válido:', storeIdRaw);
-            storeId = null;
-          }
-        }
-        
-        // Objeto simplificado para la inserción en la tabla 'orders'
-        // Solo incluimos campos que sabemos que existen en la tabla
-        const orderObject: OrderObject = {
-          user_id: user.id,
-          total_price: this.totalAmount,
-          status: 'processing',
-          vlcoin_used: 0
-        };
-        
-        // Añadir store_id solo si es válido
-        if (storeId) {
-          orderObject.store_id = storeId;
-        }
-        
-        // Intentar añadir las coordenadas de entrega si hay campos para ellas
-        try {
-          // Primero intentamos añadir los campos de latitud/longitud
-          orderObject.delivery_latitude = deliveryLatitude;
-          orderObject.delivery_longitude = deliveryLongitude;
-        } catch (e) {
-          console.warn('No se pudieron añadir coordenadas de entrega', e);
-        }
-        
-        console.log('Objeto de orden a insertar:', orderObject);
-        
-        // Insertar el pedido con el objeto simplificado
-        const { data: orderData, error: orderError } = await this.supabaseService.getClient()
+
+      console.log('Items del carrito:', this.cartItems);
+
+      // 1. Crear el pedido primero
+      const orderData = {
+        user_id: user.id,
+        total_price: this.totalAmount,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      };
+
+      console.log('Creando pedido con datos:', orderData);
+
+      const { data: order, error: orderError } = await this.supabaseService.getClient()
+        .from('orders')
+        .insert(orderData)
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error('Error al crear el pedido:', orderError);
+        throw new Error(`Error al crear el pedido: ${orderError.message}`);
+      }
+
+      if (!order) {
+        throw new Error('No se pudo crear el pedido');
+      }
+
+      console.log('Pedido creado exitosamente:', order);
+
+      // 2. Crear los items del pedido
+      const orderItems = this.cartItems.map(item => ({
+        order_id: order.id,
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.offerPrice || item.price,
+        created_at: new Date().toISOString()
+      }));
+
+      console.log('Creando items del pedido:', orderItems);
+
+      const { error: itemsError } = await this.supabaseService.getClient()
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) {
+        console.error('Error al crear los items del pedido:', itemsError);
+        // Eliminar el pedido si falla la creación de items
+        await this.supabaseService.getClient()
           .from('orders')
-          .insert(orderObject)
-          .select()
-          .single();
-          
-        if (orderError) {
-          console.error('Error al guardar el pedido:', orderError);
-          this.errorMessage = 'Error al procesar el pedido: ' + orderError.message;
-          // Mostrar más detalles del error en la consola para depuración
-          console.log('Detalles completos del error:', JSON.stringify(orderError));
-          
-          // Intentar otra vez con un objeto aún más básico si hay error
-          if (orderError.message.includes("column")) {
-            console.log("Intentando con objeto más básico...");
-            const basicOrderObject = {
-              user_id: user.id,
-              total_price: this.totalAmount,
-              status: 'processing'
-            };
-            
-            const { data: basicOrderData, error: basicOrderError } = await this.supabaseService.getClient()
-              .from('orders')
-              .insert(basicOrderObject)
-              .select()
-              .single();
-              
-            if (basicOrderError) {
-              console.error('Error en segundo intento:', basicOrderError);
-              this.errorMessage = 'No se pudo crear el pedido. Por favor, inténtalo de nuevo.';
-            } else if (basicOrderData) {
-              console.log('Pedido guardado correctamente en segundo intento:', basicOrderData);
-              this.orderId = basicOrderData.id;
-              this.orderStatus = basicOrderData.status;
-              
-              // Iniciar el seguimiento del pedido
-              this.initOrderTracker();
-            }
-          }
-        } else if (orderData) {
-          console.log('Pedido guardado correctamente:', orderData);
-          this.orderId = orderData.id;
-          this.orderStatus = orderData.status;
-          
-          // Establecer tiempo estimado de entrega
-          const now = new Date();
-          this.estimatedDeliveryTime = new Date(now.getTime() + 30 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          
-          // Iniciar el seguimiento del pedido
-          this.initOrderTracker();
-        }
-      } catch (orderErr) {
-        console.error('Excepción al crear el pedido:', orderErr);
-        this.errorMessage = 'Error al procesar el pedido: ' + String(orderErr);
+          .delete()
+          .eq('id', order.id);
+        throw new Error('Error al crear los items del pedido');
       }
+
+      // 3. Generar código QR para el pedido
+      console.log('Generando código QR para el pedido:', order.id);
+      const qrCode = await this.qrCodeService.createQRCodeForOrder(order.id);
+      
+      if (!qrCode) {
+        console.error('Error al generar el código QR');
+        throw new Error('Error al generar el código QR');
+      }
+
+      console.log('Código QR generado exitosamente:', qrCode);
+
+      // Guardar el ID del pedido y generar el QR
+      this.orderId = order.id;
+      this.qrCodeData = JSON.stringify({
+        orderId: order.id,
+        code: qrCode.code,
+        publicKey: qrCode.public_key
+      });
+      
+      // Asignar la clave privada si existe
+      this.qrCodePrivateKey = qrCode.privateKey || '';
+      this.showQRCode = true;
+      this.paymentSuccess = true;
+
+      // Mostrar notificación de éxito
+      await this.notificationService.showSuccess('Pedido creado correctamente');
+
     } catch (error) {
-      console.error('Error en el procesamiento del pago:', error);
-      this.errorMessage = String(error);
+      console.error('Error detallado en el proceso de pago:', error);
+      this.errorMessage = error instanceof Error ? error.message : 'Error al procesar el pago. Por favor, inténtalo de nuevo.';
       this.paymentSuccess = false;
+      this.showQRCode = false;
     } finally {
       this.isLoading = false;
     }

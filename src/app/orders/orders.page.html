@@ -1,21 +1,108 @@
-            <div class="order-actions">
-              <ion-button 
-                *ngIf="order.status === 'pending'"
-                class="receive-button" 
-                color="success" 
-                (click)="confirmOrderDelivery(order.id, $event)">
-                <ion-icon name="checkmark-circle" slot="start"></ion-icon>
-                Marcar como recibido
-              </ion-button>
-              <ion-button 
-                class="qr-button" 
-                color="primary" 
-                [routerLink]="['/pickup', 'VLCPICK-' + order.id.substring(0,8).toUpperCase()]"
-                [queryParams]="{ orderId: order.id, orderDetails: 'Total: ' + (order.total_price | currency:'EUR') }">
-                <ion-icon name="qr-code-outline" slot="start"></ion-icon>
-                Ver QR para recoger
-              </ion-button>
-            </div> 
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Mis Pedidos</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="orders-content">
+  <!-- Intro section -->
+  <div class="orders-intro" *ngIf="!loading && orders.length === 0">
+    <div class="intro-card">
+      <div class="app-logo">
+        <ion-icon name="bag-outline" color="light" size="large"></ion-icon>
+      </div>
+      <h2>Tus Pedidos</h2>
+      <p>Gestiona y haz seguimiento a todos tus pedidos</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <ion-segment [(ngModel)]="selectedFilter" (ionChange)="filterOrders()" class="ion-padding">
+    <ion-segment-button value="all">
+      <ion-label>Todos</ion-label>
+      <ion-badge color="primary">{{orders.length}}</ion-badge>
+    </ion-segment-button>
+    <ion-segment-button value="pending">
+      <ion-label>Pendientes</ion-label>
+      <ion-badge color="warning">{{getPendingOrdersCount()}}</ion-badge>
+    </ion-segment-button>
+    <ion-segment-button value="delivered">
+      <ion-label>Entregados</ion-label>
+      <ion-badge color="success">{{getDeliveredOrdersCount()}}</ion-badge>
+    </ion-segment-button>
+  </ion-segment>
+
+  <!-- Orders list -->
+  <div class="orders-container">
+    <div class="orders-list">
+      <ion-card class="order-card" *ngFor="let order of filteredOrders">
+        <div class="order-header">
+          <h2>#{{order.id.substring(0,8).toUpperCase()}}</h2>
+          <div class="order-status">
+            <span class="status-badge" [ngClass]="{
+              'pending': order.status === 'pending',
+              'delivered': order.status === 'delivered'
+            }">
+              {{order.status === 'pending' ? 'En preparación' : 'Entregado'}}
+            </span>
+          </div>
+        </div>
+
+        <div class="order-content">
+          <div class="order-info">
+            <p>
+              <ion-icon name="calendar-outline"></ion-icon>
+              {{order.created_at | date:'dd/MM/yyyy HH:mm'}}
+            </p>
+            <p>
+              <ion-icon name="storefront-outline"></ion-icon>
+              {{order.store_name || 'Tienda local'}}
+            </p>
+          </div>
+          <div class="order-total">
+            <span class="label">Total:</span>
+            <span class="value total">{{ order.total_price | currency:'EUR' }}</span>
+          </div>
+        </div>
+
+        <div class="order-actions ion-padding">
+          <ion-button 
+            *ngIf="order.status === 'pending'"
+            class="receive-button" 
+            color="success" 
+            (click)="confirmOrderDelivery(order.id, $event)">
+            <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+            Marcar como recibido
+          </ion-button>
+          <ion-button 
+            class="qr-button" 
+            color="primary" 
+            [routerLink]="['/pickup', order.id]"
+            [queryParams]="{ orderId: order.id, orderDetails: 'Total: ' + (order.total_price | currency:'EUR') }">
+            <ion-icon name="qr-code-outline" slot="start"></ion-icon>
+            Ver QR para recoger
+          </ion-button>
+        </div>
+      </ion-card>
+    </div>
+  </div>
+
+  <!-- Loading spinner -->
+  <div class="loading-container" *ngIf="loading">
+    <ion-spinner></ion-spinner>
+    <p>Cargando pedidos...</p>
+  </div>
+
+  <!-- Error message -->
+  <ion-card *ngIf="error" color="danger">
+    <ion-card-content>
+      {{error}}
+    </ion-card-content>
+  </ion-card>
+</ion-content>
 
 <ion-card color="warning" style="margin: 16px; text-align: center; font-size: 18px; font-weight: bold;">
   PRUEBA DE CAMBIO: Si ves esto, la app está actualizando correctamente.

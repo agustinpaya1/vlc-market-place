@@ -162,6 +162,15 @@ import { StoreService } from '../services/store.service';
                 <ion-icon name="checkmark-circle" slot="start"></ion-icon>
                 Marcar como recibido
               </ion-button>
+              <ion-button 
+                class="qr-button" 
+                color="primary" 
+                [routerLink]="['/pickup', order.id]"
+                [queryParams]="{ orderId: order.id }"
+                (click)="$event.stopPropagation()">
+                <ion-icon name="qr-code-outline" slot="start"></ion-icon>
+                Ver QR para recoger
+              </ion-button>
             </div>
           </div>
         </div>
@@ -547,17 +556,25 @@ import { StoreService } from '../services/store.service';
       padding: 0 16px 16px;
       display: flex;
       justify-content: flex-end;
+      gap: 8px;
     }
 
-    .receive-button {
+    .receive-button, .qr-button {
       --border-radius: 10px;
       font-size: 14px;
       font-weight: 600;
-      --box-shadow: 0 2px 6px rgba(var(--ion-color-success-rgb), 0.3);
       height: 36px;
     }
 
-    .receive-button ion-icon {
+    .receive-button {
+      --box-shadow: 0 2px 6px rgba(var(--ion-color-success-rgb), 0.3);
+    }
+
+    .qr-button {
+      --box-shadow: 0 2px 6px rgba(var(--ion-color-primary-rgb), 0.3);
+    }
+
+    .receive-button ion-icon, .qr-button ion-icon {
       font-size: 16px;
       margin-right: 4px;
     }
@@ -840,8 +857,19 @@ export class OrdersPage implements OnInit {
     private toastCtrl: ToastController
   ) {}
 
-  async ngOnInit() {
-    await this.loadOrders();
+  ngOnInit() {
+    // Suscribirse a cambios en el estado de autenticación
+    this.authService.user$.subscribe(user => {
+      if (user) {
+        this.loadOrders();
+      } else {
+        this.orders = [];
+        this.filteredOrders = [];
+        this.error = 'Necesitas iniciar sesión para ver tus pedidos';
+        this.showLoginButton = true;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   async loadOrders() {
@@ -850,17 +878,24 @@ export class OrdersPage implements OnInit {
     this.showLoginButton = false;
     this.cdr.markForCheck();
 
-    // Verificar si el usuario está autenticado
-    if (!this.authService.isAuthenticated()) {
-      this.loading = false;
-      this.error = 'Necesitas iniciar sesión para ver tus pedidos';
-      this.showLoginButton = true;
-      this.cdr.markForCheck();
-      return;
-    }
+    console.log('Iniciando carga de pedidos...');
 
     try {
+      // Verificar si el usuario está autenticado
+      const isAuth = await this.authService.isAuthenticated();
+      console.log('Estado de autenticación:', isAuth);
+
+      if (!isAuth) {
+        this.loading = false;
+        this.error = 'Necesitas iniciar sesión para ver tus pedidos';
+        this.showLoginButton = true;
+        this.cdr.markForCheck();
+        return;
+      }
+
+      console.log('Obteniendo pedidos del usuario...');
       this.orders = await this.orderService.getUserOrders();
+      console.log('Pedidos obtenidos:', this.orders);
       this.filterOrders();
     } catch (error) {
       console.error('Error al cargar pedidos:', error);
@@ -1006,8 +1041,10 @@ export class OrdersPage implements OnInit {
   }
 
   goToLogin() {
+    // Guardar la URL actual para redirigir después del login
+    localStorage.setItem('redirectAfterLogin', '/orders');
     // Redirigir a la página de login
-    window.location.href = '/login';
+    this.router.navigate(['/login']);
   }
 
   getStatusColor(status: string): string {
