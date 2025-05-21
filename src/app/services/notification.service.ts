@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ToastController } from '@ionic/angular/standalone';
+import { ToastController, ToastButton } from '@ionic/angular/standalone';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 
@@ -37,25 +37,24 @@ export class NotificationService {
     const duration = options.duration || 2000;
     const position = options.position || 'top';
     
-    let message = options.message;
-    if (options.icon) {
-      message = `<ion-icon name="${options.icon}" style="margin-right: 8px; font-size: 1.2em; vertical-align: middle;"></ion-icon>${message}`;
-    }
+    const toastClass = `modern-toast toast-${type}${options.icon ? ' toast-with-icon' : ''}`;
+    
+    const buttons: ToastButton[] = options.action ? [{
+      side: 'end' as const,
+      text: options.action.text,
+      handler: options.action.handler
+    }] : [];
 
     const toast = await this.toastController.create({
-      message: message,
-      duration: duration,
-      position: position,
-      color: color,
-      cssClass: `app-notification toast-${type} ${options.icon ? 'toast-with-icon' : ''}`,
-      buttons: options.action ? [
-        {
-          text: options.action.text,
-          handler: options.action.handler,
-          role: 'action'
-        }
-      ] : []
+      message: options.message,
+      duration,
+      position,
+      color,
+      cssClass: toastClass,
+      buttons,
+      icon: options.icon
     });
+
     await toast.present();
     return toast;
   }
@@ -105,19 +104,16 @@ export class NotificationService {
   }
 
   async showAuthRequired(message: string = 'Debes iniciar sesión para continuar', action: () => void) {
-    const toast = await this.toastController.create({
-      message: `<ion-icon name="lock-closed-outline"></ion-icon> ${message}`,
+    return this.show({
+      message,
+      type: 'info',
+      icon: 'lock-closed',
       duration: 4000,
       position: 'bottom',
-      buttons: [
-        {
-          text: 'Iniciar sesión',
-          handler: action
-        }
-      ],
-      cssClass: 'auth-required-toast'
+      action: {
+        text: 'Iniciar sesión',
+        handler: action
+      }
     });
-    await toast.present();
-    return toast;
   }
 } 
