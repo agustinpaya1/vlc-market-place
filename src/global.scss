@@ -1172,53 +1172,93 @@ ion-alert {
 /* Modern Toast Notifications */
 .modern-toast {
   --min-height: 48px;
-  --border-radius: 12px;
-  --background: rgba(var(--ion-color-dark-rgb), 0.95);
-  --box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  --border-radius: 16px;
+  --background: #02A396;
+  --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  --color: white;
   font-size: 15px;
   max-width: 90%;
-  margin: 0 auto;
+  margin: 8px auto;
   padding: 0;
 
   &::part(wrapper) {
     padding: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--background);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+      0 4px 12px rgba(0, 0, 0, 0.15),
+      0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   &::part(message) {
-    padding: 12px 16px;
+    padding: 14px 18px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    color: var(--color);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
   }
 
   &::part(icon) {
-    font-size: 20px;
-    margin-inline-end: 8px;
+    font-size: 22px;
+    margin-inline-end: 12px;
     margin-inline-start: 0;
+    color: var(--color);
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
   }
 
   &.toast-success {
-    --background: rgba(var(--ion-color-success-rgb), 0.95);
+    --background: linear-gradient(135deg, 
+      rgba(2, 163, 150, 0.98), 
+      rgba(2, 128, 144, 0.98)
+    );
+    --color: white;
   }
 
   &.toast-error {
-    --background: rgba(var(--ion-color-danger-rgb), 0.95);
+    --background: linear-gradient(135deg, 
+      rgba(235, 68, 90, 0.98), 
+      rgba(207, 60, 79, 0.98)
+    );
+    --color: white;
   }
 
   &.toast-warning {
-    --background: rgba(var(--ion-color-warning-rgb), 0.95);
-    --color: var(--ion-color-warning-contrast);
+    --background: linear-gradient(135deg, 
+      rgba(255, 196, 9, 0.98), 
+      rgba(255, 177, 4, 0.98)
+    );
+    --color: #000000;
   }
 
   &.toast-info {
-    --background: rgba(var(--ion-color-primary-rgb), 0.95);
+    --background: linear-gradient(135deg, 
+      rgba(2, 128, 144, 0.98), 
+      rgba(2, 109, 122, 0.98)
+    );
+    --color: white;
   }
 
   ion-button {
-    --color: var(--ion-color-light);
-    font-weight: 500;
+    --color: var(--color);
+    font-weight: 600;
     text-transform: none;
     margin: 0;
-    padding: 0 16px;
+    padding: 0 18px;
     height: 100%;
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.3);
+    }
     
     &::part(native) {
       padding: 0 12px;
@@ -1233,9 +1273,76 @@ ion-alert {
   @media (max-width: 576px) {
     max-width: 94%;
     font-size: 14px;
+    --min-height: 44px;
+    margin: 8px auto;
 
     &::part(icon) {
-      font-size: 18px;
+      font-size: 20px;
+      margin-inline-end: 10px;
+    }
+
+    &::part(message) {
+      padding: 12px 16px;
+    }
+
+    ion-button {
+      padding: 0 14px;
+    }
+  }
+
+  /* Animación de entrada */
+  animation: toastSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Soporte para modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .modern-toast {
+    --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+
+    &::part(wrapper) {
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.25),
+        0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    &.toast-success {
+      --background: linear-gradient(135deg, 
+        rgba(2, 163, 150, 0.98), 
+        rgba(2, 128, 144, 0.98)
+      );
+    }
+
+    &.toast-error {
+      --background: linear-gradient(135deg, 
+        rgba(235, 68, 90, 0.98), 
+        rgba(207, 60, 79, 0.98)
+      );
+    }
+
+    &.toast-warning {
+      --background: linear-gradient(135deg, 
+        rgba(255, 196, 9, 0.98), 
+        rgba(255, 177, 4, 0.98)
+      );
+    }
+
+    &.toast-info {
+      --background: linear-gradient(135deg, 
+        rgba(2, 128, 144, 0.98), 
+        rgba(2, 109, 122, 0.98)
+      );
     }
   }
 }

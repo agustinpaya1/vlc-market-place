@@ -22,23 +22,17 @@ export class NotificationService {
   constructor(private toastController: ToastController) {}
 
   private getColorByType(type: NotificationType = 'info'): string {
-    const colors: Record<NotificationType, string> = {
-      success: 'success',
-      error: 'danger',
-      warning: 'warning',
-      info: 'primary'
-    };
-    return colors[type];
+    // No necesitamos este método ya que usaremos nuestras propias clases CSS
+    return '';
   }
 
   async show(options: NotificationOptions) {
     const type = options.type || 'info';
-    const color = this.getColorByType(type);
     const duration = options.duration || 2000;
     const position = options.position || 'top';
     
-    const toastClass = `modern-toast toast-${type}${options.icon ? ' toast-with-icon' : ''}`;
-    
+    const toastClass = `modern-toast toast-${type}`;
+
     const buttons: ToastButton[] = options.action ? [{
       side: 'end' as const,
       text: options.action.text,
@@ -49,10 +43,10 @@ export class NotificationService {
       message: options.message,
       duration,
       position,
-      color,
       cssClass: toastClass,
       buttons,
-      icon: options.icon
+      icon: options.icon,
+      color: 'none' // Esto evita que Ionic aplique sus colores por defecto
     });
 
     await toast.present();
