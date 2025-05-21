@@ -1,9 +1,14 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/home"></ion-back-button>
     </ion-buttons>
     <ion-title>Mis Pedidos</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="showGeneralHelp()">
+        <ion-icon name="help-circle-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -20,16 +25,16 @@
   </div>
 
   <!-- Filters -->
-  <ion-segment [(ngModel)]="selectedFilter" (ionChange)="filterOrders()" class="ion-padding">
-    <ion-segment-button value="all">
+  <ion-segment [(ngModel)]="selectedFilter" (ionChange)="filterOrders()" class="orders-tabs">
+    <ion-segment-button value="all" class="tab-button">
       <ion-label>Todos</ion-label>
       <ion-badge color="primary">{{orders.length}}</ion-badge>
     </ion-segment-button>
-    <ion-segment-button value="pending">
+    <ion-segment-button value="pending" class="tab-button">
       <ion-label>Pendientes</ion-label>
       <ion-badge color="warning">{{getPendingOrdersCount()}}</ion-badge>
     </ion-segment-button>
-    <ion-segment-button value="delivered">
+    <ion-segment-button value="delivered" class="tab-button">
       <ion-label>Entregados</ion-label>
       <ion-badge color="success">{{getDeliveredOrdersCount()}}</ion-badge>
     </ion-segment-button>
@@ -38,56 +43,68 @@
   <!-- Orders list -->
   <div class="orders-container">
     <div class="orders-list">
-      <ion-card class="order-card" *ngFor="let order of filteredOrders">
+      <ion-card class="order-card" *ngFor="let order of filteredOrders" (click)="showOrderDetails(order)">
         <div class="order-header">
-          <h2>#{{order.id.substring(0,8).toUpperCase()}}</h2>
-          <div class="order-status">
-            <span class="status-badge" [ngClass]="{
-              'pending': order.status === 'pending',
-              'delivered': order.status === 'delivered'
-            }">
-              {{order.status === 'pending' ? 'En preparación' : 'Entregado'}}
-            </span>
+          <div class="order-id">
+            <ion-icon name="receipt-outline"></ion-icon>
+            #{{order.id.substring(0,8).toUpperCase()}}
+          </div>
+          <div class="order-status" [ngClass]="order.status">
+            <ion-icon [name]="order.status === 'pending' ? 'time-outline' : 'checkmark-circle-outline'"></ion-icon>
+            {{getStatusLabel(order.status)}}
           </div>
         </div>
 
         <div class="order-content">
-          <div class="order-info">
-            <p>
-              <ion-icon name="calendar-outline"></ion-icon>
-              {{order.created_at | date:'dd/MM/yyyy HH:mm'}}
-            </p>
-            <p>
-              <ion-icon name="storefront-outline"></ion-icon>
-              {{order.store_name || 'Tienda local'}}
-            </p>
+          <div class="store-info">
+            <div class="store-avatar">
+              <ion-icon name="storefront-outline" class="store-icon"></ion-icon>
+            </div>
+            <div class="store-details">
+              <div class="store-name">{{getStoreNames(order)}}</div>
+              <div class="order-date">
+                <ion-icon name="calendar-outline"></ion-icon>
+                {{order.date | date:'dd/MM/yyyy HH:mm'}}
+              </div>
+            </div>
+            <div class="order-total">
+              {{ order.total_price | currency:'EUR' }}
+            </div>
           </div>
-          <div class="order-total">
-            <span class="label">Total:</span>
-            <span class="value total">{{ order.total_price | currency:'EUR' }}</span>
+
+          <div class="products-list">
+            <ng-container *ngIf="order.items && order.items.length > 0">
+              <div class="product-item" *ngFor="let item of order.items | slice:0:3">
+                <img [src]="getProductImage(item)" [alt]="getProductName(item)">
+                <div class="product-quantity" *ngIf="item.quantity > 1">
+                  x{{item.quantity}}
+                </div>
+              </div>
+              <div class="product-item more" *ngIf="order.items.length > 3">
+                <div class="more-count">+{{order.items.length - 3}}</div>
+              </div>
+            </ng-container>
           </div>
         </div>
 
-        <div class="order-actions ion-padding">
+        <div class="order-actions" *ngIf="order.status === 'pending'">
           <ion-button 
-            *ngIf="order.status === 'pending'"
-            class="receive-button" 
-            color="success" 
+            class="button-received" 
+            expand="block"
             (click)="confirmOrderDelivery(order.id, $event)">
             <ion-icon name="checkmark-circle" slot="start"></ion-icon>
             Marcar como recibido
           </ion-button>
-          <ion-button 
-            class="qr-button" 
-            color="primary" 
-            [routerLink]="['/pickup', order.id]"
-            [queryParams]="{ orderId: order.id, orderDetails: 'Total: ' + (order.total_price | currency:'EUR') }">
-            <ion-icon name="qr-code-outline" slot="start"></ion-icon>
-            Ver QR para recoger
-          </ion-button>
         </div>
       </ion-card>
     </div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" *ngIf="!loading && filteredOrders.length === 0">
+    <ion-icon name="receipt-outline" class="empty-icon"></ion-icon>
+    <h2>No hay pedidos {{selectedFilter === 'all' ? '' : selectedFilter === 'pending' ? 'pendientes' : 'entregados'}}</h2>
+    <p>Cuando realices un pedido, aparecerá aquí</p>
   </div>
 
   <!-- Loading spinner -->
@@ -97,9 +114,10 @@
   </div>
 
   <!-- Error message -->
-  <ion-card *ngIf="error" color="danger">
+  <ion-card *ngIf="error" class="error-card">
     <ion-card-content>
-      {{error}}
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      <p>{{error}}</p>
     </ion-card-content>
   </ion-card>
 </ion-content>
