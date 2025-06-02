@@ -76,7 +76,7 @@ export class RegisterPage implements OnInit, OnDestroy {
     
     this.registerForm = this.formBuilder.group({
       type: ['user', Validators.required],
-      fullName: ['', [Validators.required, Validators.minLength(3)]],
+      name: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       businessName: [''],
@@ -144,14 +144,14 @@ export class RegisterPage implements OnInit, OnDestroy {
         }
 
         console.log('Intentando registrar con datos:', {
-          fullName: formValue.fullName,
+          name: formValue.name,
           email: formValue.email,
           type: formValue.type,
           businessData
         });
 
         const success = await this.authService.register(
-          formValue.fullName,
+          formValue.name,
           formValue.email,
           formValue.password,
           formValue.type,

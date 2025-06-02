@@ -501,4 +501,51 @@ $dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
   background-color: transparent !important;
   max-width: 100%;
   mix-blend-mode: normal;
+}
+
+.menu-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+  --border-radius: 12px;
+  margin: 8px 16px;
+  --background: var(--ion-color-light);
+  
+  &:hover {
+    --background: var(--ion-color-light-shade);
+  }
+
+  ion-icon {
+    color: var(--ion-color-primary);
+    font-size: 20px;
+  }
+
+  ion-label {
+    font-weight: 500;
+    font-size: 16px;
+  }
+}
+
+ion-list {
+  background: transparent;
+  padding: 8px 0;
+}
+
+// Estilo especial para el botón de administrar tienda
+ion-item[lines="none"].menu-item {
+  --background: var(--ion-color-primary-light, rgba(var(--ion-color-primary-rgb), 0.1));
+  
+  &:hover {
+    --background: var(--ion-color-primary-light-shade, rgba(var(--ion-color-primary-rgb), 0.2));
+  }
+
+  ion-icon {
+    color: var(--ion-color-primary);
+  }
+
+  ion-label {
+    color: var(--ion-color-primary-shade);
+    font-weight: 600;
+  }
 } 

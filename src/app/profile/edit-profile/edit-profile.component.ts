@@ -24,8 +24,8 @@ import { ToastController } from '@ionic/angular';
           <ion-item>
             <ion-label position="stacked">Nombre completo</ion-label>
             <ion-input
-              [(ngModel)]="userData.fullName"
-              name="fullName"
+              [(ngModel)]="userData.name"
+              name="name"
               type="text"
               required
             ></ion-input>
@@ -118,7 +118,7 @@ export class EditProfileComponent implements OnInit {
     const user = await this.authService.getCurrentUser();
     if (user) {
       this.userData = {
-        fullName: user.fullName,
+        name: user.name,
         phone: user.phone,
         address: user.address
       };

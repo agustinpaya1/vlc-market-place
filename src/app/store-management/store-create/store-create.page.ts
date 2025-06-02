@@ -126,6 +126,7 @@ export class StoreCreatePage {
   ) {}
 
   async createStore() {
+    console.log('StoreCreatePage - Creating store');
     if (!this.store.name) {
       await this.showToast('El nombre de la tienda es obligatorio', 'danger');
       return;
@@ -137,19 +138,21 @@ export class StoreCreatePage {
         throw new Error('Usuario no autenticado');
       }
 
+      console.log('StoreCreatePage - Current user:', user);
       const newStore: Partial<Store> = {
         ...this.store,
         owner_id: user.id,
         created_at: new Date().toISOString()
       };
 
-      // Aquí implementarías la lógica para crear la tienda
-      // await this.storeService.createStore(newStore);
+      console.log('StoreCreatePage - Creating store with data:', newStore);
+      const createdStore = await this.storeService.createStore(newStore);
+      console.log('StoreCreatePage - Store created successfully:', createdStore);
       
       await this.showToast('Tienda creada correctamente', 'success');
       this.router.navigate(['/tabs/store-management']);
     } catch (error) {
-      console.error('Error al crear la tienda:', error);
+      console.error('StoreCreatePage - Error creating store:', error);
       await this.showToast('Error al crear la tienda', 'danger');
     }
   }

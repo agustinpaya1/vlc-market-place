@@ -1,127 +1,42 @@
 <ion-header>
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/tabs/profile"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Gestión de Tiendas</ion-title>
-  </ion-toolbar>
-
-  <ion-toolbar>
-    <ion-segment [(ngModel)]="selectedSegment" (ionChange)="segmentChanged($event)">
-      <ion-segment-button value="active">
-        <ion-label>Activas</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="stats">
-        <ion-label>Estadísticas</ion-label>
-      </ion-segment-button>
-    </ion-segment>
+    <ion-title>Administración de Tiendas</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <div *ngIf="isLoading" class="ion-text-center">
-    <ion-spinner></ion-spinner>
-    <p>Cargando tiendas...</p>
-  </div>
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Bienvenido a la Administración</ion-card-title>
+      <ion-card-subtitle>Gestiona tus tiendas desde aquí</ion-card-subtitle>
+    </ion-card-header>
 
-  <div *ngIf="!isLoading">
-    <!-- Vista de tiendas activas -->
-    <div *ngIf="selectedSegment === 'active'">
-      <ion-list *ngIf="stores.length > 0">
-        <ion-item-sliding *ngFor="let store of stores">
-          <ion-item>
-            <ion-thumbnail slot="start">
-              <img [src]="store.image_url || 'assets/store-placeholder.png'" alt="Tienda">
-            </ion-thumbnail>
-            <ion-label>
-              <h2>{{ store.name }}</h2>
-              <p>{{ store.description || 'Sin descripción' }}</p>
-              <ion-badge [color]="store.isOpen ? 'success' : 'medium'">
-                {{ store.isOpen ? 'Abierta' : 'Cerrada' }}
-              </ion-badge>
-            </ion-label>
-            <ion-toggle 
-              [(ngModel)]="store.isOpen"
-              (ionChange)="toggleStoreStatus(store)"
-              slot="end">
-            </ion-toggle>
-          </ion-item>
-
-          <ion-item-options side="end">
-            <ion-item-option (click)="editStore(store.id)" color="primary">
-              <ion-icon slot="icon-only" name="create"></ion-icon>
-            </ion-item-option>
-            <ion-item-option (click)="viewStoreProducts(store.id)" color="tertiary">
-              <ion-icon slot="icon-only" name="cube"></ion-icon>
-            </ion-item-option>
-            <ion-item-option (click)="viewStoreOrders(store.id)" color="success">
-              <ion-icon slot="icon-only" name="receipt"></ion-icon>
-            </ion-item-option>
-          </ion-item-options>
-        </ion-item-sliding>
+    <ion-card-content>
+      <p>Desde este panel podrás:</p>
+      <ion-list>
+        <ion-item>
+          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+          <ion-label>Crear nuevas tiendas</ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="create-outline" slot="start"></ion-icon>
+          <ion-label>Editar tiendas existentes</ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="bag-check-outline" slot="start"></ion-icon>
+          <ion-label>Gestionar productos</ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="receipt-outline" slot="start"></ion-icon>
+          <ion-label>Ver pedidos</ion-label>
+        </ion-item>
       </ion-list>
+    </ion-card-content>
+  </ion-card>
 
-      <!-- Mensaje cuando no hay tiendas -->
-      <div *ngIf="stores.length === 0" class="ion-text-center ion-padding">
-        <ion-icon name="storefront" style="font-size: 48px; color: var(--ion-color-medium)"></ion-icon>
-        <h2>No tienes tiendas</h2>
-        <p>Crea tu primera tienda para empezar a vender</p>
-      </div>
-    </div>
-
-    <!-- Vista de estadísticas -->
-    <div *ngIf="selectedSegment === 'stats'">
-      <ion-grid>
-        <ion-row>
-          <ion-col size="12" *ngFor="let store of stores">
-            <ion-card>
-              <ion-card-header>
-                <ion-card-title>{{ store.name }}</ion-card-title>
-                <ion-card-subtitle>Estadísticas generales</ion-card-subtitle>
-              </ion-card-header>
-
-              <ion-card-content>
-                <ion-list lines="none">
-                  <ion-item>
-                    <ion-icon name="cube" slot="start" color="primary"></ion-icon>
-                    <ion-label>
-                      <h3>Productos</h3>
-                      <p>{{ store.totalProducts || 0 }}</p>
-                    </ion-label>
-                  </ion-item>
-
-                  <ion-item>
-                    <ion-icon name="receipt" slot="start" color="success"></ion-icon>
-                    <ion-label>
-                      <h3>Pedidos</h3>
-                      <p>{{ store.totalOrders || 0 }}</p>
-                    </ion-label>
-                  </ion-item>
-
-                  <ion-item>
-                    <ion-icon name="cash" slot="start" color="warning"></ion-icon>
-                    <ion-label>
-                      <h3>Ingresos</h3>
-                      <p>{{ store.totalRevenue | currency:'EUR':'symbol':'1.2-2' || '0.00 €' }}</p>
-                    </ion-label>
-                  </ion-item>
-                </ion-list>
-
-                <ion-button expand="block" fill="clear" (click)="viewStoreDetails(store.id)">
-                  Ver detalles completos
-                </ion-button>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
-    </div>
-
-    <!-- Botón flotante para crear nueva tienda -->
-    <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-      <ion-fab-button (click)="createStore()">
-        <ion-icon name="add"></ion-icon>
-      </ion-fab-button>
-    </ion-fab>
-  </div>
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button>
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content> 

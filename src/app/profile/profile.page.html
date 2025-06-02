@@ -67,6 +67,13 @@
         <ion-icon name="storefront" style="margin-right: 4px;"></ion-icon>
         Propietario de Tienda
       </div>
+      <!-- Botón para crear tienda si no es propietario -->
+      <div *ngIf="!user.isStoreOwner" class="create-store-section" style="margin: 16px 0;">
+        <ion-button expand="block" color="primary" (click)="createStore()">
+          <ion-icon name="storefront" slot="start"></ion-icon>
+          Crear mi Tienda
+        </ion-button>
+      </div>
     </div>
 
     <ion-list lines="full" class="user-info-list hardware-accelerated">
@@ -89,10 +96,14 @@
       </ion-item>
     </ion-list>
 
-    <ion-list lines="full" class="user-menu-list hardware-accelerated">
-      <ion-item *ngFor="let item of menuItems; trackBy: trackById" (click)="navigate(item.route)" detail>
-        <ion-icon [name]="item.icon" slot="start"></ion-icon>
-        <ion-label>{{ item.label }}</ion-label>
+    <ion-list lines="none">
+      <!-- Regular Menu Items -->
+      <ion-item *ngFor="let item of menuItems; trackBy: trackById" 
+                class="menu-item" 
+                (click)="navigate(item.route)">
+        <ion-icon slot="start" [name]="item.icon"></ion-icon>
+        <ion-label>{{item.label}}</ion-label>
+        <ion-icon slot="end" name="chevron-forward"></ion-icon>
       </ion-item>
     </ion-list>
 

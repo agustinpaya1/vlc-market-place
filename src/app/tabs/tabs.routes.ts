@@ -72,7 +72,7 @@ export const routes: Routes = [
           import('../locations/locations.page').then((m) => m.LocationsPage),
       },
       {
-        path: 'store-management',
+        path: 'administracion',
         loadComponent: () =>
           import('../store-management/store-management.page').then((m) => m.StoreManagementPage),
       },

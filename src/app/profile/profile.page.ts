@@ -198,34 +198,63 @@ export class ProfilePage implements OnInit, OnDestroy {
   async loadUserData(userData: User) {
     console.log('ProfilePage - Loading user data:', userData);
     
-    // Verificar si el usuario es propietario de alguna tienda
-    const userStores = await this.storeService.getUserStores(userData.id);
-    const isStoreOwner = userStores.length > 0;
-    
-    this.user = {
-      id: userData.id,
-      name: userData.fullName || userData.email.split('@')[0],
-      email: userData.email,
-      phone: userData.phone || '',
-      address: userData.address || '',
-      photoUrl: userData.photoUrl,
-      isStoreOwner
-    };
+    try {
+      // Verificar si el usuario es propietario de alguna tienda
+      const stores = await this.storeService.getUserStores(userData.id);
+      const isStoreOwner = stores.length > 0;
+      console.log('ProfilePage - User stores:', stores);
+      console.log('ProfilePage - User is store owner:', isStoreOwner);
+      
+      // Actualizar el usuario con los datos y el estado de propietario
+      this.user = {
+        ...userData,
+        name: userData.name || 'Usuario',
+        isStoreOwner
+      };
 
-    // Si es propietario de tienda, añadir el botón de administrar tienda al menú
-    if (isStoreOwner && !this.menuItems.some(item => item.id === 'manage-store')) {
+      // Actualizar los elementos del menú basado en si es propietario
       this.menuItems = [
-        {
-          id: 'manage-store',
-          icon: 'storefront',
-          label: 'Administrar Tienda',
-          route: '/tabs/store-management'
-        },
-        ...this.menuItems
+        ...(isStoreOwner ? [{ 
+          id: 'store-management', 
+          icon: 'storefront', 
+          label: 'Administrar Tiendas', 
+          route: '/tabs/administracion' 
+        }] : []),
+        { id: 'orders', icon: 'bag', label: 'Mis Pedidos', route: '/tabs/orders' },
+        { id: 'favorites', icon: 'heart', label: 'Favoritos', route: '/tabs/favorites' },
+        { id: 'invoices', icon: 'receipt', label: 'Facturas', route: '/tabs/invoices' },
+        { id: 'settings', icon: 'settings', label: 'Configuración', route: '/tabs/settings' }
       ];
-    }
 
-    this.changeDetector.detectChanges();
+      console.log('ProfilePage - Updated menu items:', this.menuItems);
+      this.changeDetector.detectChanges();
+    } catch (error: any) {
+      console.error('ProfilePage - Error loading user data:', error);
+      const errorToast = await this.toastController.create({
+        message: 'Error al cargar los datos: ' + (error.message || 'Error desconocido'),
+        duration: 3000,
+        position: 'bottom',
+        color: 'danger'
+      });
+      await errorToast.present();
+
+      // Si hay un error, asumimos que el usuario no es propietario
+      this.user = {
+        ...userData,
+        name: userData.name || 'Usuario',
+        isStoreOwner: false
+      };
+      
+      // Menú por defecto sin opción de administrar tiendas
+      this.menuItems = [
+        { id: 'orders', icon: 'bag', label: 'Mis Pedidos', route: '/tabs/orders' },
+        { id: 'favorites', icon: 'heart', label: 'Favoritos', route: '/tabs/favorites' },
+        { id: 'invoices', icon: 'receipt', label: 'Facturas', route: '/tabs/invoices' },
+        { id: 'settings', icon: 'settings', label: 'Configuración', route: '/tabs/settings' }
+      ];
+      
+      this.changeDetector.detectChanges();
+    }
   }
 
   editProfile() {
@@ -245,8 +274,53 @@ export class ProfilePage implements OnInit, OnDestroy {
     this.router.navigate(['/tabs/stores'], { replaceUrl: true });
   }
 
-  navigate(route: string) {
-    this.router.navigate([route]);
+  async navigate(route: string) {
+    console.log('ProfilePage - Intentando navegar a:', route);
+    
+    // Mostrar notificación de inicio de navegación
+    const loadingToast = await this.toastController.create({
+      message: `Navegando a ${route}...`,
+      duration: 2000,
+      position: 'bottom',
+      color: 'primary'
+    });
+    await loadingToast.present();
+
+    this.ngZone.run(async () => {
+      try {
+        // Usar la ruta tal como viene
+        console.log('ProfilePage - Ruta completa:', route);
+        
+        // Intentar la navegación
+        const result = await this.router.navigate([route], { 
+          replaceUrl: false,
+          onSameUrlNavigation: 'reload'
+        });
+        
+        console.log('ProfilePage - Resultado de la navegación:', result);
+        
+        if (result) {
+          const successToast = await this.toastController.create({
+            message: 'Navegación exitosa',
+            duration: 2000,
+            position: 'bottom',
+            color: 'success'
+          });
+          await successToast.present();
+        } else {
+          throw new Error('La navegación falló');
+        }
+      } catch (error: any) {
+        console.error('ProfilePage - Error en la navegación:', error);
+        const errorToast = await this.toastController.create({
+          message: 'Error en la navegación: ' + (error.message || 'Error desconocido'),
+          duration: 3000,
+          position: 'bottom',
+          color: 'danger'
+        });
+        await errorToast.present();
+      }
+    });
   }
 
   goToLogin() {
@@ -438,5 +512,14 @@ export class ProfilePage implements OnInit, OnDestroy {
       });
       await toast.present();
     }
+  }
+
+  createStore() {
+    console.log('ProfilePage - Creating store');
+    this.router.navigate(['/tabs/store-create']).then(() => {
+      console.log('ProfilePage - Navigation to store creation completed');
+    }).catch(error => {
+      console.error('ProfilePage - Navigation error:', error);
+    });
   }
 } 

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
@@ -106,7 +106,8 @@ export class StoreManagementPage implements OnInit {
     private authService: AuthService,
     private storeService: StoreService,
     private router: Router,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private changeDetector: ChangeDetectorRef
   ) {
     addIcons({
       create,
@@ -120,19 +121,25 @@ export class StoreManagementPage implements OnInit {
   }
 
   async ngOnInit() {
+    console.log('StoreManagementPage - Initializing');
     await this.loadStores();
   }
 
   async loadStores() {
+    console.log('StoreManagementPage - Loading stores');
     this.isLoading = true;
     try {
       const user = await this.authService.getCurrentUser();
       if (!user) {
+        console.log('StoreManagementPage - No user found, redirecting to login');
         this.router.navigate(['/login']);
         return;
       }
 
+      console.log('StoreManagementPage - Loading stores for user:', user.id);
       const stores = await this.storeService.getUserStores(user.id);
+      console.log('StoreManagementPage - Loaded stores:', stores);
+
       // Aquí podríamos cargar estadísticas adicionales para cada tienda
       this.stores = await Promise.all(stores.map(async (store) => {
         try {
@@ -145,13 +152,15 @@ export class StoreManagementPage implements OnInit {
             totalRevenue: Math.floor(Math.random() * 10000),
             isOpen: Math.random() > 0.5
           };
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Error al cargar estadísticas para la tienda ${store.id}:`, error);
           return store;
         }
       }));
-    } catch (error) {
-      console.error('Error al cargar las tiendas:', error);
+      console.log('StoreManagementPage - Processed stores with stats:', this.stores);
+      this.changeDetector.detectChanges();
+    } catch (error: any) {
+      console.error('StoreManagementPage - Error loading stores:', error);
       const toast = await this.toastController.create({
         message: 'Error al cargar las tiendas',
         duration: 2000,
@@ -160,6 +169,7 @@ export class StoreManagementPage implements OnInit {
       await toast.present();
     } finally {
       this.isLoading = false;
+      this.changeDetector.detectChanges();
     }
   }
 
@@ -173,7 +183,8 @@ export class StoreManagementPage implements OnInit {
         color: 'success'
       });
       await toast.present();
-    } catch (error) {
+      this.changeDetector.detectChanges();
+    } catch (error: any) {
       console.error('Error al cambiar el estado de la tienda:', error);
       const toast = await this.toastController.create({
         message: 'Error al cambiar el estado de la tienda',
@@ -185,26 +196,53 @@ export class StoreManagementPage implements OnInit {
   }
 
   editStore(storeId: string) {
-    this.router.navigate(['/tabs/store-edit', storeId]);
+    console.log('StoreManagementPage - Navigating to edit store:', storeId);
+    this.router.navigate(['/tabs/store-edit', storeId], { replaceUrl: false }).then(() => {
+      console.log('StoreManagementPage - Navigation to edit store completed');
+    }).catch(error => {
+      console.error('StoreManagementPage - Navigation error:', error);
+    });
   }
 
   viewStoreDetails(storeId: string) {
-    this.router.navigate(['/tabs/store', storeId]);
+    console.log('StoreManagementPage - Navigating to store details:', storeId);
+    this.router.navigate(['/tabs/store', storeId], { replaceUrl: false }).then(() => {
+      console.log('StoreManagementPage - Navigation to store details completed');
+    }).catch(error => {
+      console.error('StoreManagementPage - Navigation error:', error);
+    });
   }
 
   viewStoreProducts(storeId: string) {
-    this.router.navigate(['/tabs/store-products', storeId]);
+    console.log('StoreManagementPage - Navigating to store products:', storeId);
+    this.router.navigate(['/tabs/store-products', storeId], { replaceUrl: false }).then(() => {
+      console.log('StoreManagementPage - Navigation to store products completed');
+    }).catch(error => {
+      console.error('StoreManagementPage - Navigation error:', error);
+    });
   }
 
   viewStoreOrders(storeId: string) {
-    this.router.navigate(['/tabs/store-orders', storeId]);
+    console.log('StoreManagementPage - Navigating to store orders:', storeId);
+    this.router.navigate(['/tabs/store-orders', storeId], { replaceUrl: false }).then(() => {
+      console.log('StoreManagementPage - Navigation to store orders completed');
+    }).catch(error => {
+      console.error('StoreManagementPage - Navigation error:', error);
+    });
   }
 
   async createStore() {
-    this.router.navigate(['/tabs/store-create']);
+    console.log('StoreManagementPage - Navigating to create store');
+    this.router.navigate(['/tabs/store-create'], { replaceUrl: false }).then(() => {
+      console.log('StoreManagementPage - Navigation to create store completed');
+    }).catch(error => {
+      console.error('StoreManagementPage - Navigation error:', error);
+    });
   }
 
   segmentChanged(event: any) {
+    console.log('StoreManagementPage - Segment changed:', event.detail.value);
     this.selectedSegment = event.detail.value;
+    this.changeDetector.detectChanges();
   }
 } 

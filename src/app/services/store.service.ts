@@ -68,35 +68,50 @@ export class StoreService {
 
   async getUserStores(userId: string): Promise<Store[]> {
     try {
+      console.log('StoreService - Getting stores for user:', userId);
       const { data: stores, error } = await this.supabase
         .from('stores')
         .select('*')
         .eq('owner_id', userId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('StoreService - Error getting user stores:', error);
+        throw error;
+      }
 
+      if (!stores || stores.length === 0) {
+        console.log('StoreService - No stores found for user');
+        return [];
+      }
+
+      console.log('StoreService - Found stores:', stores);
       stores.forEach((store: Store) => this.storeCache.set(store.id, store));
       return stores;
     } catch (error) {
-      console.error('Error al obtener las tiendas del usuario:', error);
+      console.error('StoreService - Error getting user stores:', error);
       throw error;
     }
   }
 
   async createStore(store: Partial<Store>): Promise<Store> {
     try {
+      console.log('StoreService - Creating store:', store);
       const { data, error } = await this.supabase
         .from('stores')
         .insert([store])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('StoreService - Error creating store:', error);
+        throw error;
+      }
 
+      console.log('StoreService - Store created successfully:', data);
       this.storeCache.set(data.id, data);
       return data;
     } catch (error) {
-      console.error('Error al crear la tienda:', error);
+      console.error('StoreService - Error creating store:', error);
       throw error;
     }
   }
@@ -150,16 +165,25 @@ export class StoreService {
 
   async hasUserStores(userId: string): Promise<boolean> {
     try {
-      const { count, error } = await this.supabase
+      console.log('StoreService - Checking if user has stores. User ID:', userId);
+      
+      // Primero intentamos obtener las tiendas directamente
+      const { data: stores, error } = await this.supabase
         .from('stores')
-        .select('*', { count: 'exact', head: true })
+        .select('id')
         .eq('owner_id', userId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('StoreService - Error checking user stores:', error);
+        throw error;
+      }
 
-      return (count || 0) > 0;
+      const hasStores = stores && stores.length > 0;
+      console.log('StoreService - User stores found:', stores);
+      console.log('StoreService - Has stores:', hasStores);
+      return hasStores;
     } catch (error) {
-      console.error('Error al verificar si el usuario tiene tiendas:', error);
+      console.error('StoreService - Error checking user stores:', error);
       return false;
     }
   }

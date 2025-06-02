@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { AuthService } from './auth.service';
+import { AuthService, User } from './auth.service';
 import { SupabaseService } from './supabase.service';
 import { NotificationService } from './notification.service';
 
@@ -266,7 +266,6 @@ export class FavoritesService {
             .from('profiles')
             .insert({
               id: user.id,
-              full_name: user.fullName || '',
               updated_at: new Date().toISOString()
             });
             
@@ -524,7 +523,6 @@ export class FavoritesService {
             .from('profiles')
             .insert({
               id: user.id,
-              full_name: user.user_metadata?.['full_name'] || '',
               updated_at: new Date().toISOString()
             });
             

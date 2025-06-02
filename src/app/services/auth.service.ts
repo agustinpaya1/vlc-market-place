@@ -6,12 +6,12 @@ import { SupabaseService } from './supabase.service';
 export interface User {
   id: string;
   email: string;
-  fullName?: string;
+  name?: string;
+  phone?: string;
+  address?: string;
   photoUrl?: string;
   type?: string;
   vlcoinBalance?: number;
-  phone?: string;
-  address?: string;
 }
 
 export interface BusinessProfile {
@@ -58,7 +58,7 @@ export class AuthService {
           const userObj = {
             id: session.user.id,
             email: session.user.email || '',
-            fullName: userData?.['full_name'] || session.user.user_metadata?.['full_name'] || '',
+            name: userData?.['full_name'] || session.user.user_metadata?.['full_name'] || '',
             photoUrl: userData?.['photo_url'],
             type: userData?.['type'] || 'user',
             vlcoinBalance: userData?.['vlcoin_balance'] || 0,
@@ -74,7 +74,7 @@ export class AuthService {
           const userObj = {
             id: session.user.id,
             email: session.user.email || '',
-            fullName: session.user.user_metadata?.['full_name'] || ''
+            name: session.user.user_metadata?.['full_name'] || ''
           };
           this.user.next(userObj);
           console.log('AuthService - Usuario inicializado con datos básicos:', userObj);
@@ -136,7 +136,7 @@ export class AuthService {
           this.user.next({
             id: session.user.id,
             email: session.user.email || '',
-            fullName: userData?.['full_name'] || session.user.user_metadata?.['full_name'] || '',
+            name: userData?.['full_name'] || session.user.user_metadata?.['full_name'] || '',
             photoUrl: userData?.['photo_url'],
             type: userData?.['type'] || 'user',
             vlcoinBalance: userData?.['vlcoin_balance'] || 0,
@@ -148,7 +148,7 @@ export class AuthService {
           this.user.next({
             id: session.user.id,
             email: session.user.email || '',
-            fullName: session.user.user_metadata?.['full_name'] || ''
+            name: session.user.user_metadata?.['full_name'] || ''
           });
         }
       } else {
@@ -163,9 +163,9 @@ export class AuthService {
     });
   }
 
-  async register(fullName: string, email: string, password: string, type: 'user' | 'business', businessData?: BusinessProfile): Promise<boolean> {
+  async register(name: string, email: string, password: string, type: 'user' | 'business', businessData?: BusinessProfile): Promise<boolean> {
     try {
-      console.log('Iniciando registro con:', { fullName, email, type });
+      console.log('Iniciando registro con:', { name, email, type });
 
       // Paso 1: Registrar al usuario pero NO crear perfiles
       const { data: authData, error: authError } = await this.supabaseService.getClient().auth.signUp({
@@ -173,7 +173,7 @@ export class AuthService {
         password,
         options: {
           data: { 
-            full_name: fullName,
+            full_name: name,
             user_type: type 
           }
         }
@@ -325,14 +325,14 @@ export class AuthService {
       return {
         id: user.id,
         email: user.email || '',
-        fullName: user.user_metadata?.['full_name']
+        name: user.user_metadata?.['full_name']
       };
     }
 
     return {
       id: user.id,
       email: user.email || '',
-      fullName: userData?.['full_name'] || user.user_metadata?.['full_name'],
+      name: userData?.['full_name'] || user.user_metadata?.['full_name'],
       photoUrl: userData?.['photo_url'],
       type: userData?.['type'] || 'user',
       vlcoinBalance: userData?.['vlcoin_balance'] || 0,
@@ -377,7 +377,7 @@ export class AuthService {
       if (!currentUser) throw new Error('No hay usuario autenticado');
 
       const profileData: any = {
-        full_name: updates.fullName,
+        full_name: updates.name,
         phone: updates.phone,
         address: updates.address
       };
