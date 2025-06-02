@@ -4,13 +4,20 @@ import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface Store {
   id: string;
-  name: string;
-  description?: string;
-  address?: string;
-  image_url?: string;
-  created_at?: string;
-  category?: string;
-  owner_id?: string;
+  owner_id: string;
+  name: string | null;
+  description: string | null;
+  created_at: string;
+  image_url: string | null;
+  open_time: string | null;
+  category: string | null;
+  has_offers: boolean;
+  rating: number;
+  location_text: string | null;
+  location: any | null; // geometry type
+  latitude: number | null;
+  longitude: number | null;
+  coordinates: any | null; // geometry type
 }
 
 @Injectable({
@@ -42,7 +49,6 @@ export class StoreService {
 
   async getStoreById(id: string): Promise<Store | null> {
     try {
-      // Primero intentamos obtener del cache
       if (this.storeCache.has(id)) {
         return this.storeCache.get(id)!;
       }
@@ -96,9 +102,18 @@ export class StoreService {
   async createStore(store: Partial<Store>): Promise<Store> {
     try {
       console.log('StoreService - Creating store:', store);
+      
+      // Ensure default values match the database schema
+      const storeData = {
+        ...store,
+        has_offers: store.has_offers ?? false,
+        rating: store.rating ?? 4.5,
+        created_at: new Date().toISOString()
+      };
+
       const { data, error } = await this.supabase
         .from('stores')
-        .insert([store])
+        .insert([storeData])
         .select()
         .single();
 
@@ -137,6 +152,26 @@ export class StoreService {
     }
   }
 
+  async updateStoreStatus(storeId: string, isOpen: boolean): Promise<void> {
+    try {
+      const { error } = await this.supabase
+        .from('stores')
+        .update({ is_open: isOpen })
+        .eq('id', storeId);
+
+      if (error) throw error;
+
+      // Actualizar el caché si existe
+      const cachedStore = this.storeCache.get(storeId);
+      if (cachedStore) {
+        this.storeCache.set(storeId, { ...cachedStore, is_open: isOpen });
+      }
+    } catch (error: any) {
+      console.error('Error updating store status:', error);
+      throw new Error('Error al actualizar el estado de la tienda: ' + (error.message || 'Error desconocido'));
+    }
+  }
+
   async deleteStore(storeId: string): Promise<void> {
     try {
       const { error } = await this.supabase
@@ -165,25 +200,16 @@ export class StoreService {
 
   async hasUserStores(userId: string): Promise<boolean> {
     try {
-      console.log('StoreService - Checking if user has stores. User ID:', userId);
-      
-      // Primero intentamos obtener las tiendas directamente
       const { data: stores, error } = await this.supabase
         .from('stores')
         .select('id')
         .eq('owner_id', userId);
 
-      if (error) {
-        console.error('StoreService - Error checking user stores:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      const hasStores = stores && stores.length > 0;
-      console.log('StoreService - User stores found:', stores);
-      console.log('StoreService - Has stores:', hasStores);
-      return hasStores;
+      return stores && stores.length > 0;
     } catch (error) {
-      console.error('StoreService - Error checking user stores:', error);
+      console.error('Error al verificar si el usuario tiene tiendas:', error);
       return false;
     }
   }

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { AuthService } from '../services/auth.service';
 import { StoreService, Store } from '../services/store.service';
+import { OrderService, OrderStats } from '../services/order.service';
 import { Router } from '@angular/router';
 import { 
   IonHeader, 
@@ -46,14 +47,15 @@ import {
   cash, 
   add, 
   storefront,
-  createOutline
+  createOutline,
+  time,
+  star,
+  alertCircle
 } from 'ionicons/icons';
+import { NotificationService } from '../services/notification.service';
 
 interface StoreWithStats extends Store {
-  totalProducts?: number;
-  totalOrders?: number;
-  totalRevenue?: number;
-  isOpen?: boolean;
+  stats?: OrderStats;
 }
 
 @Component({
@@ -105,9 +107,11 @@ export class StoreManagementPage implements OnInit {
   constructor(
     private authService: AuthService,
     private storeService: StoreService,
+    private orderService: OrderService,
     private router: Router,
     private toastController: ToastController,
-    private changeDetector: ChangeDetectorRef
+    private changeDetector: ChangeDetectorRef,
+    private notificationService: NotificationService
   ) {
     addIcons({
       create,
@@ -116,7 +120,10 @@ export class StoreManagementPage implements OnInit {
       cash,
       add,
       storefront,
-      createOutline
+      createOutline,
+      time,
+      star,
+      alertCircle
     });
   }
 
@@ -140,104 +147,78 @@ export class StoreManagementPage implements OnInit {
       const stores = await this.storeService.getUserStores(user.id);
       console.log('StoreManagementPage - Loaded stores:', stores);
 
-      // Aquí podríamos cargar estadísticas adicionales para cada tienda
-      this.stores = await Promise.all(stores.map(async (store) => {
-        try {
-          // Aquí cargaríamos las estadísticas reales de la tienda
-          // Por ahora usamos datos de ejemplo
-          return {
-            ...store,
-            totalProducts: Math.floor(Math.random() * 100),
-            totalOrders: Math.floor(Math.random() * 50),
-            totalRevenue: Math.floor(Math.random() * 10000),
-            isOpen: Math.random() > 0.5
-          };
-        } catch (error: any) {
-          console.error(`Error al cargar estadísticas para la tienda ${store.id}:`, error);
-          return store;
-        }
+      // Obtener estadísticas de todas las tiendas de una vez
+      const storeIds = stores.map(store => store.id);
+      const statsMap = await this.orderService.getMultipleStoresStats(storeIds);
+
+      // Combinar tiendas con sus estadísticas
+      this.stores = stores.map(store => ({
+        ...store,
+        stats: statsMap[store.id]
       }));
+
       console.log('StoreManagementPage - Processed stores with stats:', this.stores);
       this.changeDetector.detectChanges();
     } catch (error: any) {
       console.error('StoreManagementPage - Error loading stores:', error);
-      const toast = await this.toastController.create({
-        message: 'Error al cargar las tiendas',
-        duration: 2000,
-        color: 'danger'
+      this.notificationService.show({
+        message: 'Error al cargar las tiendas: ' + (error.message || 'Error desconocido'),
+        type: 'error',
+        duration: 3000
       });
-      await toast.present();
     } finally {
       this.isLoading = false;
       this.changeDetector.detectChanges();
     }
   }
 
-  async toggleStoreStatus(store: StoreWithStats) {
+  isStoreOpen(store: Store): boolean {
+    return store.open_time !== null;
+  }
+
+  async toggleStoreStatus(store: Store) {
     try {
-      store.isOpen = !store.isOpen;
-      // Aquí implementaríamos la actualización real del estado en la base de datos
-      const toast = await this.toastController.create({
-        message: `Tienda ${store.isOpen ? 'abierta' : 'cerrada'}`,
-        duration: 2000,
-        color: 'success'
+      const newOpenTime = this.isStoreOpen(store) ? null : new Date().toISOString();
+      await this.storeService.updateStore({
+        id: store.id,
+        open_time: newOpenTime
       });
-      await toast.present();
+      
+      store.open_time = newOpenTime;
+      this.notificationService.show({
+        message: `Tienda ${this.isStoreOpen(store) ? 'abierta' : 'cerrada'} correctamente`,
+        type: 'success',
+        duration: 2000
+      });
       this.changeDetector.detectChanges();
     } catch (error: any) {
       console.error('Error al cambiar el estado de la tienda:', error);
-      const toast = await this.toastController.create({
-        message: 'Error al cambiar el estado de la tienda',
-        duration: 2000,
-        color: 'danger'
+      this.notificationService.show({
+        message: 'Error al cambiar el estado de la tienda: ' + (error.message || 'Error desconocido'),
+        type: 'error',
+        duration: 3000
       });
-      await toast.present();
     }
   }
 
   editStore(storeId: string) {
     console.log('StoreManagementPage - Navigating to edit store:', storeId);
-    this.router.navigate(['/tabs/store-edit', storeId], { replaceUrl: false }).then(() => {
-      console.log('StoreManagementPage - Navigation to edit store completed');
-    }).catch(error => {
-      console.error('StoreManagementPage - Navigation error:', error);
-    });
-  }
-
-  viewStoreDetails(storeId: string) {
-    console.log('StoreManagementPage - Navigating to store details:', storeId);
-    this.router.navigate(['/tabs/store', storeId], { replaceUrl: false }).then(() => {
-      console.log('StoreManagementPage - Navigation to store details completed');
-    }).catch(error => {
-      console.error('StoreManagementPage - Navigation error:', error);
-    });
+    this.router.navigate(['/tabs/store-edit', storeId], { replaceUrl: false });
   }
 
   viewStoreProducts(storeId: string) {
     console.log('StoreManagementPage - Navigating to store products:', storeId);
-    this.router.navigate(['/tabs/store-products', storeId], { replaceUrl: false }).then(() => {
-      console.log('StoreManagementPage - Navigation to store products completed');
-    }).catch(error => {
-      console.error('StoreManagementPage - Navigation error:', error);
-    });
+    this.router.navigate(['/tabs/store-products', storeId], { replaceUrl: false });
   }
 
   viewStoreOrders(storeId: string) {
     console.log('StoreManagementPage - Navigating to store orders:', storeId);
-    this.router.navigate(['/tabs/store-orders', storeId], { replaceUrl: false }).then(() => {
-      console.log('StoreManagementPage - Navigation to store orders completed');
-    }).catch(error => {
-      console.error('StoreManagementPage - Navigation error:', error);
-    });
+    this.router.navigate(['/tabs/store-orders', storeId], { replaceUrl: false });
   }
 
   async createStore() {
     console.log('StoreManagementPage - Navigating to create store');
-    this.router.navigate(['/tabs/store-create'], { replaceUrl: false }).then(() => {
-      console.log('StoreManagementPage - Navigation to create store completed');
-    }).catch(error => {
-      console.error('StoreManagementPage - Navigation error:', error);
-    });
+    this.router.navigate(['/tabs/store-create'], { replaceUrl: false });
   }
 
   segmentChanged(event: any) {

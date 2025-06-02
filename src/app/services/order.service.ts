@@ -3,16 +3,29 @@ import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { StoreService, Store } from './store.service';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface Order {
   id: string;
   user_id: string;
-  date: string;
+  store_id: string;
+  total_price: number | null;
   status: string;
-  total_price: number;
-  items: OrderItem[];
-  store_id?: string;
-  store_info?: any;
+  created_at: string;
+  vlcoin_used: number | null;
+  current_location: string | null;
+  delivery_latitude: number | null;
+  delivery_longitude: number | null;
+  delivery_progress: number;
+  estimated_delivery: string | null;
+  updated_at: string;
+}
+
+export interface OrderStats {
+  totalOrders: number;
+  totalRevenue: number;
+  pendingOrders: number;
+  completedOrders: number;
 }
 
 export interface OrderItem {
@@ -47,12 +60,15 @@ export class OrderService {
   public loading$ = this.loadingSubject.asObservable();
   private errorSubject = new BehaviorSubject<string | null>(null);
   public error$ = this.errorSubject.asObservable();
+  private supabase: SupabaseClient;
 
   constructor(
-    private supabase: SupabaseService,
+    private supabaseService: SupabaseService,
     private authService: AuthService,
     private storeService: StoreService
-  ) {}
+  ) {
+    this.supabase = this.supabaseService.getClient();
+  }
 
   async getUserOrders(): Promise<Order[]> {
     this.loadingSubject.next(true);
@@ -68,7 +84,7 @@ export class OrderService {
       // Primero precargar todas las tiendas para tener la información disponible en la caché
       await this.storeService.preloadStores();
 
-      const { data: orders, error } = await this.supabase.getClient()
+      const { data: orders, error } = await this.supabase
         .from('orders')
         .select('*')
         .eq('user_id', user.id)
@@ -102,7 +118,7 @@ export class OrderService {
     for (const order of orders) {
       try {
         // Obtener los items de cada pedido
-        const { data: items, error } = await this.supabase.getClient()
+        const { data: items, error } = await this.supabase
           .from('order_items')
           .select('*')
           .eq('order_id', order.id);
@@ -144,7 +160,7 @@ export class OrderService {
   // Método público para obtener información de un producto por su ID
   async getProductById(productId: string): Promise<Product | null> {
     try {
-      const { data, error } = await this.supabase.getClient()
+      const { data, error } = await this.supabase
         .from('products')
         .select('*')
         .eq('id', productId)
@@ -278,7 +294,7 @@ export class OrderService {
   // Método para marcar un pedido como entregado
   async markOrderAsDelivered(orderId: string): Promise<boolean> {
     try {
-      const { data, error } = await this.supabase.getClient()
+      const { data, error } = await this.supabase
         .from('orders')
         .update({ status: 'delivered', updated_at: new Date().toISOString() })
         .eq('id', orderId);
@@ -308,7 +324,7 @@ export class OrderService {
   // Método para obtener un pedido por su ID
   async getOrderById(orderId: string): Promise<Order | null> {
     try {
-      const { data, error } = await this.supabase.getClient()
+      const { data, error } = await this.supabase
         .from('orders')
         .select('*')
         .eq('id', orderId)
@@ -318,7 +334,7 @@ export class OrderService {
       if (!data) return null;
 
       // Obtener los items
-      const { data: items, error: itemsError } = await this.supabase.getClient()
+      const { data: items, error: itemsError } = await this.supabase
         .from('order_items')
         .select('*')
         .eq('order_id', orderId);
@@ -353,7 +369,7 @@ export class OrderService {
     return new Promise(async (resolve) => {
       try {
         // Obtener el pedido
-        const { data: order, error } = await this.supabase.getClient()
+        const { data: order, error } = await this.supabase
           .from('orders')
           .select('*')
           .eq('id', orderId)
@@ -366,7 +382,7 @@ export class OrderService {
         }
         
         // Obtener los items
-        const { data: items, error: itemsError } = await this.supabase.getClient()
+        const { data: items, error: itemsError } = await this.supabase
           .from('order_items')
           .select('*')
           .eq('order_id', orderId);
@@ -401,5 +417,96 @@ export class OrderService {
         resolve({ error: 'Error inesperado en diagnóstico' });
       }
     });
+  }
+
+  async getStoreOrders(storeId: string): Promise<Order[]> {
+    try {
+      const { data: orders, error } = await this.supabase
+        .from('orders')
+        .select('*')
+        .eq('store_id', storeId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return orders || [];
+    } catch (error) {
+      console.error('Error al obtener los pedidos de la tienda:', error);
+      throw error;
+    }
+  }
+
+  async getStoreStats(storeId: string): Promise<OrderStats> {
+    try {
+      // Obtener todos los pedidos de la tienda
+      const { data: orders, error } = await this.supabase
+        .from('orders')
+        .select('*')
+        .eq('store_id', storeId);
+
+      if (error) throw error;
+
+      if (!orders) {
+        return {
+          totalOrders: 0,
+          totalRevenue: 0,
+          pendingOrders: 0,
+          completedOrders: 0
+        };
+      }
+
+      // Calcular estadísticas
+      const stats: OrderStats = {
+        totalOrders: orders.length,
+        totalRevenue: orders.reduce((sum, order) => sum + (order.total_price || 0), 0),
+        pendingOrders: orders.filter(order => order.status === 'pending').length,
+        completedOrders: orders.filter(order => order.status === 'completed').length
+      };
+
+      return stats;
+    } catch (error) {
+      console.error('Error al obtener las estadísticas de la tienda:', error);
+      throw error;
+    }
+  }
+
+  async getMultipleStoresStats(storeIds: string[]): Promise<Record<string, OrderStats>> {
+    try {
+      const { data: orders, error } = await this.supabase
+        .from('orders')
+        .select('*')
+        .in('store_id', storeIds);
+
+      if (error) throw error;
+
+      const statsMap: Record<string, OrderStats> = {};
+
+      // Inicializar estadísticas para todas las tiendas
+      storeIds.forEach(storeId => {
+        statsMap[storeId] = {
+          totalOrders: 0,
+          totalRevenue: 0,
+          pendingOrders: 0,
+          completedOrders: 0
+        };
+      });
+
+      // Calcular estadísticas para cada tienda
+      if (orders) {
+        orders.forEach(order => {
+          const stats = statsMap[order.store_id];
+          if (stats) {
+            stats.totalOrders++;
+            stats.totalRevenue += order.total_price || 0;
+            if (order.status === 'pending') stats.pendingOrders++;
+            if (order.status === 'completed') stats.completedOrders++;
+          }
+        });
+      }
+
+      return statsMap;
+    } catch (error) {
+      console.error('Error al obtener estadísticas múltiples:', error);
+      throw error;
+    }
   }
 } 

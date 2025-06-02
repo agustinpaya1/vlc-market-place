@@ -64,64 +64,79 @@ ion-item-sliding {
 }
 
 ion-card {
-  margin: 10px;
-  border-radius: 15px;
+  margin: 16px;
+  border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  ion-card-header {
+    padding: 16px;
+
+    ion-card-title {
+      font-size: 1.2em;
+      font-weight: 600;
+    }
+  }
+
+  ion-card-content {
+    padding: 16px;
+  }
 
   img {
     width: 100%;
     height: 200px;
     object-fit: cover;
-    border-radius: 15px 15px 0 0;
+  }
+}
+
+ion-grid {
+  ion-col {
+    padding: 8px;
+  }
+}
+
+.store-stats {
+  ion-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
   }
 
-  ion-card-header {
-    padding: 15px;
+  p {
+    margin: 0;
+    font-size: 0.9em;
+    color: var(--ion-color-medium);
+  }
+}
 
-    ion-card-title {
-      font-size: 1.4rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
+ion-badge {
+  padding: 8px 12px;
+  border-radius: 16px;
+  font-weight: 500;
+}
 
-    ion-badge {
-      padding: 8px 12px;
-      border-radius: 15px;
-      font-size: 0.9rem;
-    }
+ion-toggle {
+  --track-background: var(--ion-color-medium);
+  --track-background-checked: var(--ion-color-success);
+}
+
+ion-fab-button {
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+
+  ion-spinner {
+    width: 48px;
+    height: 48px;
   }
 
-  ion-card-content {
-    padding: 15px;
-
-    ion-grid {
-      padding: 0;
-      
-      ion-col {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 10px;
-
-        ion-icon {
-          font-size: 24px;
-          margin-bottom: 5px;
-        }
-
-        p {
-          margin: 5px 0;
-          font-size: 0.9rem;
-          color: var(--ion-color-medium);
-        }
-      }
-    }
-
-    ion-button {
-      margin: 8px 0;
-      --border-radius: 10px;
-      height: 45px;
-      font-size: 1rem;
-    }
+  p {
+    margin-top: 16px;
+    color: var(--ion-color-medium);
   }
 }
 
@@ -176,20 +191,6 @@ ion-segment {
   p {
     color: var(--ion-color-medium);
     font-size: 16px;
-  }
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  
-  ion-spinner {
-    width: 50px;
-    height: 50px;
-    margin-bottom: 20px;
   }
 }
 
