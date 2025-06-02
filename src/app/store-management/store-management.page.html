@@ -40,8 +40,8 @@
               <ion-badge [color]="isStoreOpen(store) ? 'success' : 'medium'">
                 {{isStoreOpen(store) ? 'Abierta' : 'Cerrada'}}
               </ion-badge>
-              <ion-badge color="warning" class="ion-margin-start" *ngIf="store.has_offers">
-                Ofertas Activas
+              <ion-badge color="warning" class="ion-margin-start" *ngIf="hasOffers(store)">
+                Ofertas
               </ion-badge>
             </ion-card-subtitle>
           </ion-card-header>
@@ -49,29 +49,29 @@
           <ion-card-content>
             <!-- Store info -->
             <p *ngIf="store.description">{{store.description}}</p>
-            <p *ngIf="store.location_text">
+            <p *ngIf="store.location">
               <ion-icon name="location-outline"></ion-icon>
-              {{store.location_text}}
+              {{store.location}}
             </p>
-            <p>
-              <ion-icon name="star"></ion-icon>
-              Valoración: {{store.rating}}
-            </p>
+            <div class="rating" *ngIf="getRating(store) !== undefined">
+              Valoración: {{getRating(store)}}
+              <ion-icon name="star" color="warning"></ion-icon>
+            </div>
             
             <!-- Store stats -->
             <ion-grid>
               <ion-row>
                 <ion-col size="6" class="ion-text-center">
                   <ion-icon name="receipt" color="primary"></ion-icon>
-                  <p>{{store.stats?.totalOrders || 0}} Pedidos</p>
-                  <small *ngIf="store.stats?.pendingOrders">
+                  <p>{{getStoreStats(store).totalOrders}} Pedidos</p>
+                  <small *ngIf="getStoreStats(store).pendingOrders > 0">
                     <ion-icon name="alertCircle" color="warning"></ion-icon>
-                    {{store.stats.pendingOrders}} pendientes
+                    {{getStoreStats(store).pendingOrders}} pendientes
                   </small>
                 </ion-col>
                 <ion-col size="6" class="ion-text-center">
                   <ion-icon name="cash" color="success"></ion-icon>
-                  <p>€{{store.stats?.totalRevenue || 0}}</p>
+                  <p>€{{getStoreStats(store).totalRevenue}}</p>
                   <small>Ingresos totales</small>
                 </ion-col>
               </ion-row>
@@ -91,9 +91,14 @@
             <ion-button expand="block" (click)="viewStoreOrders(store.id)" color="tertiary" class="ion-margin-top">
               <ion-icon slot="start" name="receipt"></ion-icon>
               Ver Pedidos
-              <ion-badge slot="end" color="light" *ngIf="store.stats?.pendingOrders">
-                {{store.stats.pendingOrders}}
+              <ion-badge slot="end" color="light" *ngIf="getStoreStats(store).pendingOrders > 0">
+                {{getStoreStats(store).pendingOrders}}
               </ion-badge>
+            </ion-button>
+
+            <ion-button expand="block" (click)="scanQR(store.id)" color="warning" class="ion-margin-top">
+              <ion-icon slot="start" name="scan-outline"></ion-icon>
+              Escanear QR Pedido
             </ion-button>
 
             <!-- Store status toggle -->

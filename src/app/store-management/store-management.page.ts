@@ -3,28 +3,23 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { AuthService } from '../services/auth.service';
-import { StoreService, Store } from '../services/store.service';
+import { StoreService } from '../services/store.service';
 import { OrderService, OrderStats } from '../services/order.service';
+import { QrScannerService } from '../services/qr-scanner.service';
 import { Router } from '@angular/router';
+import { Store, StoreWithStats } from '../interfaces/store.interface';
 import { 
   IonHeader, 
   IonToolbar, 
   IonTitle, 
   IonContent, 
-  IonList, 
   IonItem, 
   IonLabel, 
-  IonThumbnail, 
   IonButton, 
   IonIcon, 
   IonSpinner,
-  IonItemSliding,
-  IonItemOptions,
-  IonItemOption,
   IonBadge,
   IonToggle,
-  IonSegment,
-  IonSegmentButton,
   IonCard,
   IonCardHeader,
   IonCardTitle,
@@ -50,13 +45,10 @@ import {
   createOutline,
   time,
   star,
-  alertCircle
+  alertCircle,
+  scanOutline
 } from 'ionicons/icons';
 import { NotificationService } from '../services/notification.service';
-
-interface StoreWithStats extends Store {
-  stats?: OrderStats;
-}
 
 @Component({
   selector: 'app-store-management',
@@ -71,20 +63,13 @@ interface StoreWithStats extends Store {
     IonToolbar,
     IonTitle,
     IonContent,
-    IonList,
     IonItem,
     IonLabel,
-    IonThumbnail,
     IonButton,
     IonIcon,
     IonSpinner,
-    IonItemSliding,
-    IonItemOptions,
-    IonItemOption,
     IonBadge,
     IonToggle,
-    IonSegment,
-    IonSegmentButton,
     IonCard,
     IonCardHeader,
     IonCardTitle,
@@ -108,6 +93,7 @@ export class StoreManagementPage implements OnInit {
     private authService: AuthService,
     private storeService: StoreService,
     private orderService: OrderService,
+    private qrScanner: QrScannerService,
     private router: Router,
     private toastController: ToastController,
     private changeDetector: ChangeDetectorRef,
@@ -123,7 +109,8 @@ export class StoreManagementPage implements OnInit {
       createOutline,
       time,
       star,
-      alertCircle
+      alertCircle,
+      scanOutline
     });
   }
 
@@ -173,28 +160,40 @@ export class StoreManagementPage implements OnInit {
   }
 
   isStoreOpen(store: Store): boolean {
-    return store.open_time !== null;
+    return store.is_open || false;
+  }
+
+  hasOffers(store: Store): boolean {
+    return store.hasOffers || store.has_offers || false;
+  }
+
+  getRating(store: Store): number | undefined {
+    return store.rating;
+  }
+
+  getStoreStats(store: StoreWithStats) {
+    return {
+      totalOrders: store.stats?.totalOrders || 0,
+      totalRevenue: store.stats?.totalRevenue || 0,
+      pendingOrders: store.stats?.pendingOrders || 0,
+      completedOrders: store.stats?.completedOrders || 0
+    };
   }
 
   async toggleStoreStatus(store: Store) {
     try {
-      const newOpenTime = this.isStoreOpen(store) ? null : new Date().toISOString();
-      await this.storeService.updateStore({
-        id: store.id,
-        open_time: newOpenTime
-      });
+      const newStatus = !this.isStoreOpen(store);
+      await this.storeService.updateStoreStatus(store.id, newStatus);
       
-      store.open_time = newOpenTime;
       this.notificationService.show({
-        message: `Tienda ${this.isStoreOpen(store) ? 'abierta' : 'cerrada'} correctamente`,
+        message: `Tienda ${newStatus ? 'abierta' : 'cerrada'} correctamente`,
         type: 'success',
         duration: 2000
       });
-      this.changeDetector.detectChanges();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error al cambiar el estado de la tienda:', error);
       this.notificationService.show({
-        message: 'Error al cambiar el estado de la tienda: ' + (error.message || 'Error desconocido'),
+        message: 'Error al cambiar el estado de la tienda',
         type: 'error',
         duration: 3000
       });
@@ -221,9 +220,45 @@ export class StoreManagementPage implements OnInit {
     this.router.navigate(['/tabs/store-create'], { replaceUrl: false });
   }
 
+  validateOrder(storeId: string) {
+    console.log('StoreManagementPage - Navigating to order validation:', storeId);
+    this.router.navigate(['/tabs/order-validation', storeId], { replaceUrl: false });
+  }
+
   segmentChanged(event: any) {
     console.log('StoreManagementPage - Segment changed:', event.detail.value);
     this.selectedSegment = event.detail.value;
     this.changeDetector.detectChanges();
+  }
+
+  async scanQR(storeId: string) {
+    try {
+      const hasPermission = await this.qrScanner.checkPermission();
+      if (!hasPermission) {
+        this.notificationService.show({
+          message: 'Se necesita permiso para usar la cámara',
+          type: 'error',
+          duration: 3000
+        });
+        return;
+      }
+
+      const scannedContent = await this.qrScanner.startScan();
+      if (scannedContent) {
+        // Redirigir a la página de validación con el código escaneado
+        this.router.navigate(['/tabs/order-validation', storeId], {
+          queryParams: { qrCode: scannedContent }
+        });
+      }
+    } catch (error) {
+      console.error('Error al escanear QR:', error);
+      this.notificationService.show({
+        message: 'Error al escanear el código QR',
+        type: 'error',
+        duration: 3000
+      });
+    } finally {
+      await this.qrScanner.stopScan();
+    }
   }
 } 

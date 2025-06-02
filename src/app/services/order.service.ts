@@ -19,6 +19,26 @@ export interface Order {
   delivery_progress: number;
   estimated_delivery: string | null;
   updated_at: string;
+  store?: {
+    id: string;
+    name: string;
+    multiStore?: boolean;
+    stores?: Array<{
+      id: string;
+      name: string;
+    }>;
+  };
+  store_info?: {
+    id: string;
+    name: string;
+    multiStore?: boolean;
+    stores?: Array<{
+      id: string;
+      name: string;
+    }>;
+  };
+  items?: OrderItem[];
+  date?: string;
 }
 
 export interface OrderStats {
@@ -356,7 +376,7 @@ export class OrderService {
         ...data,
         date: date.toISOString(),
         items: items || [],
-        store_info: storeInfo
+        store: storeInfo
       };
     } catch (error) {
       console.error('Error al obtener pedido por ID:', error);

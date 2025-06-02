@@ -4,28 +4,28 @@ import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface Store {
   id: string;
-  owner_id: string;
-  name: string | null;
-  description: string | null;
-  created_at: string;
-  image_url: string | null;
-  open_time: string | null;
-  category: string | null;
-  has_offers: boolean;
-  rating: number;
-  location_text: string | null;
-  location: any | null; // geometry type
-  latitude: number | null;
-  longitude: number | null;
-  coordinates: any | null; // geometry type
+  name: string;
+  description?: string;
+  owner_id?: string;
+  location?: string;
+  image_url?: string;
+  is_open?: boolean;
+  open_time?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  latitude?: number;
+  longitude?: number;
+  category?: string;
+  schedule?: any;
+  contact_info?: any;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class StoreService {
-  private storeCache: Map<string, Store> = new Map();
   private supabase: SupabaseClient;
+  private storeCache: Map<string, Store> = new Map();
 
   constructor(private supabaseService: SupabaseService) {
     this.supabase = this.supabaseService.getClient();
@@ -47,28 +47,46 @@ export class StoreService {
     }
   }
 
-  async getStoreById(id: string): Promise<Store | null> {
+  async getStoreById(storeId: string): Promise<Store | null> {
     try {
-      if (this.storeCache.has(id)) {
-        return this.storeCache.get(id)!;
+      // Verificar primero en el caché
+      if (this.storeCache.has(storeId)) {
+        return this.storeCache.get(storeId) || null;
       }
 
-      const { data: store, error } = await this.supabase
+      const { data, error } = await this.supabase
         .from('stores')
         .select('*')
-        .eq('id', id)
+        .eq('id', storeId)
         .single();
 
       if (error) throw error;
+      if (!data) return null;
 
-      if (store) {
-        this.storeCache.set(store.id, store);
-      }
+      const store: Store = {
+        id: data.id,
+        name: data.name || 'Tienda',
+        description: data.description,
+        owner_id: data.owner_id,
+        location: data.location,
+        image_url: data.image_url,
+        is_open: data.is_open,
+        open_time: data.open_time,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        category: data.category,
+        schedule: data.schedule,
+        contact_info: data.contact_info
+      };
 
+      // Guardar en caché
+      this.storeCache.set(storeId, store);
       return store;
     } catch (error) {
       console.error('Error al obtener la tienda:', error);
-      throw error;
+      return null;
     }
   }
 
@@ -106,8 +124,6 @@ export class StoreService {
       // Ensure default values match the database schema
       const storeData = {
         ...store,
-        has_offers: store.has_offers ?? false,
-        rating: store.rating ?? 4.5,
         created_at: new Date().toISOString()
       };
 
@@ -135,17 +151,41 @@ export class StoreService {
     try {
       if (!store.id) throw new Error('Se requiere el ID de la tienda');
 
+      // Eliminar propiedades que no existen en la interfaz Store
+      const storeToUpdate = { ...store };
+      delete (storeToUpdate as any).has_offers;
+      delete (storeToUpdate as any).rating;
+
       const { data, error } = await this.supabase
         .from('stores')
-        .update(store)
+        .update(storeToUpdate)
         .eq('id', store.id)
         .select()
         .single();
 
       if (error) throw error;
+      if (!data) throw new Error('No se pudo actualizar la tienda');
 
-      this.storeCache.set(data.id, data);
-      return data;
+      const updatedStore: Store = {
+        id: data.id,
+        name: data.name || 'Tienda',
+        description: data.description,
+        owner_id: data.owner_id,
+        location: data.location,
+        image_url: data.image_url,
+        is_open: data.is_open,
+        open_time: data.open_time,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        category: data.category,
+        schedule: data.schedule,
+        contact_info: data.contact_info
+      };
+
+      this.storeCache.set(data.id, updatedStore);
+      return updatedStore;
     } catch (error) {
       console.error('Error al actualizar la tienda:', error);
       throw error;
@@ -154,9 +194,14 @@ export class StoreService {
 
   async updateStoreStatus(storeId: string, isOpen: boolean): Promise<void> {
     try {
+      const updateData = {
+        is_open: isOpen,
+        open_time: isOpen ? new Date().toISOString() : null
+      };
+
       const { error } = await this.supabase
         .from('stores')
-        .update({ is_open: isOpen })
+        .update(updateData)
         .eq('id', storeId);
 
       if (error) throw error;
@@ -164,7 +209,11 @@ export class StoreService {
       // Actualizar el caché si existe
       const cachedStore = this.storeCache.get(storeId);
       if (cachedStore) {
-        this.storeCache.set(storeId, { ...cachedStore, is_open: isOpen });
+        this.storeCache.set(storeId, { 
+          ...cachedStore, 
+          is_open: isOpen,
+          open_time: updateData.open_time
+        });
       }
     } catch (error: any) {
       console.error('Error updating store status:', error);
@@ -229,9 +278,9 @@ export class StoreService {
     const uncachedIds: string[] = [];
 
     storeIds.forEach(id => {
-      if (this.storeCache.has(id)) {
-        const store = this.storeCache.get(id);
-        if (store) cachedStores.push(store);
+      const cachedStore = this.storeCache.get(id);
+      if (cachedStore) {
+        cachedStores.push(cachedStore);
       } else {
         uncachedIds.push(id);
       }
@@ -242,46 +291,53 @@ export class StoreService {
       return cachedStores;
     }
 
-    // Consultar la base de datos para los IDs que no están en caché
     try {
       const { data, error } = await this.supabase
         .from('stores')
         .select('*')
         .in('id', uncachedIds);
 
-      if (error) {
-        console.error('Error al obtener múltiples tiendas:', error);
-        // Retornar al menos las tiendas que teníamos en caché
-        return cachedStores;
-      }
+      if (error) throw error;
 
-      // Procesar resultados y guardar en caché
       const fetchedStores: Store[] = [];
-      if (data && data.length > 0) {
+      if (data) {
         data.forEach(storeData => {
           const store: Store = {
-            ...storeData,
-            name: storeData.name || 'Tienda'
+            id: storeData.id,
+            name: storeData.name || 'Tienda',
+            description: storeData.description,
+            owner_id: storeData.owner_id,
+            location: storeData.location,
+            image_url: storeData.image_url,
+            is_open: storeData.is_open,
+            open_time: storeData.open_time,
+            created_at: storeData.created_at,
+            updated_at: storeData.updated_at,
+            latitude: storeData.latitude,
+            longitude: storeData.longitude,
+            category: storeData.category,
+            schedule: storeData.schedule,
+            contact_info: storeData.contact_info
           };
           this.storeCache.set(store.id, store);
           fetchedStores.push(store);
         });
       }
 
-      // Crear tiendas "fake" para IDs que no se encontraron
+      // Crear tiendas por defecto para IDs no encontrados
       const fetchedIds = fetchedStores.map(s => s.id);
       const missingIds = uncachedIds.filter(id => !fetchedIds.includes(id));
       
-      const defaultStores = missingIds.map(id => {
-        const defaultStore = { id, name: 'Tienda' };
-        this.storeCache.set(id, defaultStore);
-        return defaultStore;
-      });
+      const defaultStores: Store[] = missingIds.map(id => ({
+        id,
+        name: 'Tienda'
+      }));
 
-      // Combinar tiendas de caché, las consultadas y las por defecto
+      defaultStores.forEach(store => this.storeCache.set(store.id, store));
+
       return [...cachedStores, ...fetchedStores, ...defaultStores];
-    } catch (err) {
-      console.error('Error inesperado al obtener tiendas:', err);
+    } catch (error) {
+      console.error('Error al obtener las tiendas:', error);
       return cachedStores;
     }
   }

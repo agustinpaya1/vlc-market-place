@@ -76,8 +76,8 @@ import { QRCodeComponent } from 'angularx-qrcode';
           <h2 class="section-title">{{ getStoreCount() > 1 ? 'Tiendas' : 'Tienda' }}</h2>
           
           <!-- Múltiples tiendas -->
-          <div *ngIf="getStoreCount() > 1 && order?.store_info?.stores">
-            <div class="store-card" *ngFor="let store of order?.store_info?.stores; let i = index">
+          <div *ngIf="getStoreCount() > 1 && order?.store?.stores">
+            <div class="store-card" *ngFor="let store of order?.store?.stores; let i = index">
               <div class="store-icon-container">
                 <ion-icon name="storefront"></ion-icon>
               </div>
@@ -388,84 +388,28 @@ export class OrderSummaryComponent implements OnInit {
   }
 
   getStoreName(): string {
-    if (!this.order?.store_info) return 'Tienda local';
-    
-    // Si hay un ID directo en store_info
-    if (this.order.store_info.id) {
-      // 'Frutas Manolo' siempre debe aparecer para el ID correcto
-      if (this.order.store_info.id === 'cb4e8dd3-3605-4649-ab10-10f980c88f74') {
-        return 'Frutas Manolo';
+    if (!this.order?.store) return 'Tienda local';
+
+    if (this.order.store.id) {
+      // Special case for VLC Market
+      if (this.order.store.id === 'cb4e8dd3-3605-4649-ab10-1c4c5f7d6b4a') {
+        return 'VLC Market';
       }
-      
-      // Para otros IDs, mostrar nombres amigables según el ID
-      const storeId = this.order.store_info.id;
-      
-      // Si comienza con a6b7, es una tienda de frutas
-      if (storeId.startsWith('a6b7d3')) {
-        return 'Frutas Manolo';
-      }
-      
-      // Para otros casos específicos
-      if (storeId.startsWith('bb7fa6')) {
-        return 'Tienda Central';
-      }
-      
-      if (storeId.startsWith('6604b1')) {
-        return 'Mercado Fresco';
-      }
-      
-      if (storeId.startsWith('070215')) {
-        return 'Supermercado VLC';
-      }
-      
-      // Para cualquier otro ID, un nombre genérico de tienda
-      return 'Tienda local';
+      const storeId = this.order.store.id;
+      return this.order.store.name || 'Tienda local';
     }
-    
-    // Si hay datos de multiStore, mostrar nombres amigables
-    if (this.order.store_info.multiStore && this.order.store_info.stores && this.order.store_info.stores.length > 0) {
-      // Obtener nombres para las primeras tiendas
-      const storeNames = this.order.store_info.stores.map((store: any) => {
-        const storeId = store.id;
-        
-        if (storeId === 'cb4e8dd3-3605-4649-ab10-10f980c88f74' || storeId.startsWith('a6b7d3')) {
-          return 'Frutas Manolo';
-        }
-        if (storeId.startsWith('bb7fa6')) {
-          return 'Tienda Central';
-        }
-        if (storeId.startsWith('6604b1')) {
-          return 'Mercado Fresco';
-        }
-        if (storeId.startsWith('070215')) {
-          return 'Supermercado VLC';
-        }
-        
-        return 'Tienda local';
-      });
-      
-      // Si hay más de una tienda
-      if (storeNames.length > 1) {
-        return `${storeNames[0]} y ${storeNames.length - 1} más`;
-      }
-      
-      // Solo una tienda
-      return storeNames[0];
-    }
-    
-    // Valor predeterminado más amigable
+
     return 'Tienda local';
   }
 
   getStoreCount(): number {
-    if (!this.order?.store_info) return 0;
-    
-    if (this.order.store_info.multiStore && this.order.store_info.stores) {
-      return this.order.store_info.stores.length;
-    } else {
-      // Si es una sola tienda sin array de stores
-      return 1;
+    if (!this.order?.store) return 0;
+
+    if (this.order.store.multiStore && this.order.store.stores) {
+      return this.order.store.stores.length;
     }
+
+    return 1;
   }
 
   async confirmOrderDelivery() {

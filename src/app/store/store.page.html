@@ -7,7 +7,7 @@
   <div *ngIf="store" class="store-container">
     <!-- Image with overlaid buttons -->
     <div class="store-header-image-container">
-      <img [src]="store.imageUrl" (error)="handleImageError($event)" alt="Imagen de la tienda" loading="lazy" class="store-header-image">
+      <img [src]="store.image_url" (error)="handleImageError($event)" alt="{{store.name}}" loading="lazy" class="store-header-image">
       
       <!-- Navigation elements overlaid on image -->
       <div class="header-buttons">
@@ -56,7 +56,7 @@
         
         <div class="time-info">
           <ion-icon name="time" color="tertiary"></ion-icon>
-          <span>{{ store.openTime }}</span>
+          <span>{{ store.open_time }}</span>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -51,7 +51,7 @@ import { AuthService } from '../../services/auth.service';
 
           <ion-item>
             <ion-label position="stacked">Dirección</ion-label>
-            <ion-input [(ngModel)]="store.address" name="address"></ion-input>
+            <ion-input [(ngModel)]="store.location" name="location"></ion-input>
           </ion-item>
 
           <ion-item>
@@ -115,8 +115,18 @@ import { AuthService } from '../../services/auth.service';
     IonBackButton
   ]
 })
-export class StoreCreatePage {
-  store: Partial<Store> = {};
+export class StoreCreatePage implements OnInit {
+  store: Partial<Store> = {
+    name: '',
+    description: '',
+    location: '',
+    image_url: '',
+    is_open: false,
+    open_time: null,
+    category: '',
+    contact_info: {},
+    schedule: {}
+  };
 
   constructor(
     private authService: AuthService,
@@ -124,6 +134,8 @@ export class StoreCreatePage {
     private router: Router,
     private toastController: ToastController
   ) {}
+
+  ngOnInit() {}
 
   async createStore() {
     console.log('StoreCreatePage - Creating store');

@@ -196,16 +196,23 @@ export class OrdersPage implements OnInit {
   getStatusLabel(status: string): string {
     return status === 'delivered' ? 'Entregado' : 'Pendiente';
   }
-
   getStoreNames(order: Order): string {
-    if (order.store_info?.multiStore && Array.isArray(order.store_info.stores)) {
-      return order.store_info.stores.map((store: any) => store.name).join(', ');
+    if (!order || !order.store) {
+      return 'Tienda local';
     }
-    return order.store_info?.name || 'Tienda local';
+
+    if (order.store.multiStore && Array.isArray(order.store.stores) && order.store.stores.length > 0) {
+      return order.store.stores
+        .filter(store => store && store.name)
+        .map(store => store.name)
+        .join(', ') || 'Tienda local';
+    }
+
+    return order.store.name || 'Tienda local';
   }
 
   getItemCount(order: Order): number {
-    return order.items?.length || 0;
+    return order?.items?.length || 0;
   }
 
   getProductImage(item: OrderItem): string {

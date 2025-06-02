@@ -95,6 +95,11 @@ export const routes: Routes = [
         path: 'store-orders/:id',
         loadComponent: () =>
           import('../store-management/store-orders/store-orders.page').then((m) => m.StoreOrdersPage),
+      },
+      {
+        path: 'order-validation/:storeId',
+        loadComponent: () =>
+          import('../pages/order-validation/order-validation.page').then((m) => m.OrderValidationPage),
       }
     ],
   },

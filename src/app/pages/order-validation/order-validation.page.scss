@@ -1,0 +1,224 @@
+.scanner-view {
+  position: relative;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.web-scanner-view {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+
+  .scanner-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+  }
+
+  .scanner-canvas {
+    display: none;
+  }
+
+  .scanner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.5);
+  }
+}
+
+.native-scanner-view {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.scanner-frame {
+  width: 80%;
+  height: 300px;
+  border: 2px solid var(--ion-color-primary);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+  background: transparent;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.8);
+  clip-path: inset(0 -100vmax);
+}
+
+.scanner-line {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--ion-color-primary) 50%,
+    transparent 100%
+  );
+  box-shadow: 0 0 8px var(--ion-color-primary);
+  animation: scan 2s linear infinite;
+}
+
+@keyframes scan {
+  0% {
+    top: 0;
+  }
+  50% {
+    top: 100%;
+  }
+  100% {
+    top: 0;
+  }
+}
+
+// Estilos para cuando el escáner está activo
+:host-context(.scanner-active) {
+  --background: transparent;
+  --ion-background-color: transparent;
+}
+
+ion-content {
+  --background: var(--ion-background-color);
+}
+
+ion-card {
+  margin: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+ion-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+
+  ion-icon {
+    margin-right: 8px;
+  }
+}
+
+// Estilos para el mensaje de permisos denegados
+.permission-denied {
+  text-align: center;
+  padding: 20px 0;
+
+  ion-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    color: var(--ion-color-warning);
+    margin: 16px 0;
+    font-size: 1.2em;
+  }
+
+  p {
+    color: var(--ion-color-medium);
+    margin: 12px 0;
+    font-size: 0.95em;
+    line-height: 1.4;
+  }
+
+  .safari-instructions {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(var(--ion-color-warning-rgb), 0.1);
+    border-radius: 8px;
+
+    p {
+      color: var(--ion-color-dark);
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    ol {
+      text-align: left;
+      padding-left: 20px;
+      margin: 0;
+
+      li {
+        color: var(--ion-color-dark);
+        margin: 8px 0;
+        font-size: 0.9em;
+      }
+    }
+  }
+
+  ion-button {
+    margin: 20px 0;
+  }
+}
+
+// Estilos para el resultado de validación
+.validation-success {
+  text-align: center;
+  padding: 20px;
+
+  ion-icon {
+    font-size: 48px;
+    color: var(--ion-color-success);
+    margin-bottom: 16px;
+  }
+
+  ion-card-title {
+    font-size: 1.4em;
+    font-weight: 600;
+    color: var(--ion-color-success);
+  }
+
+  p {
+    margin: 12px 0;
+    font-size: 1.1em;
+    color: var(--ion-color-dark);
+  }
+
+  ion-button {
+    margin-top: 24px;
+  }
+}
+
+// Estilos específicos para Safari
+@supports (-webkit-touch-callout: none) {
+  .web-scanner-view {
+    .scanner-video {
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    .scanner-overlay {
+      z-index: 2;
+    }
+  }
+
+  .stop-button {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    width: calc(100% - 32px);
+  }
+} 

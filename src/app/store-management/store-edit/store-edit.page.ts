@@ -56,7 +56,7 @@ import { StoreService, Store } from '../../services/store.service';
 
           <ion-item>
             <ion-label position="stacked">Dirección</ion-label>
-            <ion-input [(ngModel)]="store.address" name="address"></ion-input>
+            <ion-input [(ngModel)]="store.location" name="location"></ion-input>
           </ion-item>
 
           <ion-item>
@@ -119,7 +119,17 @@ import { StoreService, Store } from '../../services/store.service';
   ]
 })
 export class StoreEditPage implements OnInit {
-  store: Partial<Store> = {};
+  store: Partial<Store> = {
+    name: '',
+    description: '',
+    location: '',
+    image_url: '',
+    is_open: false,
+    open_time: null,
+    category: '',
+    contact_info: {},
+    schedule: {}
+  };
   isLoading = true;
 
   constructor(

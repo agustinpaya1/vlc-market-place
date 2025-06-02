@@ -1,0 +1,95 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/store-management"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Validar Pedido</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Instrucciones -->
+  <ion-card *ngIf="!isScanning && !lastScannedOrder">
+    <ion-card-header>
+      <ion-card-title>Escanear Pedido</ion-card-title>
+      <ion-card-subtitle>Escanea el código QR del pedido para validarlo</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <div *ngIf="!permissionDenied">
+        <p>1. Asegúrate de que el código QR esté bien iluminado</p>
+        <p>2. Mantén el dispositivo estable</p>
+        <p>3. El pedido se validará automáticamente al escanear</p>
+        
+        <ion-button expand="block" (click)="startScanning()" [disabled]="!scannerPermission">
+          <ion-icon name="scan-outline" slot="start"></ion-icon>
+          Comenzar Escaneo
+        </ion-button>
+      </div>
+
+      <div *ngIf="permissionDenied" class="permission-denied">
+        <ion-icon name="camera-outline" color="warning" size="large"></ion-icon>
+        <h3>Se requiere acceso a la cámara</h3>
+        <p>Para escanear códigos QR, necesitamos permiso para usar la cámara de tu dispositivo.</p>
+        
+        <!-- Instrucciones específicas para Safari -->
+        <div *ngIf="isSafari" class="safari-instructions">
+          <p><strong>En Safari:</strong></p>
+          <ol>
+            <li>Toca en "AA" en la barra de direcciones</li>
+            <li>Selecciona "Ajustes del sitio web"</li>
+            <li>Activa el permiso de "Cámara"</li>
+          </ol>
+        </div>
+
+        <ion-button expand="block" (click)="checkPermissions()" color="primary">
+          <ion-icon name="refresh-outline" slot="start"></ion-icon>
+          Verificar Permisos
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Vista de escaneo -->
+  <div *ngIf="isScanning" class="scanner-view">
+    <!-- Vista de cámara para navegador -->
+    <div *ngIf="!platform.is('capacitor')" class="web-scanner-view">
+      <video #video playsinline autoplay class="scanner-video"></video>
+      <canvas #canvas class="scanner-canvas" hidden></canvas>
+      <div class="scanner-overlay">
+        <div class="scanner-frame">
+          <div class="scanner-line"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista de cámara para dispositivo móvil -->
+    <div *ngIf="platform.is('capacitor')" class="native-scanner-view">
+      <div class="scanner-frame">
+        <div class="scanner-line"></div>
+      </div>
+    </div>
+
+    <ion-button expand="block" (click)="stopScanning()" color="danger" class="stop-button">
+      <ion-icon name="close-outline" slot="start"></ion-icon>
+      Cancelar Escaneo
+    </ion-button>
+  </div>
+
+  <!-- Resultado del escaneo -->
+  <ion-card *ngIf="lastScannedOrder" class="validation-success">
+    <ion-card-header>
+      <ion-icon name="checkmark-circle" color="success"></ion-icon>
+      <ion-card-title>¡Pedido Validado!</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p><strong>ID del Pedido:</strong> {{lastScannedOrder.id}}</p>
+      <p><strong>Cliente:</strong> {{lastScannedOrder.customer_name}}</p>
+      <p><strong>Total:</strong> {{lastScannedOrder.total | currency:'EUR'}}</p>
+      
+      <ion-button expand="block" routerLink="/tabs/store-management" color="primary">
+        <ion-icon name="home-outline" slot="start"></ion-icon>
+        Volver al Inicio
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+</ion-content> 
