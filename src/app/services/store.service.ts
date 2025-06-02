@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface Store {
   id: string;
@@ -9,6 +10,7 @@ export interface Store {
   image_url?: string;
   created_at?: string;
   category?: string;
+  owner_id?: string;
 }
 
 @Injectable({
@@ -16,46 +18,154 @@ export interface Store {
 })
 export class StoreService {
   private storeCache: Map<string, Store> = new Map();
+  private supabase: SupabaseClient;
 
-  constructor(private supabase: SupabaseService) {}
+  constructor(private supabaseService: SupabaseService) {
+    this.supabase = this.supabaseService.getClient();
+  }
 
-  /**
-   * Obtiene un almacén por su ID (con caché)
-   */
-  async getStoreById(storeId: string): Promise<Store | null> {
-    // Verificar la caché primero
-    if (this.storeCache.has(storeId)) {
-      return this.storeCache.get(storeId) || null;
-    }
-
+  async getStores(): Promise<Store[]> {
     try {
-      const { data, error } = await this.supabase.getClient()
+      const { data: stores, error } = await this.supabase
+        .from('stores')
+        .select('*');
+
+      if (error) throw error;
+
+      stores.forEach((store: Store) => this.storeCache.set(store.id, store));
+      return stores;
+    } catch (error) {
+      console.error('Error al obtener las tiendas:', error);
+      throw error;
+    }
+  }
+
+  async getStoreById(id: string): Promise<Store | null> {
+    try {
+      // Primero intentamos obtener del cache
+      if (this.storeCache.has(id)) {
+        return this.storeCache.get(id)!;
+      }
+
+      const { data: store, error } = await this.supabase
         .from('stores')
         .select('*')
-        .eq('id', storeId)
+        .eq('id', id)
         .single();
 
-      if (error) {
-        console.error(`Error al obtener tienda ${storeId}:`, error);
-        return null;
+      if (error) throw error;
+
+      if (store) {
+        this.storeCache.set(store.id, store);
       }
 
-      if (data) {
-        const store: Store = {
-          ...data,
-          name: data.name || 'Tienda' // Asegurar que siempre hay un nombre
-        };
-        
-        // Guardar en caché
-        this.storeCache.set(storeId, store);
-        return store;
-      }
-      
-      return null;
-    } catch (err) {
-      console.error(`Error al cargar tienda ${storeId}:`, err);
-      return null;
+      return store;
+    } catch (error) {
+      console.error('Error al obtener la tienda:', error);
+      throw error;
     }
+  }
+
+  async getUserStores(userId: string): Promise<Store[]> {
+    try {
+      const { data: stores, error } = await this.supabase
+        .from('stores')
+        .select('*')
+        .eq('owner_id', userId);
+
+      if (error) throw error;
+
+      stores.forEach((store: Store) => this.storeCache.set(store.id, store));
+      return stores;
+    } catch (error) {
+      console.error('Error al obtener las tiendas del usuario:', error);
+      throw error;
+    }
+  }
+
+  async createStore(store: Partial<Store>): Promise<Store> {
+    try {
+      const { data, error } = await this.supabase
+        .from('stores')
+        .insert([store])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      this.storeCache.set(data.id, data);
+      return data;
+    } catch (error) {
+      console.error('Error al crear la tienda:', error);
+      throw error;
+    }
+  }
+
+  async updateStore(store: Partial<Store>): Promise<Store> {
+    try {
+      if (!store.id) throw new Error('Se requiere el ID de la tienda');
+
+      const { data, error } = await this.supabase
+        .from('stores')
+        .update(store)
+        .eq('id', store.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      this.storeCache.set(data.id, data);
+      return data;
+    } catch (error) {
+      console.error('Error al actualizar la tienda:', error);
+      throw error;
+    }
+  }
+
+  async deleteStore(storeId: string): Promise<void> {
+    try {
+      const { error } = await this.supabase
+        .from('stores')
+        .delete()
+        .eq('id', storeId);
+
+      if (error) throw error;
+
+      this.storeCache.delete(storeId);
+    } catch (error) {
+      console.error('Error al eliminar la tienda:', error);
+      throw error;
+    }
+  }
+
+  async isUserStoreOwner(userId: string, storeId: string): Promise<boolean> {
+    try {
+      const store = await this.getStoreById(storeId);
+      return store?.owner_id === userId;
+    } catch (error) {
+      console.error('Error al verificar el propietario de la tienda:', error);
+      return false;
+    }
+  }
+
+  async hasUserStores(userId: string): Promise<boolean> {
+    try {
+      const { count, error } = await this.supabase
+        .from('stores')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', userId);
+
+      if (error) throw error;
+
+      return (count || 0) > 0;
+    } catch (error) {
+      console.error('Error al verificar si el usuario tiene tiendas:', error);
+      return false;
+    }
+  }
+
+  clearCache() {
+    this.storeCache.clear();
   }
 
   /**
@@ -84,7 +194,7 @@ export class StoreService {
 
     // Consultar la base de datos para los IDs que no están en caché
     try {
-      const { data, error } = await this.supabase.getClient()
+      const { data, error } = await this.supabase
         .from('stores')
         .select('*')
         .in('id', uncachedIds);
@@ -131,7 +241,7 @@ export class StoreService {
    */
   async getAllStores(): Promise<Store[]> {
     try {
-      const { data, error } = await this.supabase.getClient()
+      const { data, error } = await this.supabase
         .from('stores')
         .select('*')
         .order('name', { ascending: true });
@@ -184,13 +294,6 @@ export class StoreService {
   }
 
   /**
-   * Limpiar la caché de tiendas
-   */
-  clearCache(): void {
-    this.storeCache.clear();
-  }
-
-  /**
    * Método de diagnóstico para examinar tiendas existentes en Supabase
    */
   async diagnosticAllStores(): Promise<any> {
@@ -198,7 +301,7 @@ export class StoreService {
       console.log('Ejecutando diagnóstico completo de tiendas...');
       
       // Obtener todas las tiendas de la base de datos sin filtros
-      const { data: allStores, error } = await this.supabase.getClient()
+      const { data: allStores, error } = await this.supabase
         .from('stores')
         .select('*');
       
@@ -220,7 +323,7 @@ export class StoreService {
         for (const store of allStores) {
           try {
             // Intentar consultar esta tienda específica
-            const { data, error } = await this.supabase.getClient()
+            const { data, error } = await this.supabase
               .from('stores')
               .select('*')
               .eq('id', store.id)
@@ -248,7 +351,7 @@ export class StoreService {
       }
 
       // Examinar ahora pedidos para ver qué store_ids tienen
-      const { data: orders, error: ordersError } = await this.supabase.getClient()
+      const { data: orders, error: ordersError } = await this.supabase
         .from('orders')
         .select('id, store_id');
         
@@ -261,7 +364,7 @@ export class StoreService {
           };
           
       // Obtener items de pedidos para ver sus store_ids
-      const { data: orderItems, error: itemsError } = await this.supabase.getClient()
+      const { data: orderItems, error: itemsError } = await this.supabase
         .from('order_items')
         .select('order_id, store_id');
         

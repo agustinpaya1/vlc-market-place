@@ -70,6 +70,31 @@ export const routes: Routes = [
         path: 'locations',
         loadComponent: () =>
           import('../locations/locations.page').then((m) => m.LocationsPage),
+      },
+      {
+        path: 'store-management',
+        loadComponent: () =>
+          import('../store-management/store-management.page').then((m) => m.StoreManagementPage),
+      },
+      {
+        path: 'store-edit/:id',
+        loadComponent: () =>
+          import('../store-management/store-edit/store-edit.page').then((m) => m.StoreEditPage),
+      },
+      {
+        path: 'store-create',
+        loadComponent: () =>
+          import('../store-management/store-create/store-create.page').then((m) => m.StoreCreatePage),
+      },
+      {
+        path: 'store-products/:id',
+        loadComponent: () =>
+          import('../store-management/store-products/store-products.page').then((m) => m.StoreProductsPage),
+      },
+      {
+        path: 'store-orders/:id',
+        loadComponent: () =>
+          import('../store-management/store-orders/store-orders.page').then((m) => m.StoreOrdersPage),
       }
     ],
   },

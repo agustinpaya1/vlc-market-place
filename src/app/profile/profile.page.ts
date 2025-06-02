@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { AuthService, User } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
 import { SettingsService } from '../services/settings.service';
+import { StoreService } from '../services/store.service';
 import { addIcons } from 'ionicons';
 import { 
   personCircle, 
@@ -19,7 +20,8 @@ import {
   callOutline, 
   locationOutline,
   logInOutline,
-  camera
+  camera,
+  storefront
 } from 'ionicons/icons';
 import { ToastController } from '@ionic/angular';
 import { Subscription } from 'rxjs';
@@ -27,6 +29,7 @@ import { Platform } from '@ionic/angular/standalone';
 
 interface ProfileUser extends User {
   name: string;
+  isStoreOwner?: boolean;
 }
 
 interface MenuItem {
@@ -51,7 +54,8 @@ export class ProfilePage implements OnInit, OnDestroy {
     email: 'usuario@example.com',
     phone: '',
     address: '',
-    photoUrl: undefined
+    photoUrl: undefined,
+    isStoreOwner: false
   };
 
   isAuthenticated = false;
@@ -73,6 +77,7 @@ export class ProfilePage implements OnInit, OnDestroy {
     private authService: AuthService,
     private supabaseService: SupabaseService,
     private settingsService: SettingsService,
+    private storeService: StoreService,
     private toastController: ToastController,
     private platform: Platform,
     private ngZone: NgZone,
@@ -90,7 +95,8 @@ export class ProfilePage implements OnInit, OnDestroy {
       callOutline,
       locationOutline,
       logInOutline,
-      camera
+      camera,
+      storefront
     });
     console.log('ProfilePage constructor called');
     
@@ -189,16 +195,36 @@ export class ProfilePage implements OnInit, OnDestroy {
     });
   }
 
-  loadUserData(userData: User) {
+  async loadUserData(userData: User) {
     console.log('ProfilePage - Loading user data:', userData);
+    
+    // Verificar si el usuario es propietario de alguna tienda
+    const userStores = await this.storeService.getUserStores(userData.id);
+    const isStoreOwner = userStores.length > 0;
+    
     this.user = {
       id: userData.id,
       name: userData.fullName || userData.email.split('@')[0],
       email: userData.email,
       phone: userData.phone || '',
       address: userData.address || '',
-      photoUrl: userData.photoUrl
+      photoUrl: userData.photoUrl,
+      isStoreOwner
     };
+
+    // Si es propietario de tienda, añadir el botón de administrar tienda al menú
+    if (isStoreOwner && !this.menuItems.some(item => item.id === 'manage-store')) {
+      this.menuItems = [
+        {
+          id: 'manage-store',
+          icon: 'storefront',
+          label: 'Administrar Tienda',
+          route: '/tabs/store-management'
+        },
+        ...this.menuItems
+      ];
+    }
+
     this.changeDetector.detectChanges();
   }
 

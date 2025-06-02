@@ -58,6 +58,15 @@
       </div>
       <h2 class="user-fullname">{{ user.name }}</h2>
       <p class="user-email-text">{{ user.email }}</p>
+      <!-- Mostrar ID del usuario para desarrollo -->
+      <p class="user-id-text" style="font-family: monospace; background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin: 8px 0;">
+        ID: {{ user.id }}
+      </p>
+      <!-- Indicador de propietario de tienda -->
+      <div *ngIf="user.isStoreOwner" class="store-owner-badge" style="display: inline-flex; align-items: center; background: #4CAF50; color: white; padding: 4px 12px; border-radius: 16px; font-size: 12px; margin: 8px 0;">
+        <ion-icon name="storefront" style="margin-right: 4px;"></ion-icon>
+        Propietario de Tienda
+      </div>
     </div>
 
     <ion-list lines="full" class="user-info-list hardware-accelerated">
