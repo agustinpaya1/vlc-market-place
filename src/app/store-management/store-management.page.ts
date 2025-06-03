@@ -1,12 +1,12 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ToastController, ModalController } from '@ionic/angular';
 import { AuthService } from '../services/auth.service';
 import { StoreService } from '../services/store.service';
 import { OrderService, OrderStats } from '../services/order.service';
 import { QrScannerService } from '../services/qr-scanner.service';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Store, StoreWithStats } from '../interfaces/store.interface';
 import { 
   IonHeader, 
@@ -31,8 +31,7 @@ import {
   IonFab,
   IonFabButton,
   IonButtons,
-  IonBackButton,
-  ToastController
+  IonBackButton
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
@@ -46,9 +45,12 @@ import {
   time,
   star,
   alertCircle,
-  scanOutline
+  scanOutline,
+  locationOutline,
+  arrowBack
 } from 'ionicons/icons';
 import { NotificationService } from '../services/notification.service';
+import { CameraPermissionModalComponent } from '../components/camera-permission-modal/camera-permission-modal.component';
 
 @Component({
   selector: 'app-store-management',
@@ -59,6 +61,7 @@ import { NotificationService } from '../services/notification.service';
     CommonModule,
     FormsModule,
     IonicModule,
+    RouterModule,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -81,7 +84,16 @@ import { NotificationService } from '../services/notification.service';
     IonFab,
     IonFabButton,
     IonButtons,
-    IonBackButton
+    IonBackButton,
+    CameraPermissionModalComponent
+  ],
+  providers: [
+    AuthService,
+    StoreService,
+    OrderService,
+    QrScannerService,
+    NotificationService,
+    ModalController
   ]
 })
 export class StoreManagementPage implements OnInit {
@@ -97,7 +109,8 @@ export class StoreManagementPage implements OnInit {
     private router: Router,
     private toastController: ToastController,
     private changeDetector: ChangeDetectorRef,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private modalController: ModalController
   ) {
     addIcons({
       create,
@@ -110,7 +123,9 @@ export class StoreManagementPage implements OnInit {
       time,
       star,
       alertCircle,
-      scanOutline
+      scanOutline,
+      locationOutline,
+      arrowBack
     });
   }
 
@@ -233,7 +248,7 @@ export class StoreManagementPage implements OnInit {
 
   async scanQR(storeId: string) {
     try {
-      const hasPermission = await this.qrScanner.checkPermission();
+      const hasPermission = await this.qrScanner.hasPermission();
       if (!hasPermission) {
         this.notificationService.show({
           message: 'Se necesita permiso para usar la cámara',

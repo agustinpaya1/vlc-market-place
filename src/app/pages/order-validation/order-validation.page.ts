@@ -70,7 +70,6 @@ export class OrderValidationPage implements OnInit, OnDestroy {
         this.qrScanner.resetPermissions();
         this.permissionCheckAttempts = 0;
       }
-
       this.permissionCheckAttempts++;
       this.scannerPermission = await this.qrScanner.checkPermission();
       this.permissionDenied = !this.scannerPermission;
@@ -101,6 +100,9 @@ export class OrderValidationPage implements OnInit, OnDestroy {
 
   async startScanning() {
     try {
+      // Detener cualquier escaneo previo
+      await this.stopScanning();
+
       // Verificar permisos antes de iniciar
       if (!this.scannerPermission) {
         await this.checkPermissions();

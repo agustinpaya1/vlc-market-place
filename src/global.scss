@@ -1863,3 +1863,83 @@ page-orders ion-content,
   );
   box-shadow: 0 0 8px var(--ion-color-primary);
 }
+
+.camera-permission-modal {
+  --height: auto;
+  --width: 90%;
+  --max-width: 400px;
+  --border-radius: 16px;
+  --backdrop-opacity: 0.6;
+
+  &::part(content) {
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  ion-header {
+    --background: transparent;
+    
+    ion-toolbar {
+      --background: transparent;
+      --border-color: transparent;
+    }
+  }
+
+  ion-content {
+    --background: var(--ion-background-color);
+  }
+}
+
+@media (min-width: 768px) {
+  .camera-permission-modal {
+    --width: 400px;
+  }
+}
+
+#reader {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 9999 !important;
+  background: #000 !important;
+
+  video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  div {
+    border: none !important;
+  }
+}
+
+// Estilos para los botones del escáner
+#reader__dashboard {
+  position: fixed !important;
+  bottom: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  padding: 10px !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  gap: 10px !important;
+
+  button {
+    background: #fff !important;
+    color: #000 !important;
+    border: none !important;
+    padding: 8px 16px !important;
+    border-radius: 5px !important;
+    font-weight: bold !important;
+  }
+}
+
+// Marco de escaneo
+#reader__scan_region {
+  border: 2px solid #fff !important;
+  border-radius: 10px !important;
+}

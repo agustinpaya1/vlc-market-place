@@ -2,131 +2,119 @@ import { Injectable } from '@angular/core';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { Platform } from '@ionic/angular';
 import { NotificationService } from './notification.service';
-import jsQR from 'jsqr';
+import { BrowserQRCodeReader } from '@zxing/browser';
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface QRCode {
+  data: string;
+  location: {
+    topLeftCorner: Point;
+    topRightCorner: Point;
+    bottomRightCorner: Point;
+    bottomLeftCorner: Point;
+  };
+}
+
+// @ts-ignore
+const jsQR = require('jsqr') as (
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  options?: { inversionAttempts: 'dontInvert' | 'onlyInvert' | 'attemptBoth' }
+) => QRCode | null;
 
 @Injectable({
   providedIn: 'root'
 })
 export class QrScannerService {
-  private stream: MediaStream | null = null;
-  private videoElement: HTMLVideoElement | null = null;
-  private canvasElement: HTMLCanvasElement | null = null;
-  private canvasContext: CanvasRenderingContext2D | null = null;
+  private codeReader: BrowserQRCodeReader | null = null;
   private scanning = false;
-  private permissionGranted = false;
 
   constructor(
     private platform: Platform,
     private notificationService: NotificationService
-  ) {}
-
-  private isSafari(): boolean {
-    const userAgent = navigator.userAgent.toLowerCase();
-    return userAgent.includes('safari') && !userAgent.includes('chrome');
+  ) {
+    this.codeReader = new BrowserQRCodeReader();
   }
 
-  private isIOS(): boolean {
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  }
-
-  async checkPermission(): Promise<boolean> {
+  async hasPermission(): Promise<boolean> {
     try {
       if (this.platform.is('capacitor')) {
-        // En dispositivo móvil, usar el plugin de Capacitor
-        const status = await BarcodeScanner.checkPermission({ force: false });
-        if (status.granted) {
-          return true;
-        }
-        if (status.denied || status.neverAsked) {
-          const requestStatus = await BarcodeScanner.checkPermission({ force: true });
-          return requestStatus.granted || false;
-        }
+        const status = await BarcodeScanner.checkPermission({ force: true });
+        return status.granted || false;
+      }
+      
+      if (!navigator.mediaDevices?.getUserMedia) {
+        console.error('getUserMedia no está soportado en este navegador');
+        this.notificationService.show({
+          message: 'Tu navegador no soporta el acceso a la cámara',
+          type: 'error',
+          duration: 3000
+        });
         return false;
-      } else {
-        // En navegador web
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          this.notificationService.show({
-            message: 'Tu navegador no soporta el acceso a la cámara',
-            type: 'error',
-            duration: 3000
-          });
-          return false;
-        }
+      }
 
-        // Si ya tenemos el permiso guardado, lo devolvemos
-        if (this.permissionGranted) {
-          return true;
-        }
+      // Verificar si hay dispositivos de video disponibles
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      
+      if (videoDevices.length === 0) {
+        console.error('No se encontraron cámaras disponibles');
+        this.notificationService.show({
+          message: 'No se encontró ninguna cámara en tu dispositivo',
+          type: 'error',
+          duration: 3000
+        });
+        return false;
+      }
 
-        try {
-          // Intentar obtener acceso a la cámara directamente
-          const constraints = {
-            video: {
-              facingMode: this.isIOS() ? 'environment' : { ideal: 'environment' },
-              width: { ideal: 1280 },
-              height: { ideal: 720 }
-            }
-          };
-
-          const stream = await navigator.mediaDevices.getUserMedia(constraints);
-          
-          // Si llegamos aquí, el permiso fue concedido
-          this.permissionGranted = true;
-          
-          // Limpiamos el stream de prueba
-          stream.getTracks().forEach(track => track.stop());
-          
-          return true;
-        } catch (error: any) {
-          console.error('Error accessing camera:', error);
-          
-          if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-            if (this.isSafari()) {
-              this.notificationService.show({
-                message: 'Por favor, permite el acceso a la cámara en los ajustes de Safari',
-                type: 'warning',
-                duration: 5000
-              });
-            } else {
-              this.notificationService.show({
-                message: 'Permiso de cámara denegado. Por favor, permite el acceso a la cámara en la configuración de tu navegador.',
-                type: 'warning',
-                duration: 4000
-              });
-            }
-          } else if (error.name === 'NotFoundError') {
-            this.notificationService.show({
-              message: 'No se encontró ninguna cámara en tu dispositivo',
-              type: 'error',
-              duration: 3000
-            });
-          }
-          
-          return false;
-        }
+      // Intentar obtener acceso a la cámara
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment'
+          } 
+        });
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+      } catch (error) {
+        console.error('Error al acceder a la cámara:', error);
+        this.notificationService.show({
+          message: 'Error al acceder a la cámara. Por favor, verifica los permisos',
+          type: 'error',
+          duration: 3000
+        });
+        return false;
       }
     } catch (error) {
-      console.error('Error checking camera permission:', error);
+      console.error('Error checking permissions:', error);
       return false;
     }
   }
 
+  async checkPermission(): Promise<boolean> {
+    return this.hasPermission();
+  }
+
   async startScan(): Promise<string> {
-    if (this.platform.is('capacitor')) {
-      return this.startNativeScan();
-    } else {
-      return this.startWebScan();
+    try {
+      if (this.platform.is('capacitor')) {
+        return this.startNativeScan();
+      } else {
+        return this.startWebScan();
+      }
+    } catch (error) {
+      console.error('Error starting scan:', error);
+      return '';
     }
   }
 
   private async startNativeScan(): Promise<string> {
     try {
-      const hasPermission = await this.checkPermission();
-      if (!hasPermission) {
-        return '';
-      }
-
       document.querySelector('body')?.classList.add('scanner-active');
       await BarcodeScanner.hideBackground();
       const result = await BarcodeScanner.startScan();
@@ -145,135 +133,110 @@ export class QrScannerService {
 
   private async startWebScan(): Promise<string> {
     try {
-      const hasPermission = await this.checkPermission();
+      const hasPermission = await this.hasPermission();
       if (!hasPermission) {
         return '';
       }
 
-      // Crear elementos de video y canvas si no existen
-      if (!this.videoElement) {
-        this.videoElement = document.createElement('video');
-        this.videoElement.setAttribute('playsinline', 'true');
-        this.videoElement.setAttribute('autoplay', 'true');
-      }
+      // Obtener lista de cámaras
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(device => device.kind === 'videoinput');
       
-      if (!this.canvasElement) {
-        this.canvasElement = document.createElement('canvas');
-        this.canvasContext = this.canvasElement.getContext('2d');
-      }
+      // Intentar usar la última cámara (generalmente la trasera en móviles)
+      const deviceId = videoDevices.length > 0 ? videoDevices[videoDevices.length - 1].deviceId : undefined;
 
-      try {
-        const constraints = {
-          video: {
-            facingMode: this.isIOS() ? 'environment' : { ideal: 'environment' },
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+      // Crear el contenedor para el video
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.width = '100%';
+      container.style.height = '100%';
+      container.style.backgroundColor = '#000';
+      container.style.zIndex = '9999';
+      document.body.appendChild(container);
+
+      // Botón para cerrar
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Cerrar';
+      closeButton.style.position = 'fixed';
+      closeButton.style.bottom = '20px';
+      closeButton.style.left = '50%';
+      closeButton.style.transform = 'translateX(-50%)';
+      closeButton.style.zIndex = '10000';
+      closeButton.style.padding = '10px 20px';
+      closeButton.style.backgroundColor = '#fff';
+      closeButton.style.border = 'none';
+      closeButton.style.borderRadius = '5px';
+      container.appendChild(closeButton);
+
+      // Crear elemento de video
+      const videoElement = document.createElement('video');
+      videoElement.style.width = '100%';
+      videoElement.style.height = '100%';
+      videoElement.style.objectFit = 'cover';
+      container.appendChild(videoElement);
+
+      return new Promise<string>((resolve) => {
+        let scanSubscription: { stop: () => void } | null = null;
+
+        const cleanup = () => {
+          if (scanSubscription) {
+            scanSubscription.stop();
           }
+          container.remove();
         };
 
-        this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-        
-        if (!this.videoElement) return '';
-        
-        this.videoElement.srcObject = this.stream;
-        
-        // Esperar a que el video esté listo
-        await new Promise((resolve) => {
-          if (this.videoElement) {
-            this.videoElement.onloadedmetadata = () => {
-              resolve(true);
-            };
-          }
-        });
+        closeButton.onclick = () => {
+          cleanup();
+          resolve('');
+        };
 
-        await this.videoElement.play();
-
-        // Configurar dimensiones
-        if (this.canvasElement && this.videoElement) {
-          this.canvasElement.width = this.videoElement.videoWidth;
-          this.canvasElement.height = this.videoElement.videoHeight;
-        }
-
-        // Iniciar escaneo
-        return new Promise((resolve) => {
-          this.scanning = true;
-          const scan = () => {
-            if (!this.scanning) {
+        if (this.codeReader) {
+          // @ts-ignore
+          this.codeReader.decodeFromVideoDevice(deviceId, videoElement, (result, error) => {
+            if (result) {
+              cleanup();
+              // @ts-ignore
+              resolve(result.getText());
+            }
+            if (error) {
+              console.error('Error scanning:', error);
+            }
+          })
+            .then(controls => {
+              scanSubscription = controls;
+            })
+            .catch(error => {
+              console.error('Error starting scan:', error);
+              cleanup();
               resolve('');
-              return;
-            }
-
-            if (this.videoElement && this.canvasContext && this.canvasElement) {
-              try {
-                this.canvasContext.drawImage(
-                  this.videoElement,
-                  0,
-                  0,
-                  this.canvasElement.width,
-                  this.canvasElement.height
-                );
-
-                const imageData = this.canvasContext.getImageData(
-                  0,
-                  0,
-                  this.canvasElement.width,
-                  this.canvasElement.height
-                );
-
-                const code = jsQR(imageData.data, imageData.width, imageData.height);
-
-                if (code) {
-                  this.scanning = false;
-                  this.stopWebScan();
-                  resolve(code.data);
-                  return;
-                }
-              } catch (error) {
-                console.error('Error during QR scan:', error);
-              }
-            }
-
-            requestAnimationFrame(scan);
-          };
-
-          scan();
-        });
-      } catch (error) {
-        console.error('Error starting web scan:', error);
-        this.notificationService.show({
-          message: 'Error al acceder a la cámara. Por favor, asegúrate de que tienes una cámara disponible y has dado los permisos necesarios.',
-          type: 'error',
-          duration: 4000
-        });
-        return '';
-      }
+            });
+        } else {
+          cleanup();
+          resolve('');
+        }
+      });
     } catch (error) {
       console.error('Error in web scan:', error);
+      this.notificationService.show({
+        message: 'Error al iniciar el escáner',
+        type: 'error',
+        duration: 3000
+      });
       return '';
     }
   }
 
-  private stopWebScan() {
-    this.scanning = false;
-    if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
-      this.stream = null;
-    }
-    if (this.videoElement) {
-      this.videoElement.srcObject = null;
-    }
-  }
-
   async stopScan() {
+    this.scanning = false;
     if (this.platform.is('capacitor')) {
       await BarcodeScanner.stopScan();
       document.querySelector('body')?.classList.remove('scanner-active');
-    } else {
-      this.stopWebScan();
     }
   }
 
   resetPermissions() {
-    this.permissionGranted = false;
+    this.scanning = false;
   }
 } 
