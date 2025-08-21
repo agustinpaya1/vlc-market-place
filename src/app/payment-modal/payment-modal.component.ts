@@ -26,7 +26,7 @@ import { SupabaseService } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { QRCodeService } from '../services/qr-code.service';
+import { QrCodeService } from '../services/qr-code.service';
 import { NotificationService } from '../services/notification.service';
 import { QRCodeComponent } from 'angularx-qrcode';
 
@@ -99,7 +99,7 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private location: Location,
-    private qrCodeService: QRCodeService,
+    private qrCodeService: QrCodeService,
     private notificationService: NotificationService
   ) {
     addIcons({ 
@@ -209,10 +209,12 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       console.log('Iniciando proceso de pago...');
       
-      const user = await this.authService.getCurrentUser();
-      if (!user) {
-        throw new Error('Usuario no autenticado');
-      }
+      const { data: { user } } = await this.supabaseService.getClient().auth.getUser();
+if (!user) {
+  console.error("Usuario no autenticado");
+  return;
+}
+
 
       console.log('Usuario autenticado:', user.id);
 
@@ -223,13 +225,28 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
 
       console.log('Items del carrito:', this.cartItems);
 
-      // 1. Crear el pedido primero
+      // 1) Cógelo del carrito si viene
+let storeId = this.cartItems[0]?.storeId ?? null;
+
+// 2) Si no viene, lo resolvemos consultando products en Supabase
+if (!storeId) {
+  storeId = await this.resolveStoreIdFromProducts();
+  if (!storeId) {
+    throw new Error('No se pudo determinar la tienda (store_id) del pedido.');
+  }
+}
+
+
       const orderData = {
         user_id: user.id,
+        store_id: storeId, 
         total_price: this.totalAmount,
         status: 'pending',
         created_at: new Date().toISOString()
       };
+      
+      
+
 
       console.log('Creando pedido con datos:', orderData);
 
@@ -277,7 +294,7 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // 3. Generar código QR para el pedido
       console.log('Generando código QR para el pedido:', order.id);
-      const qrCode = await this.qrCodeService.createQRCodeForOrder(order.id);
+      const qrCode = await this.qrCodeService.createQRCodeForOrder(order.id, order.store_id);
       
       if (!qrCode) {
         console.error('Error al generar el código QR');
@@ -286,13 +303,14 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
 
       console.log('Código QR generado exitosamente:', qrCode);
 
-      // Guardar el ID del pedido y generar el QR
-      this.orderId = order.id;
-      this.qrCodeData = JSON.stringify({
-        orderId: order.id,
-        code: qrCode.code,
-        publicKey: qrCode.public_key
-      });
+      // Guardar el ID del pedido y generar el Q
+this.orderId = order.id;
+this.qrCodeData = JSON.stringify({
+  orderId: order.id,
+  payload: qrCode.qr_code,      
+  publicKey: qrCode.public_key
+});
+
       
       // Asignar la clave privada si existe
       this.qrCodePrivateKey = qrCode.privateKey || '';
@@ -389,4 +407,22 @@ export class PaymentModalComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
   }
+
+  private async resolveStoreIdFromProducts(): Promise<string | null> {
+    try {
+      const ids = this.cartItems.map(i => i.id);
+      const { data, error } = await this.supabaseService.getClient()
+        .from('products')
+        .select('id, store_id')
+        .in('id', ids);
+  
+      if (error || !data?.length) return null;
+  
+      const uniqueStores = Array.from(new Set(data.map(d => d.store_id)));
+      return uniqueStores.length === 1 ? uniqueStores[0] : null;
+    } catch {
+      return null;
+    }
+  }
+  
 } 

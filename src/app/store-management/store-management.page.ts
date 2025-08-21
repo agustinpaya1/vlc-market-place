@@ -60,7 +60,6 @@ import { CameraPermissionModalComponent } from '../components/camera-permission-
   imports: [
     CommonModule,
     FormsModule,
-    IonicModule,
     RouterModule,
     IonHeader,
     IonToolbar,

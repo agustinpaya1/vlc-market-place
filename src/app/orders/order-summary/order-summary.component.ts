@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule, ModalController, AlertController, ToastController } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 import { Order, OrderService, OrderItem } from '../../services/order.service';
-import { QRCodeService } from '../../services/qr-code.service';
+import { QrCodeService } from '../../services/qr-code.service';
 import { QRCodeComponent } from 'angularx-qrcode';
 
 @Component({
@@ -317,7 +317,7 @@ export class OrderSummaryComponent implements OnInit {
     private orderService: OrderService,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
-    private qrCodeService: QRCodeService
+    private qrCodeService: QrCodeService
   ) {}
 
   ngOnInit() {
@@ -339,12 +339,12 @@ export class OrderSummaryComponent implements OnInit {
       // Si el pedido está pendiente, cargar el QR
       if (this.order.status === 'pending') {
         try {
-          const qrCode = await this.qrCodeService.getQRCodeByOrderId(this.orderId);
+          const qrCode = await this.qrCodeService.getQrCodeByOrderId(this.orderId);
           if (qrCode) {
             // Crear un objeto con los datos necesarios para el QR
             const qrData = {
-              orderId: qrCode.order_id,
-              code: qrCode.code,
+              orderId: qrCode.id,
+              code: qrCode.qr_code,
               publicKey: qrCode.public_key,
               timestamp: new Date().toISOString()
             };

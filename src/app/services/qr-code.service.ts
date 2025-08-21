@@ -1,200 +1,131 @@
+import nacl from 'tweetnacl';
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import * as CryptoJS from 'crypto-js';
 
-export interface QRCode {
-  id: string;
-  order_id: string;
-  code: string;
-  public_key: string;
-  private_key_hash: string;
-  created_at: string;
-  used_at?: string;
-  used_by?: string;
-  validation_attempts: number;
-  is_valid: boolean;
-  metadata?: any;
-  privateKey?: string;
+// ---- utils base64 sin Buffer ----
+function u8ToBase64(u8: Uint8Array): string {
+  let s = '';
+  for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]);
+  return btoa(s);
+}
+function base64ToU8(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+async function sha256Hex(input: string): Promise<string> {
+  const enc = new TextEncoder().encode(input);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
-@Injectable({
-  providedIn: 'root'
-})
-export class QRCodeService {
+@Injectable({ providedIn: 'root' })
+export class QrCodeService {
   constructor(private supabaseService: SupabaseService) {}
 
-  private generateKeyPair(): { publicKey: string; privateKey: string } {
-    // Generar una clave privada aleatoria
-    const privateKey = CryptoJS.lib.WordArray.random(32).toString();
-    // Generar una clave pública basada en la privada
-    const publicKey = CryptoJS.SHA256(privateKey).toString();
-
-    return { publicKey, privateKey };
+  private async generarClavesEd25519() {
+    const keyPair = nacl.sign.keyPair();
+    const publicKey = u8ToBase64(keyPair.publicKey);
+    const privateKey = u8ToBase64(keyPair.secretKey);
+    const privateKeyHash = await sha256Hex(privateKey); // guardamos SOLO el hash
+    return { publicKey, privateKey, privateKeyHash };
   }
 
-  private hashPrivateKey(privateKey: string): string {
-    return CryptoJS.SHA256(privateKey).toString();
+  private firmar(payloadString: string, privateKeyBase64: string): string {
+    const sk = base64ToU8(privateKeyBase64);
+    const sig = nacl.sign.detached(new TextEncoder().encode(payloadString), sk);
+    return u8ToBase64(sig);
   }
 
-  async createQRCodeForOrder(orderId: string): Promise<QRCode | null> {
-    try {
-      // Generar par de claves
-      const { publicKey, privateKey } = this.generateKeyPair();
-      const privateKeyHash = this.hashPrivateKey(privateKey);
+  async createQRCodeForOrder(orderId: string, storeId?: string | null) {
+    if (!storeId) throw new Error('storeId es requerido para generar el QR');
 
-      // Generar código único para el QR
-      const code = CryptoJS.lib.WordArray.random(16).toString();
+    const supabase = this.supabaseService.getClient();
 
-      const qrData = {
+    // 1) ¿Existe clave activa para la tienda?  (leer)
+const { data: existingKey, error: kSelErr } = await supabase
+.from('keys_public')              // <--- LEE de la vista (no contiene el hash)
+.select('id, public_key, is_active, store_id')
+.eq('store_id', storeId)
+.eq('is_active', true)
+.maybeSingle();
+
+let publicKey: string;
+let privateKey: string | null = null;
+let keyId: string;
+
+if (!existingKey) {
+// 2) No hay clave -> generamos y GUARDAMOS en la tabla real (escritura)
+// como la función es async, devuelve Promise<{ publicKey, privateKey, privateKeyHash }>
+const { publicKey: pub, privateKey: priv, privateKeyHash } = 
+  await this.generarClavesEd25519();
+
+const { data: newKey, error: keyInsErr } = await supabase
+  .from('keys')                   // <--- INSERTA en la tabla
+  .insert([{
+    store_id: storeId,
+    public_key: pub,
+    private_key_hash: privateKeyHash,
+    is_active: true,
+  }])
+  .select('id')
+  .single();
+
+if (keyInsErr) throw keyInsErr;
+
+publicKey = pub;
+privateKey = priv;        // ¡sólo se devuelve al cliente 1 vez!
+keyId = newKey.id;
+} else {
+publicKey = existingKey.public_key;
+keyId    = existingKey.id;
+// privateKey = null;        // si existía, no la tenemos en cliente (bien por seguridad)
+}
+
+
+    // 2) Payload del QR
+    const payload = { order_id: orderId, store_id: storeId, timestamp: new Date().toISOString() };
+    const payloadString = JSON.stringify(payload);
+
+    // 3) Firma (solo si acabamos de generar la clave y tenemos la privada)
+    let signature = '';
+    if (privateKey) {
+      signature = this.firmar(payloadString, privateKey);
+    }
+
+    // 4) Guardar QR
+    const { data: qrCode, error: qrErr } = await supabase
+      .from('qr_codes')
+      .insert([{
         order_id: orderId,
-        code: code,
-        public_key: publicKey,
-        private_key_hash: privateKeyHash,
+        store_id: storeId,
+        payload,
+        signature,
         validation_attempts: 0,
         is_valid: true,
-        metadata: {
-          created_timestamp: new Date().toISOString(),
-          type: 'order_qr'
-        }
-      };
+        code: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
+        key_id: keyId,
+        metadata: { created_timestamp: new Date().toISOString(), type: 'order_qr' }
+      }])
+      .select()
+      .single();
+    if (qrErr) throw qrErr;
 
-      const { data: qrCode, error } = await this.supabaseService.getClient()
-        .from('qr_codes')
-        .insert(qrData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating QR code:', error);
-        return null;
-      }
-
-      // Retornar el código QR con la clave privada (solo se mostrará una vez)
-      return {
-        ...qrCode,
-        privateKey // Esta clave solo se devuelve una vez y nunca se almacena
-      };
-    } catch (error) {
-      console.error('Error in createQRCodeForOrder:', error);
-      return null;
-    }
+    // 5) Lo que devuelve el servicio al front
+    const qrPayload = JSON.stringify({ payload, signature });
+    return { ...qrCode, qr_code: qrPayload, public_key: publicKey, privateKey };
   }
 
-  async validateQRCode(orderId: string, code: string, privateKey?: string): Promise<boolean> {
-    try {
-      // Si se proporciona clave privada, usar la validación con clave
-      if (privateKey) {
-        const { data: qrCode, error } = await this.supabaseService.getClient()
-          .from('qr_codes')
-          .select('*')
-          .eq('code', code)
-          .single();
-
-        if (error || !qrCode) {
-          console.error('QR code not found');
-          return false;
-        }
-
-        // Verificar si el código es válido
-        if (!qrCode.is_valid) {
-          console.error('QR code is no longer valid');
-          return false;
-        }
-
-        // Verificar la clave privada
-        const providedKeyHash = this.hashPrivateKey(privateKey);
-        if (providedKeyHash !== qrCode.private_key_hash) {
-          // Incrementar el contador de intentos fallidos
-          await this.supabaseService.getClient()
-            .from('qr_codes')
-            .update({ 
-              validation_attempts: qrCode.validation_attempts + 1,
-              is_valid: qrCode.validation_attempts < 2 // Invalidar después de 3 intentos
-            })
-            .eq('id', qrCode.id);
-
-          return false;
-        }
-
-        // Marcar como usado
-        await this.supabaseService.getClient()
-          .from('qr_codes')
-          .update({
-            used_at: new Date().toISOString(),
-            is_valid: false
-          })
-          .eq('id', qrCode.id);
-
-        return true;
-      }
-      
-      // Validación simple sin clave privada
-      const { data, error } = await this.supabaseService.getClient()
-        .from('qr_codes')
-        .select('is_valid, validation_attempts')
-        .eq('order_id', orderId)
-        .eq('code', code)
-        .single();
-
-      if (error) throw error;
-      if (!data) return false;
-
-      return data.is_valid && data.validation_attempts < 3;
-    } catch (error) {
-      console.error('Error validating QR code:', error);
-      return false;
-    }
+  async getQrCodeByOrderId(orderId: string) {
+    const { data, error } = await this.supabaseService.getClient()
+      .from('qr_codes')
+      .select('*')
+      .eq('order_id', orderId)
+      .single();
+    if (error) throw error;
+    return data;
   }
-
-  async getQRCodeByOrderId(orderId: string): Promise<QRCode | null> {
-    try {
-      const { data: qrCode, error } = await this.supabaseService.getClient()
-        .from('qr_codes')
-        .select('*')
-        .eq('order_id', orderId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching QR code:', error);
-        return null;
-      }
-
-      return qrCode;
-    } catch (error) {
-      console.error('Error in getQRCodeByOrderId:', error);
-      return null;
-    }
-  }
-
-  async getQRCode(orderId: string): Promise<{ qr_code: string }> {
-    try {
-      const { data, error } = await this.supabaseService.getClient()
-        .from('qr_codes')
-        .select('code')
-        .eq('order_id', orderId)
-        .single();
-
-      if (error) throw error;
-      if (!data) throw new Error('QR code not found');
-
-      return { qr_code: data.code };
-    } catch (error) {
-      console.error('Error getting QR code:', error);
-      throw error;
-    }
-  }
-
-  async incrementValidationAttempt(orderId: string): Promise<void> {
-    try {
-      const { error } = await this.supabaseService.getClient()
-        .rpc('increment_qr_validation_attempt', {
-          order_id_param: orderId
-        });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error incrementing validation attempt:', error);
-      throw error;
-    }
-  }
-} 
+}
