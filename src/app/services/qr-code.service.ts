@@ -129,7 +129,7 @@ export class QrCodeService {
         return false;
       }
 
-      console.log('QR validado correctamente');
+      console.log('QR validado correctamente:', qrCode);
       return true;
     } catch (error) {
       console.error('Error validating QR code:', error);
@@ -198,17 +198,34 @@ export class QrCodeService {
 
   async markQRAsUsed(orderId: string, code: string): Promise<void> {
     try {
-      const { error } = await this.supabaseService.getClient()
+      console.log('Marcando QR como usado - orderId:', orderId, 'code:', code);
+      
+      const user = await this.supabaseService.getClient().auth.getUser();
+      console.log('Usuario actual:', user.data.user?.id);
+      
+      const updateData = {
+        used_at: new Date().toISOString(),
+        is_valid: false,
+        used_by: user.data.user?.id
+      };
+      
+      console.log('Datos de actualización:', updateData);
+      
+      const { data, error } = await this.supabaseService.getClient()
         .from('qr_codes')
-        .update({
-          used_at: new Date().toISOString(),
-          is_valid: false,
-          used_by: (await this.supabaseService.getClient().auth.getUser()).data.user?.id
-        })
+        .update(updateData)
         .eq('order_id', orderId)
-        .eq('signature', code);
+        .eq('signature', code)
+        .select();
 
-      if (error) throw error;
+      console.log('Resultado de marcar como usado:', { data, error });
+
+      if (error) {
+        console.error('Error al marcar QR como usado:', error);
+        throw error;
+      }
+      
+      console.log('QR marcado como usado exitosamente');
     } catch (error) {
       console.error('Error marking QR as used:', error);
       throw error;

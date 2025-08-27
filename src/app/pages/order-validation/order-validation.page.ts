@@ -203,17 +203,38 @@ export class OrderValidationPage implements OnInit, OnDestroy {
         return;
       }
 
-      // Validación temporal sin QR (mientras se resuelve el problema de la tabla)
-      console.log('Validando pedido directamente (modo temporal)');
-      
-      // Verificar que el pedido esté en estado 'pending'
-      if (order.status !== 'pending') {
-        this.notificationService.show({
-          message: 'Este pedido ya ha sido procesado',
-          type: 'warning',
-          duration: 3000
-        });
-        return;
+      // Validar el QR si viene con código
+      if (code) {
+        console.log('Validando código QR:', code);
+        const isValid = await this.qrCodeService.validateQRCode(orderId, code);
+        console.log('Resultado validación QR:', isValid);
+        if (!isValid) {
+          this.notificationService.show({
+            message: 'Código QR inválido o ya utilizado',
+            type: 'error',
+            duration: 3000
+          });
+          return;
+        }
+        
+        // Marcar el QR como usado después de validación exitosa
+        try {
+          await this.qrCodeService.markQRAsUsed(orderId, code);
+          console.log('QR marcado como usado');
+        } catch (error) {
+          console.error('Error al marcar QR como usado:', error);
+          // No fallar la validación si no se puede marcar como usado
+        }
+      } else {
+        // Si no hay código QR, solo validar que el pedido esté pendiente
+        if (order.status !== 'pending') {
+          this.notificationService.show({
+            message: 'Este pedido ya ha sido procesado',
+            type: 'warning',
+            duration: 3000
+          });
+          return;
+        }
       }
       
       console.log('Pedido válido para procesar');
