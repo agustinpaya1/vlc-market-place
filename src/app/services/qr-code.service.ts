@@ -45,58 +45,17 @@ export class QrCodeService {
 
     const supabase = this.supabaseService.getClient();
 
-    // 1) ¿Existe clave activa para la tienda?  (leer)
-const { data: existingKey, error: kSelErr } = await supabase
-.from('keys_public')              // <--- LEE de la vista (no contiene el hash)
-.select('id, public_key, is_active, store_id')
-.eq('store_id', storeId)
-.eq('is_active', true)
-.maybeSingle();
+    // Generar claves simples para este pedido
+    const { publicKey, privateKey, privateKeyHash } = await this.generarClavesEd25519();
 
-let publicKey: string;
-let privateKey: string | null = null;
-let keyId: string;
-
-if (!existingKey) {
-// 2) No hay clave -> generamos y GUARDAMOS en la tabla real (escritura)
-// como la función es async, devuelve Promise<{ publicKey, privateKey, privateKeyHash }>
-const { publicKey: pub, privateKey: priv, privateKeyHash } = 
-  await this.generarClavesEd25519();
-
-const { data: newKey, error: keyInsErr } = await supabase
-  .from('keys')                   // <--- INSERTA en la tabla
-  .insert([{
-    store_id: storeId,
-    public_key: pub,
-    private_key_hash: privateKeyHash,
-    is_active: true,
-  }])
-  .select('id')
-  .single();
-
-if (keyInsErr) throw keyInsErr;
-
-publicKey = pub;
-privateKey = priv;        // ¡sólo se devuelve al cliente 1 vez!
-keyId = newKey.id;
-} else {
-publicKey = existingKey.public_key;
-keyId    = existingKey.id;
-// privateKey = null;        // si existía, no la tenemos en cliente (bien por seguridad)
-}
-
-
-    // 2) Payload del QR
+    // Payload del QR
     const payload = { order_id: orderId, store_id: storeId, timestamp: new Date().toISOString() };
     const payloadString = JSON.stringify(payload);
 
-    // 3) Firma (solo si acabamos de generar la clave y tenemos la privada)
-    let signature = '';
-    if (privateKey) {
-      signature = this.firmar(payloadString, privateKey);
-    }
+    // Firma del payload
+    const signature = this.firmar(payloadString, privateKey);
 
-    // 4) Guardar QR
+    // Guardar QR
     const { data: qrCode, error: qrErr } = await supabase
       .from('qr_codes')
       .insert([{
@@ -107,14 +66,14 @@ keyId    = existingKey.id;
         validation_attempts: 0,
         is_valid: true,
         code: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
-        key_id: keyId,
         metadata: { created_timestamp: new Date().toISOString(), type: 'order_qr' }
       }])
       .select()
       .single();
+    
     if (qrErr) throw qrErr;
 
-    // 5) Lo que devuelve el servicio al front
+    // Lo que devuelve el servicio al front
     const qrPayload = JSON.stringify({ payload, signature });
     return { ...qrCode, qr_code: qrPayload, public_key: publicKey, privateKey };
   }
@@ -131,11 +90,12 @@ keyId    = existingKey.id;
 
   async validateQRCode(orderId: string, code: string): Promise<boolean> {
     try {
+      // Buscar el QR por order_id y signature (que es el código)
       const { data: qrCode, error } = await this.supabaseService.getClient()
         .from('qr_codes')
         .select('*')
         .eq('order_id', orderId)
-        .eq('code', code)
+        .eq('signature', code)
         .single();
 
       if (error || !qrCode) {
@@ -201,7 +161,7 @@ keyId    = existingKey.id;
           used_by: (await this.supabaseService.getClient().auth.getUser()).data.user?.id
         })
         .eq('order_id', orderId)
-        .eq('code', code);
+        .eq('signature', code);
 
       if (error) throw error;
     } catch (error) {
