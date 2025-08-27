@@ -314,15 +314,21 @@ export class OrderService {
   // Método para marcar un pedido como entregado
   async markOrderAsDelivered(orderId: string): Promise<boolean> {
     try {
+      console.log('Intentando marcar pedido como entregado:', orderId);
+      
       const { data, error } = await this.supabase
         .from('orders')
         .update({ status: 'delivered', updated_at: new Date().toISOString() })
         .eq('id', orderId);
 
+      console.log('Resultado de actualización:', { data, error });
+
       if (error) {
         console.error('Error al marcar pedido como entregado:', error);
         throw error;
       }
+
+      console.log('Pedido marcado como entregado exitosamente');
 
       // Actualizar el estado local si está en la lista de pedidos
       const currentOrders = this.ordersSubject.getValue();
