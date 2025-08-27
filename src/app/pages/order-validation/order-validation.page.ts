@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { QrScannerService } from '../../services/qr-scanner.service';
 import { OrderService } from '../../services/order.service';
+import { QrCodeService } from '../../services/qr-code.service';
 import { NotificationService } from '../../services/notification.service';
 import { ActivatedRoute } from '@angular/router';
 import { Platform } from '@ionic/angular';
@@ -33,7 +34,8 @@ export class OrderValidationPage implements OnInit, OnDestroy {
     private orderService: OrderService,
     private notificationService: NotificationService,
     private route: ActivatedRoute,
-    public platform: Platform
+    public platform: Platform,
+    private qrCodeService: QrCodeService
   ) {
     this.storeId = this.route.snapshot.paramMap.get('storeId') || '';
     this.detectSafari();
@@ -71,7 +73,7 @@ export class OrderValidationPage implements OnInit, OnDestroy {
         this.permissionCheckAttempts = 0;
       }
       this.permissionCheckAttempts++;
-      this.scannerPermission = await this.qrScanner.checkPermission();
+      this.scannerPermission = await this.qrScanner.hasPermission();
       this.permissionDenied = !this.scannerPermission;
 
       if (this.permissionDenied && this.isSafari) {
@@ -144,11 +146,21 @@ export class OrderValidationPage implements OnInit, OnDestroy {
     }
   }
 
-  private async validateOrder(qrContent: string) {
+    private async validateOrder(qrContent: string) {
     try {
-      // El QR debería contener el ID del pedido
-      const orderId = qrContent;
-      
+      // El QR puede contener un JSON con { orderId, code, publicKey }
+      const { orderId, code } = this.parseQrContent(qrContent);
+      if (!orderId) {
+        this.notificationService.show({
+          message: 'Código QR inválido',
+          type: 'error',
+          duration: 3000
+        });
+        return;
+      }
+
+      console.log('Validando pedido:', orderId, 'para tienda:', this.storeId);
+
       // Obtener el pedido
       const order = await this.orderService.getOrderById(orderId);
       
@@ -161,8 +173,18 @@ export class OrderValidationPage implements OnInit, OnDestroy {
         return;
       }
 
+      console.log('Pedido encontrado:', order);
+
       // Verificar que el pedido pertenece a esta tienda
       if (order.store_id !== this.storeId) {
+        // Incrementar intentos fallidos si no es el dueño de la tienda
+        try {
+          await this.qrCodeService.incrementValidationAttempt(orderId);
+          console.log('Incrementado intento fallido para QR no autorizado');
+        } catch (error) {
+          console.error('Error al incrementar intento fallido:', error);
+        }
+        
         this.notificationService.show({
           message: 'Este pedido no pertenece a tu tienda',
           type: 'error',
@@ -181,8 +203,32 @@ export class OrderValidationPage implements OnInit, OnDestroy {
         return;
       }
 
+      // Validar el QR
+      console.log('Validando QR para pedido:', orderId);
+      const isValid = await this.qrCodeService.validateQRCode(orderId, code || '');
+      console.log('Resultado validación QR:', isValid);
+      if (!isValid) {
+        this.notificationService.show({
+          message: 'Código QR inválido o ya utilizado',
+          type: 'error',
+          duration: 3000
+        });
+        return;
+      }
+      
+      // Marcar el QR como usado después de validación exitosa
+      try {
+        await this.qrCodeService.markQRAsUsed(orderId, code || '');
+        console.log('QR marcado como usado');
+      } catch (error) {
+        console.error('Error al marcar QR como usado:', error);
+        // No fallar la validación si no se puede marcar como usado
+      }
+
       // Marcar el pedido como entregado
+      console.log('Marcando pedido como entregado...');
       const success = await this.orderService.markOrderAsDelivered(orderId);
+      console.log('Resultado marcado como entregado:', success);
       
       if (success) {
         this.lastScannedOrder = order;
@@ -200,11 +246,51 @@ export class OrderValidationPage implements OnInit, OnDestroy {
       }
     } catch (error) {
       console.error('Error validating order:', error);
+      // Mostrar error más específico
+      let errorMessage = 'Error al procesar el código QR';
+      if (error instanceof Error) {
+        if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+          errorMessage = 'Error del servidor. Intenta de nuevo en unos momentos.';
+        } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+          errorMessage = 'Error de autenticación. Inicia sesión de nuevo.';
+        } else if (error.message.includes('404') || error.message.includes('Not Found')) {
+          errorMessage = 'Pedido no encontrado.';
+        }
+      }
       this.notificationService.show({
-        message: 'Error al procesar el código QR',
+        message: errorMessage,
         type: 'error',
         duration: 3000
       });
     }
+  }
+
+  private parseQrContent(qrContent: string): { orderId: string | null; code?: string } {
+    // El nuevo formato del QR contiene { payload, signature }
+    try {
+      const obj = JSON.parse(qrContent);
+      
+      // Si tiene payload, extraer order_id del payload
+      if (obj.payload && obj.payload.order_id) {
+        return { 
+          orderId: obj.payload.order_id, 
+          code: obj.signature || undefined 
+        };
+      }
+      
+      // Fallback para formato anterior
+      const orderId = obj.orderId || obj.order_id || null;
+      const code = obj.code || undefined;
+      if (orderId && typeof orderId === 'string') {
+        return { orderId, code };
+      }
+    } catch (_) {
+      // No es JSON; puede ser directamente el UUID del pedido
+    }
+    
+    // Fallback: si parece un UUID, devolverlo tal cual
+    const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i;
+    const match = qrContent.match(uuidRegex);
+    return { orderId: match ? match[0] : null };
   }
 } 

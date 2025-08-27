@@ -128,4 +128,85 @@ keyId    = existingKey.id;
     if (error) throw error;
     return data;
   }
+
+  async validateQRCode(orderId: string, code: string): Promise<boolean> {
+    try {
+      const { data: qrCode, error } = await this.supabaseService.getClient()
+        .from('qr_codes')
+        .select('*')
+        .eq('order_id', orderId)
+        .eq('code', code)
+        .single();
+
+      if (error || !qrCode) {
+        console.error('QR code not found');
+        return false;
+      }
+
+      // Verificar si el código es válido
+      if (!qrCode.is_valid) {
+        console.error('QR code is no longer valid');
+        return false;
+      }
+
+      // Verificar intentos de validación
+      if (qrCode.validation_attempts >= 3) {
+        console.error('QR code exceeded validation attempts');
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error validating QR code:', error);
+      return false;
+    }
+  }
+
+  async incrementValidationAttempt(orderId: string): Promise<void> {
+    try {
+      // Primero obtener el QR actual para saber los intentos actuales
+      const { data: qrCode, error: fetchError } = await this.supabaseService.getClient()
+        .from('qr_codes')
+        .select('validation_attempts')
+        .eq('order_id', orderId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const newAttempts = (qrCode?.validation_attempts || 0) + 1;
+      const shouldBeValid = newAttempts < 3;
+
+      const { error } = await this.supabaseService.getClient()
+        .from('qr_codes')
+        .update({ 
+          validation_attempts: newAttempts,
+          is_valid: shouldBeValid
+        })
+        .eq('order_id', orderId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error incrementing validation attempt:', error);
+      throw error;
+    }
+  }
+
+  async markQRAsUsed(orderId: string, code: string): Promise<void> {
+    try {
+      const { error } = await this.supabaseService.getClient()
+        .from('qr_codes')
+        .update({
+          used_at: new Date().toISOString(),
+          is_valid: false,
+          used_by: (await this.supabaseService.getClient().auth.getUser()).data.user?.id
+        })
+        .eq('order_id', orderId)
+        .eq('code', code);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error marking QR as used:', error);
+      throw error;
+    }
+  }
 }

@@ -271,6 +271,7 @@ if (!storeId) {
       const orderItems = this.cartItems.map(item => ({
         order_id: order.id,
         product_id: item.id,
+        store_id: storeId, // Añadir store_id requerido
         quantity: item.quantity,
         price: item.offerPrice || item.price,
         created_at: new Date().toISOString()
