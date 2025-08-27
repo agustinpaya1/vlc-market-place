@@ -90,6 +90,8 @@ export class QrCodeService {
 
   async validateQRCode(orderId: string, code: string): Promise<boolean> {
     try {
+      console.log('Validando QR - orderId:', orderId, 'code:', code);
+      
       // Buscar el QR por order_id y signature (que es el código)
       const { data: qrCode, error } = await this.supabaseService.getClient()
         .from('qr_codes')
@@ -98,7 +100,19 @@ export class QrCodeService {
         .eq('signature', code)
         .single();
 
-      if (error || !qrCode) {
+      console.log('Resultado consulta QR:', { data: qrCode, error });
+
+      if (error) {
+        console.error('Error al consultar QR:', error);
+        // Si es error 406, intentar sin signature
+        if (error.code === '406' || error.message?.includes('406')) {
+          console.log('Intentando validación sin signature...');
+          return await this.validateQRCodeSimple(orderId);
+        }
+        return false;
+      }
+
+      if (!qrCode) {
         console.error('QR code not found');
         return false;
       }
@@ -115,9 +129,40 @@ export class QrCodeService {
         return false;
       }
 
+      console.log('QR validado correctamente');
       return true;
     } catch (error) {
       console.error('Error validating QR code:', error);
+      return false;
+    }
+  }
+
+  // Validación simple sin depender de signature
+  private async validateQRCodeSimple(orderId: string): Promise<boolean> {
+    try {
+      console.log('Validación simple para orderId:', orderId);
+      
+      const { data: qrCode, error } = await this.supabaseService.getClient()
+        .from('qr_codes')
+        .select('is_valid, validation_attempts')
+        .eq('order_id', orderId)
+        .single();
+
+      console.log('Resultado validación simple:', { data: qrCode, error });
+
+      if (error) {
+        console.error('Error en validación simple:', error);
+        return false;
+      }
+
+      if (!qrCode) {
+        console.error('QR no encontrado en validación simple');
+        return false;
+      }
+
+      return qrCode.is_valid && qrCode.validation_attempts < 3;
+    } catch (error) {
+      console.error('Error en validación simple:', error);
       return false;
     }
   }

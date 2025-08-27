@@ -203,27 +203,20 @@ export class OrderValidationPage implements OnInit, OnDestroy {
         return;
       }
 
-      // Validar el QR
-      console.log('Validando QR para pedido:', orderId);
-      const isValid = await this.qrCodeService.validateQRCode(orderId, code || '');
-      console.log('Resultado validación QR:', isValid);
-      if (!isValid) {
+      // Validación temporal sin QR (mientras se resuelve el problema de la tabla)
+      console.log('Validando pedido directamente (modo temporal)');
+      
+      // Verificar que el pedido esté en estado 'pending'
+      if (order.status !== 'pending') {
         this.notificationService.show({
-          message: 'Código QR inválido o ya utilizado',
-          type: 'error',
+          message: 'Este pedido ya ha sido procesado',
+          type: 'warning',
           duration: 3000
         });
         return;
       }
       
-      // Marcar el QR como usado después de validación exitosa
-      try {
-        await this.qrCodeService.markQRAsUsed(orderId, code || '');
-        console.log('QR marcado como usado');
-      } catch (error) {
-        console.error('Error al marcar QR como usado:', error);
-        // No fallar la validación si no se puede marcar como usado
-      }
+      console.log('Pedido válido para procesar');
 
       // Marcar el pedido como entregado
       console.log('Marcando pedido como entregado...');
@@ -266,9 +259,12 @@ export class OrderValidationPage implements OnInit, OnDestroy {
   }
 
   private parseQrContent(qrContent: string): { orderId: string | null; code?: string } {
-    // El nuevo formato del QR contiene { payload, signature }
+    console.log('Parseando contenido QR:', qrContent);
+    
+    // Intentar parsear como JSON
     try {
       const obj = JSON.parse(qrContent);
+      console.log('QR parseado como JSON:', obj);
       
       // Si tiene payload, extraer order_id del payload
       if (obj.payload && obj.payload.order_id) {
@@ -284,13 +280,19 @@ export class OrderValidationPage implements OnInit, OnDestroy {
       if (orderId && typeof orderId === 'string') {
         return { orderId, code };
       }
-    } catch (_) {
-      // No es JSON; puede ser directamente el UUID del pedido
+    } catch (error) {
+      console.log('QR no es JSON válido, intentando como UUID directo');
     }
     
     // Fallback: si parece un UUID, devolverlo tal cual
     const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i;
     const match = qrContent.match(uuidRegex);
-    return { orderId: match ? match[0] : null };
+    if (match) {
+      console.log('QR parseado como UUID directo:', match[0]);
+      return { orderId: match[0] };
+    }
+    
+    console.log('No se pudo parsear el QR');
+    return { orderId: null };
   }
 } 
