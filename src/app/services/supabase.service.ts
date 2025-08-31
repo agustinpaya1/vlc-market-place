@@ -142,28 +142,78 @@ export class SupabaseService {
     return result;
   }
 
-  // Método para obtener la URL pública de una imagen del bucket
-  private getPublicUrl(path: string | null): string {
-    if (!path) {
-      return this.getDefaultProfileImageUrl();
+  // Método interno: resolver bucket y path a partir de una ruta almacenada
+  private resolveBucketAndPath(
+    inputPath: string,
+    fallbackBucket: string
+  ): { bucket: string; path: string } | null {
+    if (!inputPath) return null;
+
+    // 1) Rutas absolutas o assets locales: devolver null para que se use tal cual
+    if (
+      inputPath.startsWith('http://') ||
+      inputPath.startsWith('https://') ||
+      inputPath.startsWith('assets/') ||
+      inputPath.includes('/storage/v1/object/public/')
+    ) {
+      return null;
     }
 
-    // If already a full URL, return as-is
-    if (path.startsWith('http://') || path.startsWith('https://')) {
+    // 2) Si viene como "bucket/relative/path.jpg" -> dividir por primera '/'
+    const firstSlash = inputPath.indexOf('/');
+    if (firstSlash > 0) {
+      const maybeBucket = inputPath.substring(0, firstSlash);
+      const restPath = inputPath.substring(firstSlash + 1);
+      // buckets conocidos
+      const knownBuckets = new Set([
+        'profile-photos',
+        'productos',
+        'fotostiendas',
+        'stores',
+        'public'
+      ]);
+      if (knownBuckets.has(maybeBucket)) {
+        return { bucket: maybeBucket, path: restPath };
+      }
+    }
+
+    // 3) Si solo viene un path relativo, usar bucket por defecto del tipo
+    return { bucket: fallbackBucket, path: inputPath };
+  }
+
+  // Obtener URL pública de imagen según tipo
+  private getPublicUrlFor(
+    path: string | null,
+    type: 'profile' | 'store' | 'product'
+  ): string {
+    if (!path) {
+      return type === 'profile'
+        ? this.getDefaultProfileImageUrl()
+        : 'assets/store-placeholder.jpg';
+    }
+
+    // Si ya es URL absoluta o asset local, devolver tal cual
+    if (
+      path.startsWith('http://') ||
+      path.startsWith('https://') ||
+      path.startsWith('assets/') ||
+      path.includes('/storage/v1/object/public/')
+    ) {
       return path;
     }
 
-    try {
-      const { data } = this.getClient()
-        .storage
-        .from(this.bucketName)
-        .getPublicUrl(path);
+    const fallbackBucket =
+      type === 'profile' ? 'profile-photos' : type === 'store' ? 'fotostiendas' : 'productos';
 
-      console.log('Generated URL for', path, ':', data.publicUrl);
+    const resolved = this.resolveBucketAndPath(path, fallbackBucket);
+    if (!resolved) return path; // ya gestionado arriba
+
+    try {
+      const { data } = this.getClient().storage.from(resolved.bucket).getPublicUrl(resolved.path);
       return data.publicUrl;
     } catch (error) {
       console.error('Error getting public URL:', error);
-      return this.getDefaultProfileImageUrl();
+      return type === 'profile' ? this.getDefaultProfileImageUrl() : 'assets/store-placeholder.jpg';
     }
   }
 
@@ -184,7 +234,7 @@ export class SupabaseService {
       console.log('Datos de tiendas recibidos:', stores);
       
       const mappedStores = stores.map(store => {
-        const imageUrl = this.getPublicUrl(store.image_url);
+        const imageUrl = this.getPublicUrlFor(store.image_url, 'store');
         console.log(`Tienda ${store.name}:`, {
           nombre: store.name,
           imagen_original: store.image_url,
@@ -216,7 +266,7 @@ export class SupabaseService {
       if (error) throw error;
       
       return data.map(product => {
-        const imageUrl = this.getPublicUrl(product.image_url);
+        const imageUrl = this.getPublicUrlFor(product.image_url, 'product');
         // Si tiene discount y price, calcular offerPrice
         let offerPrice = product.offerPrice;
         let isOffer = product.isOffer;
@@ -249,7 +299,7 @@ export class SupabaseService {
       if (error) throw error;
       
       if (data) {
-        const imageUrl = this.getPublicUrl(data.image_url);
+        const imageUrl = this.getPublicUrlFor(data.image_url, 'store');
         console.log(`Tienda ${data.name}:`, {
           nombre: data.name,
           imagen_original: data.image_url,
@@ -282,6 +332,48 @@ export class SupabaseService {
       console.error('Error al obtener la URL pública de la imagen:', error);
       return '';
     }
+  }
+
+  // ====== Edge Functions wrappers ======
+  async signQr(orderId: string): Promise<{ jws: string; payload?: any }> {
+    const supabase = this.getClient();
+    const { data, error } = await supabase.functions.invoke('sign_qr', {
+      body: { order_id: orderId }
+    });
+    if (error) throw error;
+    return data as { jws: string; payload?: any };
+  }
+
+  async getStorePublicKeys(storeId: string): Promise<Array<{
+    id: string; // kid
+    store_id: string;
+    public_key: string;
+    status: 'active' | 'retired' | 'revoked';
+    not_before: string;
+    not_after: string | null;
+  }>> {
+    const supabase = this.getClient();
+    const { data, error } = await supabase.functions.invoke('get_store_public_keys', {
+      body: { store_id: storeId }
+    });
+    if (error) throw error;
+    return (data?.keys ?? []) as any[];
+  }
+
+  async redeemOrder(jws: string): Promise<{ success: boolean; reason?: string }> {
+    const { data, error } = await this.getClient().functions.invoke('redeem_order', {
+      body: { jws }
+    });
+    if (error) throw error;
+    return data as any;
+  }
+
+  async redeemOrderOffline(jws: string, claim: any): Promise<{ success: boolean; reason?: string }> {
+    const { data, error } = await this.getClient().functions.invoke('redeem_order_offline', {
+      body: { jws, claim }
+    });
+    if (error) throw error;
+    return data as any;
   }
 
   // Método para subir un archivo al bucket
@@ -455,7 +547,7 @@ export class SupabaseService {
     return uuidv4();
   }
 
-  async updateUserProfile(userId: string, updates: { photo_url?: string, name?: string }): Promise<void> {
+  async updateUserProfile(userId: string, updates: { avatar_url?: string, name?: string }): Promise<void> {
     const { error } = await this.getClient()
       .from('profiles')
       .update(updates)

@@ -122,8 +122,9 @@
           <h3>Código QR para recoger tu pedido</h3>
           <qrcode 
             [qrdata]="qrCodeData"
-            [width]="256"
-            [errorCorrectionLevel]="'H'"
+            [width]="300"
+            [errorCorrectionLevel]="'M'"
+            [margin]="2"
             [title]="'QR Code para pedido #' + orderId"
           ></qrcode>
           <div class="qr-instructions">

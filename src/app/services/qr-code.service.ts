@@ -1,6 +1,7 @@
 import nacl from 'tweetnacl';
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+// Key management now handled entirely by Edge Functions
 
 // ---- utils base64 sin Buffer ----
 function u8ToBase64(u8: Uint8Array): string {
@@ -24,15 +25,11 @@ async function sha256Hex(input: string): Promise<string> {
 
 @Injectable({ providedIn: 'root' })
 export class QrCodeService {
-  constructor(private supabaseService: SupabaseService) {}
+  constructor(
+    private supabaseService: SupabaseService
+  ) {}
 
-  private async generarClavesEd25519() {
-    const keyPair = nacl.sign.keyPair();
-    const publicKey = u8ToBase64(keyPair.publicKey);
-    const privateKey = u8ToBase64(keyPair.secretKey);
-    const privateKeyHash = await sha256Hex(privateKey); // guardamos SOLO el hash
-    return { publicKey, privateKey, privateKeyHash };
-  }
+  // Eliminado: la generación de claves ahora vive en Edge Functions
 
   private firmar(payloadString: string, privateKeyBase64: string): string {
     const sk = base64ToU8(privateKeyBase64);
@@ -40,42 +37,28 @@ export class QrCodeService {
     return u8ToBase64(sig);
   }
 
-  async createQRCodeForOrder(orderId: string, storeId?: string | null) {
-    if (!storeId) throw new Error('storeId es requerido para generar el QR');
+  private verificarFirma(payloadString: string, signature: string, publicKey: string): boolean {
+    try {
+      const pk = base64ToU8(publicKey);
+      const sig = base64ToU8(signature);
+      const payload = new TextEncoder().encode(payloadString);
+      return nacl.sign.detached.verify(payload, sig, pk);
+    } catch (error) {
+      console.error('Error al verificar firma:', error);
+      return false;
+    }
+  }
 
-    const supabase = this.supabaseService.getClient();
-
-    // Generar claves simples para este pedido
-    const { publicKey, privateKey, privateKeyHash } = await this.generarClavesEd25519();
-
-    // Payload del QR
-    const payload = { order_id: orderId, store_id: storeId, timestamp: new Date().toISOString() };
-    const payloadString = JSON.stringify(payload);
-
-    // Firma del payload
-    const signature = this.firmar(payloadString, privateKey);
-
-    // Guardar QR
-    const { data: qrCode, error: qrErr } = await supabase
-      .from('qr_codes')
-      .insert([{
-        order_id: orderId,
-        store_id: storeId,
-        payload,
-        signature,
-        validation_attempts: 0,
-        is_valid: true,
-        code: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
-        metadata: { created_timestamp: new Date().toISOString(), type: 'order_qr' }
-      }])
-      .select()
-      .single();
-    
-    if (qrErr) throw qrErr;
-
-    // Lo que devuelve el servicio al front
-    const qrPayload = JSON.stringify({ payload, signature });
-    return { ...qrCode, qr_code: qrPayload, public_key: publicKey, privateKey };
+  async createQRCodeForOrder(orderId: string, _storeId?: string | null) {
+    // Todo el proceso se delega al backend (Edge Function sign_qr)
+    try {
+      const result = await this.supabaseService.signQr(orderId);
+      // Devolvemos el jws para que el front pinte el QR
+      return { jws: result.jws, payload: result.payload };
+    } catch (error) {
+      console.error('❌ Error creando QR code mediante sign_qr:', error);
+      throw error;
+    }
   }
 
   async getQrCodeByOrderId(orderId: string) {
@@ -88,48 +71,111 @@ export class QrCodeService {
     return data;
   }
 
-  async validateQRCode(orderId: string, code: string): Promise<boolean> {
+  async validateQRCode(orderId: string, scannedData: string): Promise<boolean> {
     try {
-      console.log('Validando QR - orderId:', orderId, 'code:', code);
+      console.log('Validando QR - orderId:', orderId, 'scannedData:', scannedData);
       
-      // Buscar el QR por order_id y signature (que es el código)
+      // Parsear los datos escaneados (pueden venir como string o ya parseados)
+      let qrData;
+      if (typeof scannedData === 'string') {
+        try {
+          qrData = JSON.parse(scannedData);
+        } catch (parseError) {
+          console.error('Error al parsear datos del QR:', parseError);
+          return false;
+        }
+      } else {
+        // Ya viene parseado como objeto
+        qrData = scannedData;
+      }
+
+      // Verificar que el QR contiene los datos necesarios
+      if (!qrData.order_id || !qrData.code || !qrData.signature || !qrData.public_key) {
+        console.error('QR no contiene los datos necesarios');
+        return false;
+      }
+
+      // Verificar que el order_id coincide
+      if (qrData.order_id !== orderId) {
+        console.error('Order ID no coincide');
+        return false;
+      }
+
+      // Buscar el QR en la base de datos
       const { data: qrCode, error } = await this.supabaseService.getClient()
         .from('qr_codes')
         .select('*')
         .eq('order_id', orderId)
-        .eq('signature', code)
+        .eq('code', qrData.code)
         .single();
 
-      console.log('Resultado consulta QR:', { data: qrCode, error });
-
       if (error) {
-        console.error('Error al consultar QR:', error);
-        // Si es error 406, intentar sin signature
-        if (error.code === '406' || error.message?.includes('406')) {
-          console.log('Intentando validación sin signature...');
-          return await this.validateQRCodeSimple(orderId);
-        }
+        console.error('Error al buscar QR en BD:', error);
         return false;
       }
 
       if (!qrCode) {
-        console.error('QR code not found');
+        console.error('QR no encontrado en la base de datos');
         return false;
       }
 
-      // Verificar si el código es válido
+      // Verificar si el QR sigue siendo válido
       if (!qrCode.is_valid) {
-        console.error('QR code is no longer valid');
+        console.error('QR ya no es válido');
         return false;
       }
 
       // Verificar intentos de validación
       if (qrCode.validation_attempts >= 3) {
-        console.error('QR code exceeded validation attempts');
+        console.error('QR ha excedido los intentos de validación');
         return false;
       }
 
-      console.log('QR validado correctamente:', qrCode);
+      // Verificar que la clave pública coincide
+      if (qrCode.public_key !== qrData.public_key) {
+        console.error('Clave pública no coincide');
+        return false;
+      }
+
+      // VERIFICACIÓN CRIPTOGRÁFICA: Verificar la firma digital
+      // Usar el payload original que se guardó en la base de datos
+      // IMPORTANTE: No usar JSON.stringify para evitar modificaciones en el timestamp
+      const payloadForVerification = qrCode.payload;
+      
+      console.log('Payload para verificación (original de BD):', payloadForVerification);
+      console.log('Tipo de payload:', typeof payloadForVerification);
+      
+      // Si el payload es un objeto, convertirlo a string exactamente como se firmó
+      let payloadString;
+      if (typeof payloadForVerification === 'object') {
+        payloadString = JSON.stringify(payloadForVerification);
+        console.log('Payload stringificado:', payloadString);
+      } else {
+        payloadString = payloadForVerification;
+        console.log('Payload ya es string:', payloadString);
+      }
+      
+      const isSignatureValid = this.verificarFirma(payloadString, qrData.signature, qrData.public_key);
+      if (!isSignatureValid) {
+        console.error('Firma digital no válida');
+        console.error('Payload verificado:', payloadForVerification);
+        console.error('Firma recibida:', qrData.signature);
+        console.error('Clave pública:', qrData.public_key);
+        await this.incrementValidationAttempt(orderId);
+        return false;
+      }
+
+      // Verificar timestamp (QR no debe ser muy antiguo - máximo 24 horas)
+      const qrTimestamp = new Date(qrCode.created_at);
+      const now = new Date();
+      const hoursDiff = (now.getTime() - qrTimestamp.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursDiff > 24) {
+        console.error('QR ha expirado (más de 24 horas)');
+        return false;
+      }
+
+      console.log('QR validado correctamente con verificación criptográfica');
       return true;
     } catch (error) {
       console.error('Error validating QR code:', error);
@@ -137,39 +183,9 @@ export class QrCodeService {
     }
   }
 
-  // Validación simple sin depender de signature
-  private async validateQRCodeSimple(orderId: string): Promise<boolean> {
-    try {
-      console.log('Validación simple para orderId:', orderId);
-      
-      const { data: qrCode, error } = await this.supabaseService.getClient()
-        .from('qr_codes')
-        .select('is_valid, validation_attempts')
-        .eq('order_id', orderId)
-        .single();
-
-      console.log('Resultado validación simple:', { data: qrCode, error });
-
-      if (error) {
-        console.error('Error en validación simple:', error);
-        return false;
-      }
-
-      if (!qrCode) {
-        console.error('QR no encontrado en validación simple');
-        return false;
-      }
-
-      return qrCode.is_valid && qrCode.validation_attempts < 3;
-    } catch (error) {
-      console.error('Error en validación simple:', error);
-      return false;
-    }
-  }
-
   async incrementValidationAttempt(orderId: string): Promise<void> {
     try {
-      // Primero obtener el QR actual para saber los intentos actuales
+      // Obtener el QR actual
       const { data: qrCode, error: fetchError } = await this.supabaseService.getClient()
         .from('qr_codes')
         .select('validation_attempts')
@@ -185,50 +201,44 @@ export class QrCodeService {
         .from('qr_codes')
         .update({ 
           validation_attempts: newAttempts,
-          is_valid: shouldBeValid
+          is_valid: shouldBeValid,
+          updated_at: new Date().toISOString()
         })
         .eq('order_id', orderId);
 
       if (error) throw error;
+      
+      console.log(`Intentos de validación incrementados a ${newAttempts} para orden ${orderId}`);
     } catch (error) {
       console.error('Error incrementing validation attempt:', error);
       throw error;
     }
   }
 
-  async markQRAsUsed(orderId: string, code: string): Promise<void> {
-    try {
-      console.log('Marcando QR como usado - orderId:', orderId, 'code:', code);
-      
-      const user = await this.supabaseService.getClient().auth.getUser();
-      console.log('Usuario actual:', user.data.user?.id);
-      
-      const updateData = {
-        used_at: new Date().toISOString(),
-        is_valid: false,
-        used_by: user.data.user?.id
-      };
-      
-      console.log('Datos de actualización:', updateData);
-      
-      const { data, error } = await this.supabaseService.getClient()
-        .from('qr_codes')
-        .update(updateData)
-        .eq('order_id', orderId)
-        .eq('signature', code)
-        .select();
+  async markQRAsUsed(_orderId: string, scannedJws: string): Promise<void> {
+    // Llamar al backend (redeem_order)
+    const res = await this.supabaseService.redeemOrder(scannedJws);
+    if (!res.success) throw new Error(res.reason || 'redeem failed');
+  }
 
-      console.log('Resultado de marcar como usado:', { data, error });
+  // Método para verificar la propiedad de la tienda
+  async verifyStoreOwnership(userId: string, storeId: string): Promise<boolean> {
+    try {
+      const { data: store, error } = await this.supabaseService.getClient()
+        .from('stores')
+        .select('owner_id')
+        .eq('id', storeId)
+        .single();
 
       if (error) {
-        console.error('Error al marcar QR como usado:', error);
-        throw error;
+        console.error('Error al verificar propiedad de tienda:', error);
+        return false;
       }
-      
-      console.log('QR marcado como usado exitosamente');
+
+      return store?.owner_id === userId;
     } catch (error) {
-      console.error('Error marking QR as used:', error);
-      throw error;
+      console.error('Error verificando propiedad de tienda:', error);
+      return false;
     }
   }
 }

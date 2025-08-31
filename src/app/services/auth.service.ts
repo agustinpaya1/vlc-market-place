@@ -59,7 +59,7 @@ export class AuthService {
             id: session.user.id,
             email: session.user.email || '',
             name: userData?.['full_name'] || session.user.user_metadata?.['full_name'] || '',
-            photoUrl: userData?.['photo_url'],
+            photoUrl: userData?.['avatar_url'],
             type: userData?.['type'] || 'user',
             vlcoinBalance: userData?.['vlcoin_balance'] || 0,
             phone: userData?.['phone'],
@@ -137,7 +137,7 @@ export class AuthService {
             id: session.user.id,
             email: session.user.email || '',
             name: userData?.['full_name'] || session.user.user_metadata?.['full_name'] || '',
-            photoUrl: userData?.['photo_url'],
+            photoUrl: userData?.['avatar_url'],
             type: userData?.['type'] || 'user',
             vlcoinBalance: userData?.['vlcoin_balance'] || 0,
             phone: userData?.['phone'],
@@ -333,7 +333,7 @@ export class AuthService {
       id: user.id,
       email: user.email || '',
       name: userData?.['full_name'] || user.user_metadata?.['full_name'],
-      photoUrl: userData?.['photo_url'],
+      photoUrl: userData?.['avatar_url'],
       type: userData?.['type'] || 'user',
       vlcoinBalance: userData?.['vlcoin_balance'] || 0,
       phone: userData?.['phone'],
@@ -347,7 +347,7 @@ export class AuthService {
       const { error } = await this.supabaseService.getClient()
         .from('profiles')
         .update({ 
-          photo_url: photoUrl,
+          avatar_url: photoUrl,
           updated_at: new Date().toISOString() 
         })
         .eq('id', userId);

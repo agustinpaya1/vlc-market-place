@@ -306,15 +306,12 @@ if (!storeId) {
 
       // Guardar el ID del pedido y generar el Q
 this.orderId = order.id;
-this.qrCodeData = JSON.stringify({
-  orderId: order.id,
-  payload: qrCode.qr_code,      
-  publicKey: qrCode.public_key
-});
+// Ahora el backend devuelve un JWS. Lo mostramos directamente en el QR
+this.qrCodeData = qrCode.jws;
 
       
-      // Asignar la clave privada si existe
-      this.qrCodePrivateKey = qrCode.privateKey || '';
+      // Ya no exponemos clave privada en el front
+      this.qrCodePrivateKey = '';
       this.showQRCode = true;
       this.paymentSuccess = true;
 

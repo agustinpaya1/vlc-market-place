@@ -341,14 +341,15 @@ export class OrderSummaryComponent implements OnInit {
         try {
           const qrCode = await this.qrCodeService.getQrCodeByOrderId(this.orderId);
           if (qrCode) {
-            // Crear un objeto con los datos necesarios para el QR
-            const qrData = {
-              orderId: qrCode.id,
-              code: qrCode.qr_code,
-              publicKey: qrCode.public_key,
-              timestamp: new Date().toISOString()
-            };
-            this.qrCodeData = JSON.stringify(qrData);
+            // El QR ya viene con el formato correcto desde el servicio
+            this.qrCodeData = qrCode.qr_code || JSON.stringify({
+              order_id: qrCode.order_id,
+              code: qrCode.code,
+              payload: JSON.stringify(qrCode.payload),
+              signature: qrCode.signature,
+              public_key: qrCode.public_key,
+              key_id: qrCode.key_id
+            });
           } else {
             console.warn('No se encontró el código QR para el pedido:', this.orderId);
           }

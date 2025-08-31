@@ -8,6 +8,8 @@ import { QrCodeService } from '../../services/qr-code.service';
 import { NotificationService } from '../../services/notification.service';
 import { ActivatedRoute } from '@angular/router';
 import { Platform } from '@ionic/angular';
+import { SupabaseService } from '../../services/supabase.service';
+import nacl from 'tweetnacl';
 
 @Component({
   selector: 'app-order-validation',
@@ -35,7 +37,8 @@ export class OrderValidationPage implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private route: ActivatedRoute,
     public platform: Platform,
-    private qrCodeService: QrCodeService
+    private qrCodeService: QrCodeService,
+    private supabaseService: SupabaseService
   ) {
     this.storeId = this.route.snapshot.paramMap.get('storeId') || '';
     this.detectSafari();
@@ -146,10 +149,26 @@ export class OrderValidationPage implements OnInit, OnDestroy {
     }
   }
 
-    private async validateOrder(qrContent: string) {
+  private async validateOrder(qrContent: string) {
     try {
-      // El QR puede contener un JSON con { orderId, code, publicKey }
-      const { orderId, code } = this.parseQrContent(qrContent);
+      // 1) Si es JWS (tres partes separadas por puntos), verificar primero
+      let orderId: string | null = null;
+      let isJws = false;
+      const parts = qrContent.split('.');
+      if (parts.length === 3) {
+        isJws = true;
+        const verify = await this.verifyJws(qrContent);
+        if (!verify.ok) {
+          this.notificationService.show({ message: verify.reason || 'JWS inválido', type: 'error', duration: 3000 });
+          return;
+        }
+        orderId = verify.payload?.oid || null;
+      } else {
+        // 2) Fallback: JSON/UUID como antes
+        const parsed = this.parseQrContent(qrContent);
+        orderId = parsed.orderId;
+      }
+
       if (!orderId) {
         this.notificationService.show({
           message: 'Código QR inválido',
@@ -161,7 +180,36 @@ export class OrderValidationPage implements OnInit, OnDestroy {
 
       console.log('Validando pedido:', orderId, 'para tienda:', this.storeId);
 
-      // Obtener el pedido
+      // PASO 1: Verificar propiedad de la tienda
+      const user = await this.supabaseService.getClient().auth.getUser();
+      if (!user.data.user?.id) {
+        this.notificationService.show({
+          message: 'Error de autenticación. Inicia sesión de nuevo.',
+          type: 'error',
+          duration: 3000
+        });
+        return;
+      }
+
+      const isOwner = await this.qrCodeService.verifyStoreOwnership(user.data.user.id, this.storeId);
+      if (!isOwner) {
+        // Incrementar intentos fallidos si no es el dueño de la tienda
+        try {
+          await this.qrCodeService.incrementValidationAttempt(orderId);
+          console.log('Incrementado intento fallido para usuario no autorizado');
+        } catch (error) {
+          console.error('Error al incrementar intento fallido:', error);
+        }
+        
+        this.notificationService.show({
+          message: 'No tienes permisos para validar pedidos de esta tienda',
+          type: 'error',
+          duration: 3000
+        });
+        return;
+      }
+
+      // PASO 2: Obtener el pedido y verificar que pertenece a esta tienda
       const order = await this.orderService.getOrderById(orderId);
       
       if (!order) {
@@ -177,10 +225,10 @@ export class OrderValidationPage implements OnInit, OnDestroy {
 
       // Verificar que el pedido pertenece a esta tienda
       if (order.store_id !== this.storeId) {
-        // Incrementar intentos fallidos si no es el dueño de la tienda
+        // Incrementar intentos fallidos si no es el pedido correcto
         try {
           await this.qrCodeService.incrementValidationAttempt(orderId);
-          console.log('Incrementado intento fallido para QR no autorizado');
+          console.log('Incrementado intento fallido para QR de tienda incorrecta');
         } catch (error) {
           console.error('Error al incrementar intento fallido:', error);
         }
@@ -193,7 +241,7 @@ export class OrderValidationPage implements OnInit, OnDestroy {
         return;
       }
 
-      // Verificar si el pedido está pendiente
+      // PASO 3: Verificar si el pedido está pendiente
       if (order.status !== 'pending') {
         this.notificationService.show({
           message: 'Este pedido ya ha sido validado',
@@ -203,30 +251,63 @@ export class OrderValidationPage implements OnInit, OnDestroy {
         return;
       }
 
-      // Validar el QR si viene con código
-      if (code) {
-        console.log('Validando código QR:', code);
-        const isValid = await this.qrCodeService.validateQRCode(orderId, code);
-        console.log('Resultado validación QR:', isValid);
+      // PASO 4: Si no es JWS, mantener validación antigua (backwards-compat)
+      const { qrData } = { qrData: undefined as any };
+      if (!isJws && qrData && qrData.signature && qrData.public_key) {
+        console.log('=== VALIDACIÓN CRIPTOGRÁFICA INICIADA ===');
+        console.log('Datos del QR recibidos:', {
+          order_id: qrData.order_id,
+          code: qrData.code,
+          signature: qrData.signature ? 'PRESENTE' : 'AUSENTE',
+          public_key: qrData.public_key ? 'PRESENTE' : 'AUSENTE'
+        });
+        
+                 const isValid = await this.qrCodeService.validateQRCode(orderId, qrData);
+        console.log('Resultado validación criptográfica QR:', isValid);
+        
         if (!isValid) {
+          console.error('❌ Validación criptográfica FALLÓ');
+          
+                     // IMPORTANTE: Marcar el QR como usado ANTES del return
+           // porque se intentó validar (incluso si falló)
+           try {
+             console.log('Marcando QR como usado (validación fallida)...');
+             // CORREGIDO: Pasar qrData en lugar de qrContent para que tenga el campo 'code'
+             await this.qrCodeService.markQRAsUsed(orderId, qrData);
+             console.log('✅ QR marcado como usado (intento de validación)');
+           } catch (error) {
+             console.error('❌ Error al marcar QR como usado:', error);
+           }
+          
           this.notificationService.show({
-            message: 'Código QR inválido o ya utilizado',
+            message: 'Código QR inválido, expirado o ya utilizado',
             type: 'error',
             duration: 3000
           });
           return;
         }
         
-        // Marcar el QR como usado después de validación exitosa
-        try {
-          await this.qrCodeService.markQRAsUsed(orderId, code);
-          console.log('QR marcado como usado');
-        } catch (error) {
-          console.error('Error al marcar QR como usado:', error);
-          // No fallar la validación si no se puede marcar como usado
-        }
+        console.log('✅ Validación criptográfica EXITOSA');
+        
+                 // PASO 5: Marcar el QR como usado después de validación exitosa
+         try {
+           console.log('Marcando QR como usado...');
+           // CORREGIDO: Pasar qrData en lugar de qrContent para que tenga el campo 'code'
+           await this.qrCodeService.markQRAsUsed(orderId, qrData);
+           console.log('✅ QR marcado como usado exitosamente');
+         } catch (error) {
+           console.error('❌ Error al marcar QR como usado:', error);
+           this.notificationService.show({
+             message: 'Error al procesar el código QR. Intenta de nuevo.',
+             type: 'error',
+             duration: 3000
+           });
+           return;
+         }
       } else {
-        // Si no hay código QR, solo validar que el pedido esté pendiente
+        // Si no hay datos del QR completos, solo validar que el pedido esté pendiente
+        console.log('⚠️ QR sin datos criptográficos, validando solo estado del pedido');
+        console.log('qrData recibido:', qrData);
         if (order.status !== 'pending') {
           this.notificationService.show({
             message: 'Este pedido ya ha sido procesado',
@@ -239,7 +320,7 @@ export class OrderValidationPage implements OnInit, OnDestroy {
       
       console.log('Pedido válido para procesar');
 
-      // Marcar el pedido como entregado
+      // PASO 6: Marcar el pedido como entregado
       console.log('Marcando pedido como entregado...');
       const success = await this.orderService.markOrderAsDelivered(orderId);
       console.log('Resultado marcado como entregado:', success);
@@ -247,7 +328,7 @@ export class OrderValidationPage implements OnInit, OnDestroy {
       if (success) {
         this.lastScannedOrder = order;
         this.notificationService.show({
-          message: 'Pedido validado correctamente',
+          message: 'Pedido validado y entregado correctamente',
           type: 'success',
           duration: 2000
         });
@@ -269,6 +350,10 @@ export class OrderValidationPage implements OnInit, OnDestroy {
           errorMessage = 'Error de autenticación. Inicia sesión de nuevo.';
         } else if (error.message.includes('404') || error.message.includes('Not Found')) {
           errorMessage = 'Pedido no encontrado.';
+        } else if (error.message.includes('Usuario no autenticado')) {
+          errorMessage = 'Sesión expirada. Inicia sesión de nuevo.';
+        } else if (error.message.includes('No tienes permisos')) {
+          errorMessage = 'No tienes permisos para esta operación.';
         }
       }
       this.notificationService.show({
@@ -279,27 +364,107 @@ export class OrderValidationPage implements OnInit, OnDestroy {
     }
   }
 
-  private parseQrContent(qrContent: string): { orderId: string | null; code?: string } {
-    console.log('Parseando contenido QR:', qrContent);
+  private parseQrContent(qrContent: string): { orderId: string | null; qrData?: any } {
+    console.log('=== INICIO PARSING QR ===');
+    console.log('Contenido QR recibido:', qrContent);
     
-    // Intentar parsear como JSON
+    // Intentar parsear como JSON (nuevo formato con criptografía)
     try {
       const obj = JSON.parse(qrContent);
-      console.log('QR parseado como JSON:', obj);
+      console.log('✅ QR parseado como JSON exitosamente');
+      console.log('Estructura del objeto:', {
+        orderId: obj.orderId,
+        hasPayload: !!obj.payload,
+        payloadKeys: obj.payload ? Object.keys(obj.payload) : 'NO TIENE PAYLOAD',
+        order_id: obj.order_id,
+        code: obj.code,
+        signature: obj.signature,
+        public_key: obj.public_key
+      });
       
-      // Si tiene payload, extraer order_id del payload
+             // NUEVO: Verificar si es el formato actual con orderId y payload
+       if (obj.orderId && obj.payload) {
+         console.log('🎯 QR con formato actual (orderId + payload)');
+         console.log('Payload completo:', obj.payload);
+         
+         // CORREGIDO: El payload es un string JSON escapado, necesitamos parsearlo
+         let payloadData;
+         try {
+           if (typeof obj.payload === 'string') {
+             console.log('📝 Payload es un string, parseándolo...');
+             payloadData = JSON.parse(obj.payload);
+             console.log('✅ Payload parseado exitosamente:', payloadData);
+           } else {
+             payloadData = obj.payload;
+             console.log('📝 Payload ya es un objeto');
+           }
+         } catch (parseError) {
+           console.error('❌ Error al parsear payload:', parseError);
+           return { 
+             orderId: obj.orderId, 
+             qrData: undefined
+           };
+         }
+         
+         console.log('Verificando campos del payload parseado:', {
+           order_id: payloadData.order_id,
+           code: payloadData.code,
+           signature: payloadData.signature ? 'PRESENTE' : 'AUSENTE',
+           public_key: payloadData.public_key ? 'PRESENTE' : 'AUSENTE'
+         });
+         
+         if (payloadData.order_id && payloadData.code && payloadData.signature && payloadData.public_key) {
+           console.log('✅ Payload contiene datos criptográficos completos');
+           const qrData = {
+             order_id: payloadData.order_id,
+             code: payloadData.code,
+             signature: payloadData.signature,
+             public_key: payloadData.public_key,
+             key_id: payloadData.key_id
+           };
+           console.log('qrData construido:', qrData);
+           return { 
+             orderId: obj.orderId, 
+             qrData: qrData
+           };
+         } else {
+           console.log('⚠️ Payload no contiene datos criptográficos completos');
+           console.log('Campos faltantes:', {
+             order_id: !payloadData.order_id ? 'FALTA' : 'OK',
+             code: !payloadData.code ? 'FALTA' : 'OK',
+             signature: !payloadData.signature ? 'FALTA' : 'OK',
+             public_key: !payloadData.public_key ? 'FALTA' : 'OK'
+           });
+           return { 
+             orderId: obj.orderId, 
+             qrData: undefined
+           };
+         }
+       }
+      
+      // Verificar si es el nuevo formato con datos criptográficos completos en nivel raíz
+      if (obj.order_id && obj.code && obj.signature && obj.public_key) {
+        console.log('QR con formato criptográfico completo (nivel raíz)');
+        return { 
+          orderId: obj.order_id, 
+          qrData: obj
+        };
+      }
+      
+      // Si tiene payload, extraer order_id del payload (formato anterior)
       if (obj.payload && obj.payload.order_id) {
+        console.log('QR con formato de payload');
         return { 
           orderId: obj.payload.order_id, 
-          code: obj.signature || undefined 
+          qrData: obj.signature ? obj : undefined
         };
       }
       
       // Fallback para formato anterior
       const orderId = obj.orderId || obj.order_id || null;
-      const code = obj.code || undefined;
       if (orderId && typeof orderId === 'string') {
-        return { orderId, code };
+        console.log('QR con formato anterior');
+        return { orderId, qrData: obj.code ? obj : undefined };
       }
     } catch (error) {
       console.log('QR no es JSON válido, intentando como UUID directo');
@@ -315,5 +480,50 @@ export class OrderValidationPage implements OnInit, OnDestroy {
     
     console.log('No se pudo parsear el QR');
     return { orderId: null };
+  }
+
+  // ======= JWS verification =======
+  private async verifyJws(jws: string): Promise<{ ok: boolean; reason?: string; header?: any; payload?: any }> {
+    try {
+      const [h, p, s] = jws.split('.');
+      if (!h || !p || !s) return { ok: false, reason: 'Formato JWS inválido' };
+
+      const header = JSON.parse(this.base64UrlDecodeToString(h));
+      const payload = JSON.parse(this.base64UrlDecodeToString(p));
+
+      // Cargar clave pública por kid
+      const keys = await this.supabaseService.getStorePublicKeys(payload.sid);
+      const key = (keys || []).find(k => k.id === header.kid);
+      if (!key) return { ok: false, reason: 'Clave pública no encontrada' };
+
+      // Verificar firma
+      const ok = nacl.sign.detached.verify(
+        new TextEncoder().encode(`${h}.${p}`),
+        this.base64UrlToBytes(s),
+        this.base64UrlToBytes(key.public_key)
+      );
+      if (!ok) return { ok: false, reason: 'Firma inválida' };
+
+      // Verificar ventanas de tiempo
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.nbf && now < payload.nbf) return { ok: false, reason: 'Not before (nbf)' };
+      if (payload.exp && now > payload.exp) return { ok: false, reason: 'Expirado (exp)' };
+
+      return { ok: true, header, payload };
+    } catch (e: any) {
+      return { ok: false, reason: e?.message || 'Error verificando JWS' };
+    }
+  }
+
+  private base64UrlToBytes(b64u: string): Uint8Array {
+    const pad = '='.repeat((4 - (b64u.length % 4)) % 4);
+    const b64 = (b64u + pad).replace(/-/g, '+').replace(/_/g, '/');
+    const bin = atob(b64);
+    return new Uint8Array([...bin].map(c => c.charCodeAt(0)));
+  }
+
+  private base64UrlDecodeToString(b64u: string): string {
+    const decoder = new TextDecoder();
+    return decoder.decode(this.base64UrlToBytes(b64u));
   }
 } 

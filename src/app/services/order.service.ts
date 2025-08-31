@@ -17,7 +17,7 @@ export interface Order {
   delivery_latitude: number | null;
   delivery_longitude: number | null;
   delivery_progress: number;
-  estimated_delivery: string | null;
+  estimated_delivery_time: string | null;
   updated_at: string;
   store?: {
     id: string;
