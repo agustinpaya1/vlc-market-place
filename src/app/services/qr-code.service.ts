@@ -215,10 +215,38 @@ export class QrCodeService {
     }
   }
 
-  async markQRAsUsed(_orderId: string, scannedJws: string): Promise<void> {
-    // Llamar al backend (redeem_order)
-    const res = await this.supabaseService.redeemOrder(scannedJws);
-    if (!res.success) throw new Error(res.reason || 'redeem failed');
+  async markQRAsUsed(_orderId: string, scanned: string | { jws?: string; code?: string; signature?: string; public_key?: string }): Promise<void> {
+    // Para JWS moderno: enviar el JWS completo
+    if (typeof scanned === 'string') {
+      const jwsCandidate = scanned.trim();
+      if (jwsCandidate.split('.').length === 3) {
+        const res = await this.supabaseService.redeemOrder(jwsCandidate);
+        if (!res.success) throw new Error(res.reason || 'redeem failed');
+        return;
+      }
+    }
+
+    // Para objeto legado con firma manual, intentar redención offline si existe
+    const jws = (scanned as any)?.jws as string | undefined;
+    if (jws && jws.split('.').length === 3) {
+      const res = await this.supabaseService.redeemOrder(jws);
+      if (!res.success) throw new Error(res.reason || 'redeem failed');
+      return;
+    }
+
+    // Si no hay JWS, invocar flujo offline (si está disponible en backend)
+    const legacy = scanned as any;
+    if (legacy && legacy.code && legacy.signature && legacy.public_key) {
+      const claim = { code: legacy.code, signature: legacy.signature, public_key: legacy.public_key };
+      try {
+        const res = await this.supabaseService.redeemOrderOffline('legacy', claim);
+        if (!res.success) throw new Error(res.reason || 'redeem offline failed');
+      } catch (e) {
+        // Si no existe la función offline, ignorar silenciosamente para compatibilidad
+        console.warn('redeemOrderOffline no disponible o falló:', e);
+      }
+      return;
+    }
   }
 
   // Método para verificar la propiedad de la tienda

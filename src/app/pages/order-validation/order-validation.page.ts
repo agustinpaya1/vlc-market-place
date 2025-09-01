@@ -9,6 +9,7 @@ import { NotificationService } from '../../services/notification.service';
 import { ActivatedRoute } from '@angular/router';
 import { Platform } from '@ionic/angular';
 import { SupabaseService } from '../../services/supabase.service';
+import { SupabaseFunctionsService } from '../../services/supabase-functions.service';
 import nacl from 'tweetnacl';
 
 @Component({
@@ -38,7 +39,8 @@ export class OrderValidationPage implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     public platform: Platform,
     private qrCodeService: QrCodeService,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private supaFx: SupabaseFunctionsService
   ) {
     this.storeId = this.route.snapshot.paramMap.get('storeId') || '';
     this.detectSafari();
@@ -176,6 +178,64 @@ export class OrderValidationPage implements OnInit, OnDestroy {
           duration: 3000
         });
         return;
+      }
+
+      // Comprobar si el QR ya fue utilizado (is_valid = false)
+      try {
+        const supabase = this.supabaseService.getClient();
+        const { data: qrRow, error: qrErr } = await supabase
+          .from('qr_codes')
+          .select('id, is_valid, used_at, used_by, validation_attempts')
+          .eq('order_id', orderId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (!qrErr && qrRow && qrRow.is_valid === false) {
+          // Sumar intento y guardar timestamp del último intento
+          try {
+            const newAttempts = (qrRow.validation_attempts || 0) + 1;
+            const baseUpdate: any = {
+              validation_attempts: newAttempts,
+              updated_at: new Date().toISOString()
+            };
+            // Intentar guardar last_attempt_at si la columna existe
+            (baseUpdate as any).last_attempt_at = new Date().toISOString();
+            const { data: updData, error: updErr1 } = await supabase
+              .from('qr_codes')
+              .update(baseUpdate)
+              .eq('id', qrRow.id)
+              .select()
+              .single();
+            console.log('Update result (invalid QR):', updData, updErr1);
+            if (updErr1) throw updErr1;
+          } catch (updErr) {
+            // Si falla por columna inexistente u otro motivo, intentar solo validation_attempts
+            try {
+              const { data: updData2, error: updErr2 } = await supabase
+                .from('qr_codes')
+                .update({
+                  validation_attempts: (qrRow.validation_attempts || 0) + 1,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', qrRow.id)
+                .select()
+                .single();
+              console.log('Fallback update result (invalid QR):', updData2, updErr2);
+            } catch (updErr2) {
+              console.warn('No se pudo registrar el intento de validación para QR inválido:', updErr2);
+            }
+          }
+
+          this.notificationService.show({
+            message: 'Este QR ya fue utilizado y no es válido',
+            type: 'error',
+            duration: 3000
+          });
+          return;
+        }
+      } catch (e) {
+        console.warn('No se pudo comprobar el estado del QR:', e);
       }
 
       console.log('Validando pedido:', orderId, 'para tienda:', this.storeId);
@@ -320,7 +380,24 @@ export class OrderValidationPage implements OnInit, OnDestroy {
       
       console.log('Pedido válido para procesar');
 
-      // PASO 6: Marcar el pedido como entregado
+      // PASO 6: Marcar QR como usado (para trazabilidad) y luego marcar pedido entregado
+      try {
+        const supabase = this.supabaseService.getClient();
+        const { data: authUser } = await supabase.auth.getUser();
+        const currentUserId = authUser.user?.id || null;
+        await supabase
+          .from('qr_codes')
+          .update({
+            used_at: new Date().toISOString(),
+            used_by: currentUserId,
+            is_valid: false,
+            updated_at: new Date().toISOString()
+          })
+          .eq('order_id', orderId);
+      } catch (e) {
+        console.warn('No se pudo marcar el QR como usado:', e);
+      }
+
       console.log('Marcando pedido como entregado...');
       const success = await this.orderService.markOrderAsDelivered(orderId);
       console.log('Resultado marcado como entregado:', success);
@@ -491,8 +568,8 @@ export class OrderValidationPage implements OnInit, OnDestroy {
       const header = JSON.parse(this.base64UrlDecodeToString(h));
       const payload = JSON.parse(this.base64UrlDecodeToString(p));
 
-      // Cargar clave pública por kid
-      const keys = await this.supabaseService.getStorePublicKeys(payload.sid);
+      // Cargar clave pública por kid desde Edge Function
+      const keys = await this.supaFx.getStorePublicKeys(payload.sid);
       const key = (keys || []).find(k => k.id === header.kid);
       if (!key) return { ok: false, reason: 'Clave pública no encontrada' };
 
