@@ -1,18 +1,31 @@
 <ion-content class="scanner-content">
-  <video #video playsinline autoplay muted></video>
+  <div class="scanner-title">Escanear pedido</div>
+  <div class="scanner-subtitle">Alinea el código dentro del marco</div>
+  <div class="scanner-window">
+    <video #video playsinline autoplay muted></video>
 
-  <div class="scanner-overlay">
-    <div class="scan-frame">
-      <div class="scan-line"></div>
+    <div class="scanner-overlay">
+      <div class="scan-frame">
+        <div class="scan-line"></div>
+      </div>
     </div>
   </div>
 
   <ion-buttons class="scanner-buttons">
-    <ion-button (click)="close()" color="medium">Cerrar</ion-button>
-    <ion-button (click)="toggleTorch()" [disabled]="!torchSupported">
+    <ion-button (click)="close()" color="medium">
+      <ion-icon slot="start" name="close"></ion-icon>
+      Cerrar
+    </ion-button>
+    <ion-button (click)="toggleTorch()" color="primary" [disabled]="!torchSupported">
+      <ion-icon slot="start" name="flashlight"></ion-icon>
       Linterna
     </ion-button>
+    <ion-button (click)="switchCamera()" color="primary">
+      <ion-icon slot="start" name="camera-reverse"></ion-icon>
+      Cambiar cámara
+    </ion-button>
   </ion-buttons>
+
 </ion-content>
 
 

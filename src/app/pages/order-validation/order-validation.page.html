@@ -18,7 +18,7 @@
       <div *ngIf="!permissionDenied">
         <p>1. Asegúrate de que el código QR esté bien iluminado</p>
         <p>2. Mantén el dispositivo estable</p>
-        <p>3. El pedido se validará automáticamente al escanear</p>
+        <p>3. Pulsa el botón para iniciar el escaneo</p>
         
         <ion-button expand="block" (click)="startScanning()">
           <ion-icon name="scan-outline" slot="start"></ion-icon>
@@ -49,46 +49,54 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Vista de escaneo -->
-  <div *ngIf="isScanning" class="scanner-view">
-    <!-- Vista de cámara para navegador -->
-    <div *ngIf="!platform.is('capacitor')" class="web-scanner-view">
-      <video #video playsinline autoplay class="scanner-video"></video>
-      <canvas #canvas class="scanner-canvas" hidden></canvas>
-      <div class="scanner-overlay">
-        <div class="scanner-frame">
-          <div class="scanner-line"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Vista de cámara para dispositivo móvil -->
-    <div *ngIf="platform.is('capacitor')" class="native-scanner-view">
-      <div class="scanner-frame">
-        <div class="scanner-line"></div>
-      </div>
-    </div>
-
-    <ion-button expand="block" (click)="stopScanning()" color="danger" class="stop-button">
-      <ion-icon name="close-outline" slot="start"></ion-icon>
-      Cancelar Escaneo
-    </ion-button>
-  </div>
+  
 
   <!-- Resultado del escaneo -->
   <ion-card *ngIf="lastScannedOrder" class="validation-success">
     <ion-card-header>
       <ion-icon name="checkmark-circle" color="success"></ion-icon>
-      <ion-card-title>¡Pedido Validado!</ion-card-title>
+      <ion-card-title>¡Pedido validado correctamente!</ion-card-title>
+      <ion-card-subtitle>Entrega el pedido al cliente indicado abajo</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>
-      <p><strong>ID del Pedido:</strong> {{lastScannedOrder.id}}</p>
-      <p><strong>Cliente:</strong> {{lastScannedOrder.customer_name}}</p>
-      <p><strong>Total:</strong> {{lastScannedOrder.total | currency:'EUR'}}</p>
-      
-      <ion-button expand="block" routerLink="/tabs/store-management" color="primary">
+      <ion-item lines="none">
+        <ion-label>
+          <h2>Pedido</h2>
+          <p>{{lastScannedOrder.id}}</p>
+        </ion-label>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-icon name="person-circle-outline" slot="start" color="primary"></ion-icon>
+        <ion-label>
+          <h2>Cliente</h2>
+          <p>{{lastScannedOrder.customer_name || 'Jorge Granel'}}</p>
+        </ion-label>
+      </ion-item>
+
+      <ion-list *ngIf="lastScannedOrder.items?.length">
+        <ion-list-header>
+          <ion-label>Artículos del pedido</ion-label>
+        </ion-list-header>
+        <ion-item *ngFor="let it of lastScannedOrder.items">
+          <ion-label>
+            <h3>{{it.product_info?.name || 'Producto'}}</h3>
+            <p>Cantidad: {{it.quantity}} · {{(it.price || 0) | currency:'EUR'}}</p>
+          </ion-label>
+          <ion-note slot="end">{{((it.price || 0) * (it.quantity || 0)) | currency:'EUR'}}</ion-note>
+        </ion-item>
+      </ion-list>
+
+      <ion-item lines="full">
+        <ion-label>
+          <h2>Total</h2>
+        </ion-label>
+        <ion-note slot="end"><strong>{{(lastScannedOrder.total_price || lastScannedOrder.total) | currency:'EUR'}}</strong></ion-note>
+      </ion-item>
+
+      <ion-button expand="block" routerLink="/tabs/store-management" color="primary" class="ion-margin-top">
         <ion-icon name="home-outline" slot="start"></ion-icon>
-        Volver al Inicio
+        Volver al inicio
       </ion-button>
     </ion-card-content>
   </ion-card>
