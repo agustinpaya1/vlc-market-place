@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ModalController } from '@ionic/angular';
 import { QrScannerService } from '../../services/qr-scanner.service';
 import { OrderService } from '../../services/order.service';
 import { QrCodeService } from '../../services/qr-code.service';
@@ -11,6 +11,7 @@ import { Platform } from '@ionic/angular';
 import { SupabaseService } from '../../services/supabase.service';
 import { SupabaseFunctionsService } from '../../services/supabase-functions.service';
 import nacl from 'tweetnacl';
+import { QrScannerModalComponent } from '../../components/qr-scanner-modal/qr-scanner-modal.component';
 
 @Component({
   selector: 'app-order-validation',
@@ -40,7 +41,8 @@ export class OrderValidationPage implements OnInit, OnDestroy {
     public platform: Platform,
     private qrCodeService: QrCodeService,
     private supabaseService: SupabaseService,
-    private supaFx: SupabaseFunctionsService
+    private supaFx: SupabaseFunctionsService,
+    private modalCtrl: ModalController
   ) {
     this.storeId = this.route.snapshot.paramMap.get('storeId') || '';
     this.detectSafari();
@@ -107,38 +109,38 @@ export class OrderValidationPage implements OnInit, OnDestroy {
 
   async startScanning() {
     try {
-      // Detener cualquier escaneo previo
-      await this.stopScanning();
-
-      // Verificar permisos antes de iniciar
+      // Verificar permisos (no bloqueamos la apertura del modal)
       if (!this.scannerPermission) {
         await this.checkPermissions();
-        if (!this.scannerPermission) {
-          return;
-        }
       }
 
-      this.isScanning = true;
-      const scannedContent = await this.qrScanner.startScan();
-      
-      if (scannedContent) {
-        await this.validateOrder(scannedContent);
-      } else {
+      console.log('[OrderValidation] Abriendo modal de escáner...');
+      const modal = await this.modalCtrl.create({
+        component: QrScannerModalComponent,
+        cssClass: 'qr-scanner-modal',
+        backdropDismiss: false
+      });
+
+      await modal.present();
+      console.log('[OrderValidation] Modal de escáner presentado');
+      const { data, role } = await modal.onDidDismiss();
+      console.log('[OrderValidation] Modal cerrado:', role, data);
+      if (role === 'confirm' && data?.value) {
+        await this.validateOrder(data.value);
+      } else if (role !== 'confirm') {
         this.notificationService.show({
-          message: 'No se pudo leer el código QR',
-          type: 'error',
-          duration: 3000
+          message: 'Escaneo cancelado',
+          type: 'warning',
+          duration: 1500
         });
       }
     } catch (error) {
-      console.error('Error during scanning:', error);
+      console.error('Error opening scanner modal:', error);
       this.notificationService.show({
-        message: 'Error al escanear el código QR',
+        message: 'Error al abrir el escáner',
         type: 'error',
         duration: 3000
       });
-    } finally {
-      this.isScanning = false;
     }
   }
 

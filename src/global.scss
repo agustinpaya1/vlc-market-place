@@ -164,6 +164,20 @@ ion-content {
   --padding-bottom: var(--spacing-md);
 }
 
+/* Full-screen QR scanner modal appearance */
+.qr-scanner-modal {
+  --background: rgba(0, 0, 0, 0.9);
+  --height: 100%;
+  --width: 100%;
+  --border-radius: 0;
+  &::part(content) {
+    height: 100%;
+    width: 100%;
+    border-radius: 0;
+    background: rgba(0, 0, 0, 0.9);
+  }
+}
+
 ion-header, ion-toolbar {
   --background: #02A396;
   --color: white;

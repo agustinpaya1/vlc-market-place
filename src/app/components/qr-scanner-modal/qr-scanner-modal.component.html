@@ -1,0 +1,18 @@
+<ion-content class="scanner-content">
+  <video #video playsinline autoplay muted></video>
+
+  <div class="scanner-overlay">
+    <div class="scan-frame">
+      <div class="scan-line"></div>
+    </div>
+  </div>
+
+  <ion-buttons class="scanner-buttons">
+    <ion-button (click)="close()" color="medium">Cerrar</ion-button>
+    <ion-button (click)="toggleTorch()" [disabled]="!torchSupported">
+      Linterna
+    </ion-button>
+  </ion-buttons>
+</ion-content>
+
+
