@@ -1,6 +1,4 @@
-
-```markdown
-# MercAU - VLC Marketplace
+# MercAU - A Sustainable Local Marketplace
 
 MercAU is a full-stack web and mobile marketplace designed to promote local commerce and sustainable delivery. The platform connects users with nearby stores through an AI-assisted interface, real-time synchronization, and a gamified reward system that encourages eco-friendly and community-focused shopping habits.
 
@@ -16,16 +14,16 @@ MercAU is a full-stack web and mobile marketplace designed to promote local comm
 ## Technologies Used
 
 -   **Frontend**: Angular, TypeScript, Ionic Framework, HTML, SCSS
--   **Backend & Database**: Firebase (Firestore, Authentication, Hosting)
+-   **Backend & Database**: Supabase (PostgreSQL Database, Authentication, and Realtime APIs)
 -   **AI Integration**: Custom AiChatComponent and AiChatService
 
 ## Collaborators
 
--   Mario Pérez
 -   Laila Makmar
+-   Mario érez
 -   Silvia Barea
--   Saúl López
--   Agustín Payá ([@agustinpaya1](https://github.com/agustinpaya1))
+-   Saúl Alcázar
+-   Agustín Payá
 
 ## Getting Started
 
@@ -44,20 +42,30 @@ npm install -g @ionic/cli
 
 1.  **Clone the repository:**
     ```sh
-    git clone https://github.com/agustinpaya1/vlc-market-place.git
+    git clone https://github.com/essieredd/MercAU_Marketplace.git
     ```
 2.  **Navigate to the project directory:**
     ```sh
-    cd vlc-market-place
+    cd MercAU_Marketplace
     ```
 3.  **Install NPM packages:**
     ```sh
     npm install
     ```
-4.  **Set up Firebase:**
-    -   Create a project at [firebase.google.com](https://firebase.google.com/).
-    -   Obtain your Firebase configuration (apiKey, authDomain, etc.).
-    -   Add your configuration to the files at `src/environments/environment.ts` and `src/environments/environment.prod.ts`.
+4.  **Set up your Supabase backend:**
+    -   Head over to [supabase.com](https://supabase.com/) and create a new project.
+    -   In your Supabase project dashboard, go to **Project Settings > API**.
+    -   You'll need two things: the **Project URL** and the `anon` **public** key.
+    -   Next, find the environment files at `src/environments/environment.ts` and `src/environments/environment.prod.ts`. Add your Supabase credentials to both files like this:
+
+    ```typescript
+    // In src/environments/environment.ts
+    export const environment = {
+      production: false,
+      supabaseUrl: 'YOUR_SUPABASE_PROJECT_URL',
+      supabaseKey: 'YOUR_SUPABASE_ANON_KEY'
+    };
+    ```
 
 5.  **Run the application:**
     To serve the application for web development:
@@ -65,7 +73,3 @@ npm install -g @ionic/cli
     ionic serve
     ```
     Navigate to `http://localhost:8100/`. The app will automatically reload if you change any of the source files.
-
-```
-
-***
