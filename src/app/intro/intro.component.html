@@ -1,110 +1,72 @@
-<ion-content>
-  <div class="intro-container hardware-accelerated">
-    <div class="slides-container">
-      <!-- Logo intro slide (new first slide) -->
-      <div class="intro-slide hardware-accelerated" [class.active]="currentSlide === 0">
-        <div class="slide-content logo-slide">
-          <div class="logo-intro-wrapper">
-            <div class="logo-intro">
-              <div class="app-logo-container">
-                <img src="https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/logoapp//logo.png" alt="MercAU Logo" class="app-logo" loading="eager" fetchpriority="high">
-              </div>
-              <h1 class="app-name">MercAU</h1>
-              <p class="app-tagline">Tu mercado valenciano en tu móvil</p>
+<ion-content class="ion-padding" scroll-y="false">
+  <div class="intro-container">
+    <swiper-container #swiper pagination="true" pagination-clickable="true" centered-slides="true" initial-slide="0"
+      class="full-height">
+
+      <!-- Slide 1: Context -->
+      <swiper-slide>
+        <div class="slide-content">
+          <div class="icon-container primary-gradient">
+            <ion-icon name="rocket-outline"></ion-icon>
+          </div>
+          <h1>Proyecto Galardonado</h1>
+          <p class="description">
+            Desarrollado para el concurso <strong>Artemis Code</strong>. Una solución completa de comercio local
+            sostenible.
+          </p>
+          <div class="swipe-hint">
+            <span class="hint-text">Desliza para continuar</span>
+            <ion-icon name="arrow-forward-outline" class="hint-icon"></ion-icon>
+          </div>
+        </div>
+      </swiper-slide>
+
+      <!-- Slide 2: Achievements -->
+      <swiper-slide>
+        <div class="slide-content">
+          <div class="icon-container gold-gradient">
+            <ion-icon name="trophy-outline"></ion-icon>
+          </div>
+          <h1>Reconocimiento</h1>
+          <div class="achievements-list">
+            <div class="achievement-item">
+              <ion-icon name="medal" color="medium"></ion-icon>
+              <span>2º Premio del Jurado</span>
+            </div>
+            <div class="achievement-item">
+              <ion-icon name="star" color="warning"></ion-icon>
+              <span>Ganador del Voto Popular</span>
             </div>
           </div>
-          <div class="dots">
-            <span class="dot active"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-          </div>
-          <div class="actions logo-actions">
-            <button class="next-button start-explore hardware-accelerated" (click)="nextSlide()">
-              <span>Explorar</span>
-              <ion-icon name="arrow-forward-outline"></ion-icon>
-            </button>
+          <p class="description">
+            Demostrando excelencia técnica y valor real para el usuario.
+          </p>
+          <div class="swipe-hint">
+            <span class="hint-text">Desliza para continuar</span>
+            <ion-icon name="arrow-forward-outline" class="hint-icon"></ion-icon>
           </div>
         </div>
-      </div>
+      </swiper-slide>
 
-      <!-- Primera pantalla de introducción (now slide 1) -->
-      <div class="intro-slide hardware-accelerated" [class.active]="currentSlide === 1">
+      <!-- Slide 3: Tech Stack -->
+      <swiper-slide>
         <div class="slide-content">
-          <div class="illustration">
-            <img src="assets/intro/slide1.svg" alt="Mercados locales ilustración" loading="lazy">
+          <div class="icon-container code-gradient">
+            <ion-icon name="code-slash-outline"></ion-icon>
           </div>
-          <div class="text-content">
-            <h2>Descubre Mercados Locales</h2>
-            <p>Explora los mejores mercados y tiendas locales de Valencia. Apoya el comercio de proximidad desde tu móvil.</p>
-          </div>
-          <div class="dots">
-            <span class="dot"></span>
-            <span class="dot active"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-          </div>
-          <div class="actions">
-            <button class="skip-button" (click)="skip()">Saltar</button>
-            <button class="next-button hardware-accelerated" (click)="nextSlide()">
-              <span>Siguiente</span>
-              <ion-icon name="arrow-forward-outline"></ion-icon>
-            </button>
-          </div>
-        </div>
-      </div>
+          <h1>Explora la Demo</h1>
+          <p class="description">
+            Construido con <strong>Angular 19, Ionic y Supabase</strong>. Navega por las tiendas, prueba el carrito y
+            disfruta la experiencia nativa en la web.
+          </p>
 
-      <!-- Segunda pantalla de introducción (now slide 2) -->
-      <div class="intro-slide hardware-accelerated" [class.active]="currentSlide === 2">
-        <div class="slide-content">
-          <div class="illustration">
-            <img src="assets/intro/slide2.svg" alt="Productos frescos ilustración" loading="lazy">
-          </div>
-          <div class="text-content">
-            <h2>Productos Frescos y de Calidad</h2>
-            <p>Encuentra los mejores productos frescos directamente de productores locales. Calidad garantizada y precios justos.</p>
-          </div>
-          <div class="dots">
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot active"></span>
-            <span class="dot"></span>
-          </div>
-          <div class="actions">
-            <button class="skip-button" (click)="skip()">Saltar</button>
-            <button class="next-button hardware-accelerated" (click)="nextSlide()">
-              <span>Siguiente</span>
-              <ion-icon name="arrow-forward-outline"></ion-icon>
-            </button>
-          </div>
+          <ion-button expand="block" shape="round" class="action-button" (click)="finish()">
+            Ver Demo
+            <ion-icon slot="end" name="open-outline"></ion-icon>
+          </ion-button>
         </div>
-      </div>
+      </swiper-slide>
 
-      <!-- Tercera pantalla de introducción (now slide 3) -->
-      <div class="intro-slide hardware-accelerated" [class.active]="currentSlide === 3">
-        <div class="slide-content">
-          <div class="illustration">
-            <img src="assets/intro/slide3.svg" alt="Compra sostenible ilustración" loading="lazy">
-          </div>
-          <div class="text-content">
-            <h2>Compra Sostenible y Gana</h2>
-            <p>Acumula VLCoins con cada compra, apoya el comercio local y canjea recompensas mientras reduces tu huella ecológica.</p>
-          </div>
-          <div class="dots">
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot active"></span>
-          </div>
-          <div class="actions">
-            <button class="skip-button" (click)="skip()">Saltar</button>
-            <button class="next-button start-button hardware-accelerated" (click)="finish()" [disabled]="isFinishing">
-              <span>Comenzar</span>
-              <ion-icon name="arrow-forward-outline"></ion-icon>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </swiper-container>
   </div>
 </ion-content>

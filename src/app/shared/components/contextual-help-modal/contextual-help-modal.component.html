@@ -1,0 +1,41 @@
+<ion-content class="contextual-modal-content">
+    <div class="modal-wrapper">
+        <swiper-container [pagination]="true" pagination-clickable="true" pagination-dynamic-bullets="true"
+            class="help-swiper">
+
+            <swiper-slide *ngFor="let slide of slides; let i = index; let last = last">
+                <div class="slide-content">
+                    <div class="illustration-container">
+                        <!-- Placeholder icon or image if provided -->
+                        <img *ngIf="slide.image" [src]="slide.image" alt="illustration" class="slide-image">
+                        <div *ngIf="!slide.image" class="icon-placeholder">
+                            <ion-icon name="bulb-outline"></ion-icon>
+                        </div>
+                    </div>
+
+                    <h2 class="slide-title">{{ slide.title }}</h2>
+                    <p class="slide-text" [innerHTML]="slide.text"></p>
+                    <!-- Using simple binding for now, assuming sanitized or safe strings -->
+                    <!-- Actually, let's use innerHTML but basic for now. Angular sanitizes by default but 'pre-line' style might be needed for \n -->
+
+
+                    <div class="swipe-hint" *ngIf="!last">
+                        <span class="hint-text">Desliza para continuar</span>
+                        <ion-icon name="arrow-forward-outline" class="hint-icon"></ion-icon>
+                    </div>
+
+                    <div class="action-area" *ngIf="last">
+                        <ion-button expand="block" shape="round" class="action-btn" (click)="close()">
+                            Entendido
+                        </ion-button>
+                    </div>
+                </div>
+            </swiper-slide>
+
+        </swiper-container>
+
+        <!-- Close button for non-last slides if user wants early exit? 
+         Requirement said "Botón 'Entendido' en la última slide que cierra el modal", 
+         implies forced flow or swipe to end. Let's stick to requirement. -->
+    </div>
+</ion-content>

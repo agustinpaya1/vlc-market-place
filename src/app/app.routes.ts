@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
 import { IntroComponent } from './intro/intro.component';
+import { IntroGuard } from './guards/intro.guard';
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'intro',
+    redirectTo: 'tabs/stores',
     pathMatch: 'full'
   },
   {
@@ -13,7 +14,8 @@ export const routes: Routes = [
   },
   {
     path: 'tabs',
-    loadChildren: () => import('./tabs/tabs.routes').then(m => m.routes)
+    loadChildren: () => import('./tabs/tabs.routes').then(m => m.routes),
+    canActivate: [IntroGuard]
   },
   {
     path: 'login',

@@ -7,19 +7,21 @@ import { AuthService, User } from '../services/auth.service';
 import { SupabaseService } from '../services/supabase.service';
 import { SettingsService } from '../services/settings.service';
 import { addIcons } from 'ionicons';
-import { 
-  personCircle, 
-  pencil, 
-  logOut, 
-  settings, 
-  heart, 
-  bag, 
-  calendar, 
-  receipt, 
-  callOutline, 
+import {
+  personCircle,
+  pencil,
+  logOut,
+  settings,
+  heart,
+  bag,
+  calendar,
+  receipt,
+  callOutline,
   locationOutline,
   logInOutline,
-  camera
+  camera,
+  walletOutline,
+  chevronForwardOutline
 } from 'ionicons/icons';
 import { ToastController } from '@ionic/angular';
 import { Subscription } from 'rxjs';
@@ -52,6 +54,12 @@ export class ProfilePage implements OnInit, OnDestroy {
     phone: '',
     address: '',
     photoUrl: undefined
+  };
+
+  // Mock Stats for Gamification
+  userStats = {
+    vlcoins: 1250,
+    orders: 12
   };
 
   isAuthenticated = false;
@@ -90,16 +98,18 @@ export class ProfilePage implements OnInit, OnDestroy {
       callOutline,
       locationOutline,
       logInOutline,
-      camera
+      camera,
+      walletOutline,
+      chevronForwardOutline
     });
     console.log('ProfilePage constructor called');
-    
+
     // Optimización: manejar el resize de manera eficiente
     this.resizeListener = () => {
       if (this.animationFrameId !== null) {
         cancelAnimationFrame(this.animationFrameId);
       }
-      
+
       this.animationFrameId = requestAnimationFrame(() => {
         this.changeDetector.detectChanges();
         this.animationFrameId = null;
@@ -114,14 +124,14 @@ export class ProfilePage implements OnInit, OnDestroy {
 
   ngOnInit() {
     console.log('ProfilePage - ngOnInit');
-    
+
     // Optimización: Agregar event listener fuera de la zona de Angular
     this.ngZone.runOutsideAngular(() => {
       window.addEventListener('resize', this.resizeListener, { passive: true });
     });
-    
+
     this.checkAuthStatus();
-    
+
     // Suscribirse a cambios en la configuración de tema
     this.themeSubscription = this.settingsService.getSettings().subscribe(settings => {
       // Forzar detección de cambios cuando cambia el tema
@@ -137,14 +147,14 @@ export class ProfilePage implements OnInit, OnDestroy {
     if (this.authSubscription) {
       this.authSubscription.unsubscribe();
     }
-    
+
     if (this.themeSubscription) {
       this.themeSubscription.unsubscribe();
     }
-    
+
     // Limpiar recursos
     window.removeEventListener('resize', this.resizeListener);
-    
+
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
     }
@@ -157,7 +167,7 @@ export class ProfilePage implements OnInit, OnDestroy {
 
   async checkAuthStatus() {
     console.log('ProfilePage - checkAuthStatus');
-    
+
     // Force refresh from Supabase to ensure we have the latest auth state
     try {
       const { data } = await this.supabaseService.getClient().auth.getSession();
@@ -165,25 +175,25 @@ export class ProfilePage implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error getting current session:', error);
     }
-    
+
     if (this.authSubscription) {
       this.authSubscription.unsubscribe();
     }
-    
+
     this.authSubscription = this.authService.user$.subscribe(user => {
       console.log('ProfilePage - Auth subscription update:', user);
-      
+
       // Ejecutar cambios dentro de la zona de Angular y disparar detección de cambios
       this.ngZone.run(() => {
         this.isAuthenticated = !!user;
-        
+
         if (user) {
           console.log('ProfilePage - User is authenticated:', user);
           this.loadUserData(user);
         } else {
           console.log('ProfilePage - User is NOT authenticated');
         }
-        
+
         this.changeDetector.detectChanges();
       });
     });
@@ -215,7 +225,7 @@ export class ProfilePage implements OnInit, OnDestroy {
       color: 'primary'
     });
     await toast.present();
-    
+
     this.router.navigate(['/tabs/stores'], { replaceUrl: true });
   }
 
@@ -281,7 +291,7 @@ export class ProfilePage implements OnInit, OnDestroy {
 
       // Subir la foto de perfil
       const photoUrl = await this.supabaseService.uploadProfilePhoto(file, currentUser.id);
-      
+
       console.log('Photo uploaded successfully:', photoUrl);
       console.log('Full photo details:', {
         url: photoUrl,
@@ -306,7 +316,7 @@ export class ProfilePage implements OnInit, OnDestroy {
 
     } catch (error) {
       console.error('Comprehensive error in onPhotoUpload:', error);
-      
+
       // Mostrar un toast de error con más detalles
       const toast = await this.toastController.create({
         message: `Error al actualizar la foto de perfil: ${error instanceof Error ? error.message : 'Error desconocido'}`,
@@ -331,8 +341,8 @@ export class ProfilePage implements OnInit, OnDestroy {
     });
 
     // Fallback to default profile image
-    imgElement.src = 'assets/default-profile.svg';
-    
+    imgElement.src = 'https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/perfil/imagen%201.png';
+
     // Optional: Log the error to help diagnose issues
     this.logImageLoadError(originalSrc);
   }

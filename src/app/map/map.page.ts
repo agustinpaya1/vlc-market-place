@@ -4,47 +4,47 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Platform, ToastController } from '@ionic/angular';
 import {
-    IonBadge,
-    IonButton,
-    IonCard,
-    IonCardContent,
-    IonCardHeader,
-    IonChip,
-    IonCol,
-    IonContent,
-    IonGrid,
-    IonHeader,
-    IonIcon,
-    IonImg,
-    IonRow,
-    IonSearchbar,
-    IonSkeletonText,
-    IonSpinner
+  IonBadge,
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonChip,
+  IonCol,
+  IonContent,
+  IonGrid,
+  IonHeader,
+  IonIcon,
+  IonImg,
+  IonRow,
+  IonSearchbar,
+  IonSkeletonText,
+  IonSpinner
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
-    add,
-    alertCircleOutline,
-    arrowForward,
-    basketOutline,
-    callOutline,
-    cartOutline,
-    cartSharp,
-    checkmarkCircle,
-    checkmarkCircleOutline,
-    chevronBack,
-    closeCircle,
-    closeOutline,
-    compassOutline,
-    locationOutline,
-    locationSharp,
-    pricetagOutline,
-    remove,
-    share,
-    star,
-    storefrontOutline,
-    timeOutline,
-    timeSharp
+  add,
+  alertCircleOutline,
+  arrowForward,
+  basketOutline,
+  callOutline,
+  cartOutline,
+  cartSharp,
+  checkmarkCircle,
+  checkmarkCircleOutline,
+  chevronBack,
+  closeCircle,
+  closeOutline,
+  compassOutline,
+  locationOutline,
+  locationSharp,
+  pricetagOutline,
+  remove,
+  share,
+  star,
+  storefrontOutline,
+  timeOutline,
+  timeSharp
 } from 'ionicons/icons';
 import * as L from 'leaflet';
 import { Subscription } from 'rxjs';
@@ -52,6 +52,7 @@ import { AuthService } from '../services/auth.service';
 import { CartItem, CartService } from '../services/cart.service';
 import { SupabaseService } from '../services/supabase.service';
 import { VlcoinService } from '../services/vlcoin.service';
+import { ContextualHelpService } from '../services/contextual-help.service';
 
 interface Product {
   id: string;
@@ -108,6 +109,8 @@ interface Recompensa {
   distanciaAlUsuario?: number;
 }
 
+import { ViewDidEnter } from '@ionic/angular';
+
 @Component({
   selector: 'app-map',
   templateUrl: './map.page.html',
@@ -135,19 +138,19 @@ interface Recompensa {
     IonCol
   ]
 })
-export class MapPage implements OnInit, OnDestroy, AfterViewInit {
+export class MapPage implements OnInit, OnDestroy, AfterViewInit, ViewDidEnter {
   @ViewChild('productBottomSheet') productBottomSheet!: ElementRef;
-  
+
   private markers: any[] = [];
   private subscriptions: Subscription[] = [];
-  
+
   isDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
   isBottomSheetActive = false;
   isProductSheetActive = false;
   isAuthenticated = false;
   currentUser: any = null;
   isLoading = true;
-  
+
   stores: Store[] = [];
   selectedStore: Store | null = null;
   storeProducts: Product[] = [];
@@ -183,7 +186,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   cartItemsCount = 0;
 
 
-  
+
 
   constructor(
     private platform: Platform,
@@ -192,17 +195,18 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     private supabaseService: SupabaseService,
     private vlcoinService: VlcoinService,
     private toastController: ToastController,
-    private cartService: CartService
+    private cartService: CartService,
+    private contextualHelpService: ContextualHelpService
   ) {
     // Añadimos solo los iconos importados explícitamente
-    addIcons({locationOutline, timeOutline, star, storefrontOutline, cartOutline, closeOutline, chevronBack, share, locationSharp, timeSharp, cartSharp, callOutline, checkmarkCircle, closeCircle, pricetagOutline, arrowForward, compassOutline, checkmarkCircleOutline, alertCircleOutline, remove, add, basketOutline});
-    
+    addIcons({ locationOutline, timeOutline, star, storefrontOutline, cartOutline, closeOutline, chevronBack, share, locationSharp, timeSharp, cartSharp, callOutline, checkmarkCircle, closeCircle, pricetagOutline, arrowForward, compassOutline, checkmarkCircleOutline, alertCircleOutline, remove, add, basketOutline });
+
     this.subscriptions.push(
       this.authService.user$.subscribe(user => {
         const wasAuthenticated = this.isAuthenticated;
         this.isAuthenticated = !!user;
         this.currentUser = user;
-        
+
         // Si el usuario ha cerrado sesión y tenía el modo Cazador activo, desactivarlo
         if (wasAuthenticated && !this.isAuthenticated && this.modoCOLActivo) {
           this.modoCOLActivo = false;
@@ -236,6 +240,10 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  ionViewDidEnter() {
+    this.contextualHelpService.checkAndShow('map');
+  }
+
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
     if (this.cartSubscription) {
@@ -247,57 +255,57 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   private inicializarRecompensas() {
     // Recompensas iniciales
     this.recompensas = [
-      { 
-        id: '1', 
-        lat: 39.4702, 
-        lng: -0.3768, 
-        titulo: '2x1 en café solo hoy ☕', 
+      {
+        id: '1',
+        lat: 39.4702,
+        lng: -0.3768,
+        titulo: '2x1 en café solo hoy ☕',
         descripcion: 'Presenta este cupón en Café Concierto y disfruta de 2 cafés por el precio de 1',
-        coins: 10, 
+        coins: 10,
         tienda: 'Café Concierto',
         tiendaId: 'cafe1',
         tipo: 'descuento'
       },
-      { 
-        id: '2', 
-        lat: 39.4715, 
-        lng: -0.3752, 
-        titulo: '15% dto. en productos locales 🍊', 
+      {
+        id: '2',
+        lat: 39.4715,
+        lng: -0.3752,
+        titulo: '15% dto. en productos locales 🍊',
         descripcion: 'Descuento aplicable en productos frescos del Mercado Central',
-        coins: 15, 
+        coins: 15,
         tienda: 'Mercado Central',
         tiendaId: 'mercado1',
         tipo: 'descuento'
       },
-      { 
-        id: '3', 
-        lat: 39.4695, 
-        lng: -0.3790, 
-        titulo: 'Taller gratuito de cerámica 🏺', 
+      {
+        id: '3',
+        lat: 39.4695,
+        lng: -0.3790,
+        titulo: 'Taller gratuito de cerámica 🏺',
         descripcion: 'Participa en un taller de iniciación a la cerámica valenciana',
-        coins: 25, 
+        coins: 25,
         tienda: 'Artesanías Valencia',
         tiendaId: 'artesanias1',
         tipo: 'experiencia'
       },
-      { 
-        id: '4', 
-        lat: 39.4675, 
-        lng: -0.3760, 
-        titulo: 'Pack gourmet gratis 🥘', 
+      {
+        id: '4',
+        lat: 39.4675,
+        lng: -0.3760,
+        titulo: 'Pack gourmet gratis 🥘',
         descripcion: 'Recoge tu pack de productos gourmet de regalo',
-        coins: 30, 
+        coins: 30,
         tienda: 'Gourmet Valencia',
         tiendaId: 'gourmet1',
         tipo: 'regalo'
       },
-      { 
-        id: '5', 
-        lat: 39.4740, 
-        lng: -0.3770, 
-        titulo: 'Descubre el tesoro oculto 💰', 
+      {
+        id: '5',
+        lat: 39.4740,
+        lng: -0.3770,
+        titulo: 'Descubre el tesoro oculto 💰',
         descripcion: 'Premio especial valorado en 100€ para los cazadores más rápidos',
-        coins: 50, 
+        coins: 50,
         tienda: 'Ayuntamiento',
         tiendaId: 'ayuntamiento1',
         tipo: 'regalo'
@@ -314,7 +322,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       // this.router.navigate(['/login']);
       return;
     }
-    
+
     if (!this.modoCOLActivo) {
       // Si vamos a activar el modo, primero mostramos la explicación
       this.mostrarExplicacionCazador = true;
@@ -335,34 +343,34 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   activarModoCazador() {
     // Verificar autenticación nuevamente por seguridad
     if (!this.isAuthenticated || !this.leafletMap) return;
-    
+
     // Limpiar marcadores previos por si acaso
     this.desactivarModoCazador();
-    
+
     // Añadir marcadores de recompensas al mapa
     this.recompensas.forEach((recompensa) => {
       // No mostrar recompensas ya canjeadas
       if (this.recompensasCanjeadas.includes(recompensa.id)) return;
-      
+
       const marker = L.marker([recompensa.lat, recompensa.lng], {
         icon: this.treasureIcon
       });
-      
+
       // Crear contenido HTML personalizado para el popup
       const popupContent = document.createElement('div');
       popupContent.className = 'col-popup-content';
-      
+
       // Título
       const title = document.createElement('h3');
       title.textContent = recompensa.titulo;
       popupContent.appendChild(title);
-      
+
       // Monedas
       const coins = document.createElement('p');
       coins.className = 'col-popup-coins';
       coins.textContent = `+${recompensa.coins} VLCoin`;
       popupContent.appendChild(coins);
-      
+
       // Botón
       const button = document.createElement('button');
       button.className = 'col-popup-button';
@@ -373,7 +381,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
         this.leafletMap?.closePopup();
       };
       popupContent.appendChild(button);
-      
+
       // Crear popup con opciones personalizadas
       const popup = L.popup({
         className: 'leaflet-popup-col-reward',
@@ -381,15 +389,15 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
         autoClose: true,
         closeOnClick: true
       }).setContent(popupContent);
-      
+
       // Vincular el popup al marcador
       marker.bindPopup(popup);
-      
+
       // Añadir un controlador de eventos para el clic en el marcador
       marker.on('click', () => {
         marker.openPopup();
       });
-      
+
       marker.addTo(this.leafletMap!);
       this.marcadoresRecompensa.push(marker);
     });
@@ -405,17 +413,17 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
 
   mostrarDetallesRecompensa(recompensa: Recompensa) {
     this.recompensaSeleccionada = recompensa;
-    
+
     // Calcular y guardar la distancia para mostrarla en el popup
     if (this.leafletMap) {
       const centroMapa = this.leafletMap.getCenter();
       const distancia = this.calcularDistanciaEnMetros(
-        centroMapa.lat, 
-        centroMapa.lng, 
-        recompensa.lat, 
+        centroMapa.lat,
+        centroMapa.lng,
+        recompensa.lat,
         recompensa.lng
       );
-      
+
       // Añadir la distancia a la recompensa seleccionada
       this.recompensaSeleccionada.distanciaAlUsuario = Math.round(distancia);
     }
@@ -431,16 +439,16 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       alert('¡Estás demasiado lejos! Acércate a menos de 50 metros del tesoro para poder canjearlo.');
       return;
     }
-    
+
     // Verificar que el usuario está autenticado
     if (!this.isAuthenticated || !this.currentUser || !this.currentUser.id) {
       alert('Debes iniciar sesión para canjear recompensas.');
       return;
     }
-    
+
     // Añadir a la lista de recompensas canjeadas
     this.recompensasCanjeadas.push(recompensa.id);
-    
+
     // Primero intentamos guardar el historial del canje
     this.guardarHistorialCanje(recompensa).then(historialGuardado => {
       // Luego añadimos las monedas al saldo del usuario
@@ -449,7 +457,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
           if (success) {
             // Actualizar explícitamente el saldo para refrescar la UI
             await this.vlcoinService.getVlcoinBalance(this.currentUser.id);
-            
+
             // Mostrar mensaje de éxito
             const toast = await this.toastController.create({
               message: `¡Has ganado ${recompensa.coins} VLCoin! Tu nuevo saldo se ha actualizado.`,
@@ -464,7 +472,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
               ]
             });
             await toast.present();
-            
+
             // Alerta de éxito
             alert(`¡Enhorabuena! Has canjeado "${recompensa.titulo}" por ${recompensa.coins} VLCoin. 🎉`);
           } else {
@@ -488,13 +496,13 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
         });
       alert(`¡Enhorabuena! Has canjeado "${recompensa.titulo}" por ${recompensa.coins} VLCoin. 🎉`);
     });
-    
+
     // Actualizar marcadores si el modo cazador está activo
     if (this.modoCOLActivo) {
       this.desactivarModoCazador();
       this.activarModoCazador();
     }
-    
+
     this.cerrarPopupRecompensa();
   }
 
@@ -502,12 +510,12 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   private createCustomMarkerIcon(store: Store): L.Icon {
     // Determinar si la tienda está abierta
     const isOpen = this.checkIfStoreIsOpen(store.open_time);
-    
+
     // Usar diferentes iconos según el estado de la tienda
-    const iconUrl = isOpen 
+    const iconUrl = isOpen
       ? 'assets/map-icons/store-marker.svg'
       : 'assets/map-icons/map-pin.svg';
-    
+
     return L.icon({
       iconUrl: iconUrl,
       iconSize: [40, 50],
@@ -519,15 +527,15 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
 
   private addStoreMarkersToMap() {
     if (!this.leafletMap) return;
-    
+
     // Eliminar marcadores previos
     this.leafletMarkers.forEach(marker => marker.remove());
     this.leafletMarkers = [];
-    
+
     // Añadir un marcador por cada tienda con coordenadas
     this.stores.forEach(store => {
       if (!store.latitude || !store.longitude) return;
-      
+
       // Crear un marcador con icono personalizado
       const customIcon = this.createCustomMarkerIcon(store);
       const marker = L.marker([store.latitude, store.longitude], {
@@ -535,9 +543,9 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
         title: store.name,
         alt: `Tienda: ${store.name}`
       });
-      
+
       marker.addTo(this.leafletMap!);
-      
+
       // Crear el popup con diseño moderno
       const isOpen = this.checkIfStoreIsOpen(store.open_time);
       const imageUrl = store.image_url || store.imageUrl || 'assets/store-placeholder.jpg';
@@ -564,7 +572,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
           </div>
         </div>
       `;
-      
+
       // Crear y vincular el popup al marcador
       const popup = L.popup({
         closeButton: true,
@@ -585,10 +593,10 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
         // Calcular la posición centrada con offset
         const offsetY = this.isBottomSheetActive ? this.getMapOffset() : 0;
         const targetLatLng = marker.getLatLng();
-        
+
         // Primero muestra el popup
         marker.bindPopup(popup).openPopup();
-        
+
         // Luego centra el mapa - reducimos duración para que sea más rápido
         this.leafletMap?.flyTo(targetLatLng, 16, {
           duration: 0.5, // Más rápido
@@ -596,26 +604,26 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
           noMoveStart: true, // Evita eventos de inicio de movimiento para reducir parpadeos
           animate: true
         });
-        
+
         // Aplicar offset solo después de que termine la animación principal
         setTimeout(() => {
           if (offsetY > 0 && this.leafletMap) {
-            const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY/2]);
+            const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY / 2]);
             const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
-            
+
             this.leafletMap.panTo(newLatLng, {
               duration: 0.3,
               easeLinearity: 0.5,
               noMoveStart: true
             });
           }
-          
+
           // Configurar los botones del popup
           const viewBtn = document.querySelector(`button.view-store[data-store-id="${store.id}"]`);
           if (viewBtn) {
             viewBtn.addEventListener('click', () => this.selectStoreFromMap(store));
           }
-          
+
           // Permitir nuevos clics después de un tiempo para evitar múltiples activaciones
           setTimeout(() => {
             isAnimating = false;
@@ -633,37 +641,37 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     this.loadStoreProducts(store.id);
     this.showProductSheet();
     this.isBottomSheetActive = true;
-    
+
     if (this.leafletMap && store.latitude && store.longitude) {
       const targetLatLng = L.latLng(store.latitude, store.longitude);
-      
+
       // Primero centrar el mapa con animación más rápida
       this.leafletMap.flyTo(targetLatLng, 16, {
         duration: 0.5,
         easeLinearity: 0.25,
         noMoveStart: true
       });
-      
+
       // Luego, después de la animación principal, aplicar el offset si es necesario
       setTimeout(() => {
         if (this.isBottomSheetActive && this.leafletMap) {
           const offsetY = this.getMapOffset();
-          const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY/2]);
+          const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY / 2]);
           const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
-          
+
           this.leafletMap.panTo(newLatLng, {
             duration: 0.3,
             easeLinearity: 0.5,
             noMoveStart: true
           });
         }
-        
+
         // Encuentra y abre el popup
         const marker = this.leafletMarkers.find(m => {
           const latlng = m.getLatLng();
           return latlng.lat === store.latitude && latlng.lng === store.longitude;
         });
-        
+
         if (marker) {
           marker.openPopup();
         }
@@ -676,37 +684,37 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     this.loadStoreProducts(store.id);
     this.showProductSheet();
     this.isBottomSheetActive = true;
-    
+
     if (this.leafletMap && store.latitude && store.longitude) {
       const targetLatLng = L.latLng(store.latitude, store.longitude);
-      
+
       // Primero centrar el mapa con animación más rápida
       this.leafletMap.flyTo(targetLatLng, 16, {
         duration: 0.5,
         easeLinearity: 0.25,
         noMoveStart: true
       });
-      
+
       // Luego, después de la animación principal, aplicar el offset si es necesario
       setTimeout(() => {
         if (this.isBottomSheetActive && this.leafletMap) {
           const offsetY = this.getMapOffset();
-          const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY/2]);
+          const targetPoint = this.leafletMap.project(targetLatLng, this.leafletMap.getZoom()).subtract([0, offsetY / 2]);
           const newLatLng = this.leafletMap.unproject(targetPoint, this.leafletMap.getZoom());
-          
+
           this.leafletMap.panTo(newLatLng, {
             duration: 0.3,
             easeLinearity: 0.5,
             noMoveStart: true
           });
         }
-        
+
         // Encuentra y abre el popup
         const marker = this.leafletMarkers.find(m => {
           const latlng = m.getLatLng();
           return latlng.lat === store.latitude && latlng.lng === store.longitude;
         });
-        
+
         if (marker) {
           marker.openPopup();
         }
@@ -799,8 +807,8 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
 
   private filterStores(query: string) {
     if (this.stores && this.stores.length > 0) {
-      const filteredStores = this.stores.filter(store => 
-        store.name.toLowerCase().includes(query) || 
+      const filteredStores = this.stores.filter(store =>
+        store.name.toLowerCase().includes(query) ||
         (store.category && store.category.toLowerCase().includes(query)) ||
         (store.description && store.description.toLowerCase().includes(query))
       );
@@ -817,14 +825,14 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       this.isDarkTheme = darkModeMediaQuery.matches;
       this.updateThemeClasses();
-      
+
       const handleThemeChange = (e: MediaQueryListEvent) => {
         this.isDarkTheme = e.matches;
         this.updateThemeClasses();
         // Actualizar el tile layer y los marcadores
         this.updateMapTileLayer();
       };
-      
+
       darkModeMediaQuery.addEventListener('change', handleThemeChange);
     }
   }
@@ -832,7 +840,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
   private updateThemeClasses() {
     document.body.classList.toggle('dark-theme', this.isDarkTheme);
     document.body.classList.toggle('light-theme', !this.isDarkTheme);
-    
+
     const elements = [
       'ion-content',
       '.bottom-sheet',
@@ -845,7 +853,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       '.stores-list',
       '.product-card'
     ];
-    
+
     elements.forEach(selector => {
       const elementList = document.querySelectorAll(selector);
       elementList.forEach(element => {
@@ -853,18 +861,18 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
         element.classList.toggle('light-theme', !this.isDarkTheme);
       });
     });
-    
+
     // Actualizar las variables CSS del documento
     document.documentElement.style.setProperty(
-      '--ion-background-color', 
+      '--ion-background-color',
       this.isDarkTheme ? 'var(--color-bg-dark)' : 'var(--color-bg-light)'
     );
     document.documentElement.style.setProperty(
-      '--ion-text-color', 
+      '--ion-text-color',
       this.isDarkTheme ? 'var(--color-text-dark)' : 'var(--color-text-light)'
     );
     document.documentElement.style.setProperty(
-      '--ion-card-background', 
+      '--ion-card-background',
       this.isDarkTheme ? 'var(--color-card-dark)' : 'var(--color-card-light)'
     );
   }
@@ -884,9 +892,9 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       attribution: '&copy; <a href=\"https://www.maptiler.com/copyright/\">MapTiler</a> &copy; OpenStreetMap contributors',
       maxZoom: 20
     });
-    
+
     this.lightTileLayer.addTo(map);
-    
+
     this.leafletMap = map;
     this.addStoreMarkersToMap();
 
@@ -894,17 +902,17 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       this.leafletMap!.invalidateSize();
     }, 300);
   }
-  
+
   private updateMapTileLayer() {
     if (!this.leafletMap || !this.lightTileLayer || !this.darkTileLayer) {
       return;
     }
-    
+
     // Si ya hay un tile layer, quitarlo primero
     if (this.currentTileLayer) {
       this.leafletMap.removeLayer(this.currentTileLayer);
     }
-    
+
     // Agregar el nuevo tile layer según el tema actual
     if (this.isDarkTheme) {
       this.darkTileLayer.addTo(this.leafletMap);
@@ -913,11 +921,11 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       this.lightTileLayer.addTo(this.leafletMap);
       this.currentTileLayer = this.lightTileLayer;
     }
-    
+
     // Actualizar los marcadores para reflejar el cambio de tema
     this.updateMarkersForTheme();
   }
-  
+
   private updateMarkersForTheme() {
     // Recrear los marcadores con el nuevo tema
     if (this.leafletMap && this.stores && this.stores.length > 0) {
@@ -937,43 +945,43 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     const R = 6371; // Radio de la Tierra en km
     const dLat = this.deg2rad(lat2 - lat1);
     const dLon = this.deg2rad(lon2 - lon1);
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2); 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distanciaKm = R * c; // Distancia en km
     return distanciaKm * 1000; // Convertir a metros
   }
-  
+
   private deg2rad(deg: number): number {
-    return deg * (Math.PI/180);
+    return deg * (Math.PI / 180);
   }
-  
+
   // Verificar si el usuario está lo suficientemente cerca de una recompensa (50 metros)
   private estaLoSuficientementeCerca(recompensa: Recompensa): boolean {
     if (!navigator.geolocation) {
       alert('Tu navegador no soporta geolocalización');
       return false;
     }
-    
+
     // Si estamos en modo desarrollo, permitir canjear desde cualquier lugar
     if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
       return true;
     }
-    
+
     // Si la recompensa ya tiene calculada la distancia, usamos ese valor
     if (recompensa.distanciaAlUsuario !== undefined) {
       return recompensa.distanciaAlUsuario <= 50;
     }
-    
+
     return false;
   }
 
   // Guardar un canje en el historial de recompensas del usuario
   private async guardarHistorialCanje(recompensa: Recompensa): Promise<boolean> {
     if (!this.currentUser || !this.currentUser.id) return false;
-    
+
     try {
       const { error } = await this.supabaseService.getClient()
         .from('recompensas_canjeadas')
@@ -987,12 +995,12 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
           longitud: recompensa.lng,
           tienda: recompensa.tienda || 'Tesoro del Cazador'
         });
-        
+
       if (error) {
         console.error('Error al guardar historial de canje:', error);
         return false;
       }
-      
+
       return true;
     } catch (error) {
       console.error('Error al guardar historial de canje:', error);
@@ -1019,7 +1027,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
     const item = this.cartItems.find(item => item.id === productId);
     return item ? item.quantity : 0;
   }
-  
+
   incrementQuantity(product: Product) {
     const currentQuantity = this.getProductQuantity(product.id);
     if (currentQuantity > 0) {
@@ -1028,7 +1036,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       this.addToCart(product);
     }
   }
-  
+
   decrementQuantity(product: Product) {
     const currentQuantity = this.getProductQuantity(product.id);
     if (currentQuantity > 1) {
@@ -1037,7 +1045,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
       this.cartService.removeFromCart(product.id);
     }
   }
-  
+
   async addToCart(product: Product) {
     try {
       await this.cartService.addToCart({
@@ -1047,7 +1055,7 @@ export class MapPage implements OnInit, OnDestroy, AfterViewInit {
         quantity: 1,
         imageUrl: product.imageUrl || product.image_url
       });
-      
+
       // Mostrar notificación
       const toast = await this.toastController.create({
         message: `${product.name} añadido al carrito`,

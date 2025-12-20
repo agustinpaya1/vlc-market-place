@@ -1,504 +1,316 @@
-// Variables de colores basados en la imagen de referencia
-$color-primary: #02A396; // Verde azulado principal
-$color-secondary: #02877b; // Verde azulado más oscuro
-$color-bg: #EDF5F0; // Fondo claro verde-gris
-$color-text: #2C3E50; // Texto oscuro
-$color-light-text: #7F8C8D; // Texto claro
-$color-white: #FFFFFF; // Blanco
-$color-danger: #dc3545; // Color rojo para el botón de cerrar sesión
-$font-family: 'Roboto', sans-serif;
-$turquoise-light: #5fe3d0; // Color turquesa claro para botones
-$border-radius-small: 8px;
-$border-radius-medium: 25px;
-$spacing-sm: 8px;
-$spacing-md: 16px;
-$spacing-lg: 24px;
-$spacing-xl: 30px;
-$card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-$transition-speed: 0.3s;
-$favorite-color: #0288d1; // Color azul para los favoritos
+// Variables
+$primary-teal: #00897B;
+$primary-teal-dark: #00796B;
+$bg-color: #f2f4f6;
+$card-bg: #ffffff;
+$text-dark: #1d1d1d;
+$text-medium: #666666;
+$text-light: #ffffff;
+$danger: #eb445a;
 
-// Variables para modo oscuro
-$dark-bg: #121212; // Fondo oscuro
-$dark-surface: #1e1e1e; // Superficie de componentes en modo oscuro
-$dark-primary: #02c4b4; // Verde azulado más brillante para modo oscuro
-$dark-text: #E0E0E0; // Texto claro para modo oscuro
-$dark-secondary-text: #9E9E9E; // Texto secundario para modo oscuro
-$dark-danger: #e74c3c; // Rojo más brillante para modo oscuro
-
-// Importando el módulo color de sass
-@use "sass:color";
-
-// Estilos para modo claro (predeterminado)
-:host {
-  ion-content {
-    --background: linear-gradient(170deg, #{$color-primary} 40%, #{$color-bg} 40%);
-    --color: #{$color-text};
-    font-family: $font-family;
-    
-    &::part(scroll) {
-      padding-bottom: 50px;
-    }
-  }
+ion-content {
+  --background: #{$bg-color};
 }
 
-// User profile section
-.user-profile-header {
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+// 1. Header Section
+.user-header {
+  background: linear-gradient(180deg, $primary-teal 0%, $primary-teal-dark 100%);
+  padding: 40px 20px 30px; // Extra bottom padding for stats
+  border-bottom-left-radius: 30px;
+  border-bottom-right-radius: 30px;
+  color: $text-light;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  margin-bottom: 20px;
-  padding-top: 40px;
-}
-
-.user-avatar-container {
   position: relative;
-  width: 120px;
-  height: 120px;
-  margin-bottom: 15px;
-}
+  box-shadow: 0 4px 20px rgba(0, 137, 123, 0.2);
 
-.user-avatar-image {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid $color-white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.user-photo-upload-button,
-.user-edit-button {
-  position: absolute;
-  z-index: 10;
-  --background: #{$turquoise-light};
-  --background-activated: #{color.adjust($turquoise-light, $lightness: -10%)};
-  --border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  
-  ion-icon {
-    color: $color-text;
-    font-size: 18px;
-  }
-}
-
-.user-photo-upload-button {
-  bottom: 0;
-  right: 0;
-}
-
-.user-edit-button {
-  bottom: 0;
-  left: 0;
-}
-
-.user-fullname {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 5px;
-  color: $color-white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.user-email-text {
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 15px;
-  font-size: 14px;
-}
-
-// User info lists
-.user-info-list {
-  margin-bottom: 20px;
-  border-radius: $border-radius-medium;
-  overflow: hidden;
-  box-shadow: $card-shadow;
-  background: transparent;
-  padding: 8px 0;
-  
-  ion-item {
-    --background: #F8F9FA;
-    --border-radius: 25px;
-    --padding-start: 16px;
-    --padding-end: 16px;
-    --padding-top: 12px;
-    --padding-bottom: 12px;
-    --min-height: 55px;
+  .avatar-wrapper {
+    position: relative;
+    width: 100px;
+    height: 100px;
     margin-bottom: 16px;
-    --border-width: 0;
-    --highlight-color-focused: #{$color-primary};
-    --inner-padding-end: 16px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-    border-radius: 25px;
-    margin-left: 8px;
-    margin-right: 8px;
-    
-    &:last-child {
-      margin-bottom: 0;
-    }
-    
-    &.item-has-focus {
-      --background: white;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-    }
-    
-    ion-icon {
-      color: $color-primary;
-      margin-right: 16px;
-      font-size: 22px;
-    }
-    
-    ion-label {
-      h3 {
-        font-weight: 500;
-        color: $color-text;
-        font-size: 15px;
-      }
-      
-      p {
-        color: $color-light-text;
-        font-size: 14px;
-        margin-bottom: 4px;
-      }
-    }
-  }
-}
 
-.user-menu-list {
-  margin-bottom: 20px;
-  border-radius: $border-radius-medium;
-  overflow: hidden;
-  box-shadow: $card-shadow;
-  background: transparent;
-  padding: 8px 0;
-  
-  ion-item {
-    --background: #F8F9FA;
-    --border-radius: 25px;
-    --padding-start: 16px;
-    --padding-end: 16px;
-    --padding-top: 12px;
-    --padding-bottom: 12px;
-    --min-height: 55px;
-    margin-bottom: 16px;
-    --border-width: 0;
-    --highlight-color-focused: #{$color-primary};
-    --inner-padding-end: 16px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-    border-radius: 25px;
-    margin-left: 8px;
-    margin-right: 8px;
-    transition: transform $transition-speed ease;
-    
-    &:last-child {
-      margin-bottom: 0;
+    .avatar-image {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      background-color: #e0e0e0; // Loading placeholder color
     }
-    
-    ion-icon {
-      color: $color-primary;
-      margin-right: 16px;
-      font-size: 22px;
-      transition: transform $transition-speed ease;
-      
-      &[name="heart"] {
-        color: $favorite-color !important;
-      }
-    }
-    
-    &:hover {
-      transform: translateY(-2px);
-      --background: white;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-      
+
+    // Edit Button Floating over Avatar Corner
+    .edit-fab-button {
+      position: absolute;
+      bottom: 0;
+      right: -8px;
+      width: 36px;
+      height: 36px;
+      --background: #ffffff;
+      --background-activated: #f0f0f0;
+      --border-radius: 50%;
+      --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      --padding-start: 0;
+      --padding-end: 0;
+      --color: #{$primary-teal};
+
       ion-icon {
-        transform: translateX(4px);
+        font-size: 18px;
       }
+    }
+  }
+
+  .user-info-text {
+    text-align: center;
+    margin-bottom: 24px;
+
+    .username {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .email {
+      margin: 4px 0 0;
+      font-size: 0.9rem;
+      opacity: 0.9;
+      font-weight: 400;
+    }
+  }
+
+  // 4. Stats Row inside Header
+  .stats-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 340px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 12px 0;
+    margin-top: 8px;
+
+    .stat-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      // Horizontal layout within item for icon + data? Or vertical?
+      // Let's do Vertical for compactness
+
+      .stat-icon-box {
+        display: none; // Minimalist: hide icon or show small? Let's hide to focus on numbers as requested "Stats Rápidas"
+        // Or show small next to label
+      }
+
+      .stat-data {
+        text-align: center;
+
+        .stat-value {
+          display: block;
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: $text-light;
+        }
+
+        .stat-label {
+          font-size: 0.75rem;
+          opacity: 0.8;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.3);
     }
   }
 }
 
-// Footer actions
-.user-actions-container {
-  padding: 0 15px;
-  margin-top: $spacing-xl;
-  
-  ion-button {
-    --border-radius: $border-radius-small;
-    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    height: 48px;
-    font-weight: 500;
-    transition: all $transition-speed ease;
-    
-    &:hover {
-      --box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-      transform: translateY(-2px);
+// 2. Info & Menu Section
+.content-wrapper {
+  padding: 24px 16px;
+  flex: 1;
+  max-width: 600px;
+  width: 100%;
+  align-self: center;
+
+  // Info Card
+  .info-card {
+    background: $card-bg;
+    border-radius: 16px;
+    padding: 0; // Inner items have padding
+    margin-bottom: 32px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+
+      .info-icon {
+        font-size: 24px;
+        color: $primary-teal;
+        margin-right: 16px;
+        min-width: 24px; // prevent shrink
+      }
+
+      .info-text {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+
+        .label {
+          font-size: 0.75rem;
+          color: $text-medium;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 2px;
+          font-weight: 500;
+        }
+
+        .value {
+          font-size: 1rem;
+          color: $text-dark;
+          font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+    }
+
+    .separator {
+      height: 1px;
+      background: #f0f0f0;
+      margin-left: 60px; // Indented separator
     }
   }
 
-  .logout-button {
-    --background: #{$color-danger};
-    --color: #{$color-white};
-    font-weight: bold;
-    letter-spacing: 0.5px;
+  // 3. Menu
+  .section-title {
+    font-size: 0.9rem;
+    color: $text-medium;
     text-transform: uppercase;
-    --border-radius: 25px;
-    margin: 15px 5px;
-    --border-style: none;
+    letter-spacing: 1px;
+    margin: 0 0 12px 12px;
+    font-weight: 600;
   }
-}
 
-// Dark mode adjustments - solo se aplican cuando la clase dark-theme está presente
-:host-context(.dark-theme) {
-  ion-content {
-    --background: linear-gradient(170deg, #{color.adjust($color-primary, $lightness: -15%)} 40%, #{$dark-bg} 40%);
-    --color: #{$dark-text};
-  }
-  
-  .user-profile-header {
-    .user-fullname {
-      color: $dark-text;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    
-    .user-email-text {
-      color: rgba(224, 224, 224, 0.8);
-    }
-  }
-  
-  .user-avatar-image {
-    border-color: $dark-surface;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-  
-  .user-photo-upload-button,
-  .user-edit-button {
-    --background: #{$dark-primary};
-    --background-activated: #{color.adjust($dark-primary, $lightness: -10%)};
-    
-    ion-icon {
-      color: $dark-text;
-    }
-  }
-  
-  .user-info-list,
-  .user-menu-list {
+  .menu-list {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 32px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+
     ion-item {
-      --background: #{$dark-surface};
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-      
-      &.item-has-focus {
-        --background: #{color.adjust($dark-surface, $lightness: 5%)};
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+      --min-height: 60px;
+      --padding-top: 8px;
+      --padding-bottom: 8px;
+      --padding-start: 16px;
+      --border-color: rgba(0, 0, 0, 0.05);
+      --background: #ffffff;
+
+      .menu-icon {
+        color: $primary-teal;
+        margin-right: 16px;
+        font-size: 24px;
       }
-      
-      ion-icon {
-        color: $dark-primary;
-        
-        &[name="heart"] {
-          color: $favorite-color !important;
-        }
-      }
-      
+
       ion-label {
-        h3 {
-          color: $dark-text;
-        }
-        
-        p {
-          color: $dark-secondary-text;
-        }
+        font-weight: 500;
+        color: $text-dark;
+        font-size: 1rem;
       }
-      
-      &:hover {
-        --background: #{color.adjust($dark-surface, $lightness: 5%)};
+
+      .arrow-icon {
+        font-size: 20px;
+        opacity: 0.5;
       }
     }
   }
-  
-  .user-actions-container {
-    .logout-button {
-      --background: #{$dark-danger};
+
+  .logout-container {
+    margin-top: 20px;
+    padding: 0 10px;
+    margin-bottom: 100px; // Safety spacer for Tabs
+
+    .logout-btn {
+      --border-color: #{$danger};
+      --color: #{$danger};
+      --border-width: 1.5px;
+      --border-radius: 12px;
+      font-weight: 600;
+      height: 50px;
     }
   }
 }
 
-// Responsive adjustments
-@media (min-width: 768px) {
-  .user-profile-header {
-    padding: $spacing-xl 0;
-  }
-  
-  .user-avatar-icon {
-    font-size: 100px;
-  }
-  
-  .user-info-list, 
-  .user-menu-list,
-  .user-actions-container {
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-}
-
-// Estilos para la vista de usuario no autenticado
+// Not Authenticated Styles (Simplified match)
 .not-authenticated-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  height: 100%;
-  text-align: center;
-  padding-top: 80px;
-}
-
-.app-logo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 40px;
-  
-  img {
-    width: 180px;
-    height: 180px;
-    object-fit: contain;
-    margin-bottom: 20px;
-    background: transparent;
-    border-radius: 0;
-    box-shadow: none;
-  }
-  
-  h1 {
-    color: white;
-    font-size: 28px;
-    font-weight: 700;
-    margin: 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-}
-
-.login-prompt-card {
-  background-color: white;
-  border-radius: 16px;
-  padding: 25px 20px;
-  text-align: center;
-  max-width: 320px;
-  width: 100%;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  margin: var(--spacing-md);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  
-  h2 {
-    color: $color-primary;
-    margin-bottom: 15px;
-    font-family: $font-family;
-    font-size: 24px;
-    font-weight: 600;
-    text-align: center;
-    width: 100%;
-  }
-  
-  p {
-    color: $color-light-text;
-    margin-bottom: 20px;
-    font-family: $font-family;
-    font-size: 16px;
-    line-height: 1.5;
-    text-align: center;
-    width: 100%;
-  }
+  min-height: 100%;
+  padding: 20px;
+  background: $bg-color;
 
-  ion-button {
-    margin: 15px 0;
-    --border-radius: 25px;
-    --background: #{$color-primary};
-    --background-activated: #{$color-secondary};
-    font-weight: 500;
-    font-size: 16px;
-    height: 46px;
-    width: 100%;
-    --box-shadow: 0 4px 8px rgba(2, 163, 150, 0.25);
-    
-    ion-icon {
-      margin-right: 8px;
+  .app-logo {
+    margin-bottom: 40px;
+    text-align: center;
+
+    img {
+      width: 100px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      color: $primary-teal;
+      font-weight: 700;
+      margin: 0;
     }
   }
-}
 
-// Aplicar estilos específicos para el modo oscuro en la tarjeta de login
-:host-context(.dark-theme) {
   .login-prompt-card {
-    background-color: $dark-surface;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
-    
+    background: $card-bg;
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+
+    .large-profile-icon {
+      font-size: 64px;
+      color: $primary-teal;
+      margin-bottom: 16px;
+    }
+
     h2 {
-      color: $dark-primary;
+      margin: 0 0 8px;
+      color: $text-dark;
+      font-weight: 700;
     }
-    
+
     p {
-      color: $dark-secondary-text;
-    }
-    
-    ion-button {
-      --background: #{$dark-primary};
-      --background-activated: #{color.adjust($dark-primary, $lightness: -10%)};
-    }
-    
-    .register-prompt {
-      color: $dark-secondary-text;
-      
-      a {
-        color: $dark-primary;
-      }
+      color: $text-medium;
+      margin-bottom: 24px;
     }
   }
-
-  .large-profile-icon {
-    color: $dark-secondary-text;
-  }
 }
-
-.large-profile-icon {
-  font-size: 64px;
-  color: var(--ion-color-medium);
-  margin-bottom: var(--spacing-sm);
-}
-
-.register-prompt {
-  margin-top: 15px;
-  color: var(--ion-color-medium);
-}
-
-.register-prompt a {
-  color: var(--ion-color-primary);
-  text-decoration: none;
-  cursor: pointer;
-}
-
-// Media queries for responsive design
-@media (min-height: 700px) {
-  .not-authenticated-container {
-    padding-top: 5vh;
-  }
-}
-
-@media (max-width: 360px) {
-  .app-logo h1 {
-    font-size: 20px;
-  }
-  
-  .login-prompt-card {
-    padding: 20px;
-  }
-}
-
-.transparent-logo {
-  background-color: transparent !important;
-  max-width: 100%;
-  mix-blend-mode: normal;
-} 

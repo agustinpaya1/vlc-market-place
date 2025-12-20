@@ -1,117 +1,129 @@
-<ion-content>
+<ion-content [fullscreen]="true">
   <!-- Contenido cuando el usuario está autenticado -->
-  <div *ngIf="isAuthenticated" class="ion-padding hardware-accelerated">
-    <div class="user-profile-header">
-      <div class="user-avatar-container hardware-accelerated">
-        <!-- User avatar with comprehensive error handling -->
+  <div *ngIf="isAuthenticated" class="profile-container">
+
+    <!-- 1. Header (Cabecera) -->
+    <div class="user-header">
+      <div class="avatar-wrapper">
         <ng-container *ngIf="user.photoUrl; else defaultAvatar">
-          <img 
-            [src]="user.photoUrl" 
-            class="user-avatar-image hardware-accelerated" 
-            (error)="onImageError($event)"
-            alt="Foto de perfil del usuario"
-            loading="lazy"
-            crossorigin="anonymous"
-            referrerpolicy="no-referrer"
-            width="120"
-            height="120"
-            decoding="async"
-          >
+          <img [src]="user.photoUrl" class="avatar-image" (error)="onImageError($event)" alt="Perfil" loading="lazy">
         </ng-container>
         <ng-template #defaultAvatar>
-          <img 
-            src="assets/default-profile.svg" 
-            class="user-avatar-image hardware-accelerated" 
-            alt="Avatar por defecto"
-            width="120"
-            height="120"
-            loading="eager"
-          >
+          <img src="https://yftetqhpxurrndkehoeg.supabase.co/storage/v1/object/public/perfil/imagen%201.png"
+            class="avatar-image" alt="Avatar por defecto">
         </ng-template>
-        
-        <!-- Botón de carga de foto -->
-        <ion-button 
-          fill="clear" 
-          class="user-photo-upload-button" 
-          (click)="fileInput.click()"
-        >
-          <ion-icon name="camera" slot="icon-only"></ion-icon>
-        </ion-button>
-        
-        <!-- Input de archivo oculto -->
-        <input 
-          #fileInput 
-          type="file" 
-          accept="image/*" 
-          (change)="onPhotoUpload($event)" 
-          style="display: none"
-        >
-        
-        <!-- Botón de edición de perfil -->
-        <ion-button 
-          fill="clear" 
-          class="user-edit-button hardware-accelerated" 
-          (click)="editProfile()"
-        >
+
+        <!-- Edit Button (Floating) -->
+        <ion-button fill="clear" class="edit-fab-button" (click)="editProfile()">
           <ion-icon name="pencil" slot="icon-only"></ion-icon>
         </ion-button>
+
+        <!-- Photo Upload Button (Hidden but clickable area handled by UI or separated if needed) 
+             For this design, let's keep the edit button as the primary action on avatar or top right. 
+             The requirements say "Edit Button... floating sobre la esquina del avatar".
+             We will assume clicking this edit button navigates to edit profile or opens upload. 
+             The previous code had separate buttons. Let's stick to the visible "pencil" for edit profile. 
+             And maybe a camera button if strictly needed, but let's follow the "clean" directive. 
+             Let's keep the underlying input for file upload if the user wants to change photo directly? 
+             Or just rely on 'editProfile' page. 
+             Requirement: "Edit Button: Un botón pequeño y discreto (icono de lápiz) flotando sobre la esquina del avatar"
+         -->
+        <!-- Keeping the camera button for photo upload as a separate floating action or combined? 
+              Let's keep the pencil for "Edit Profile" (nav) and maybe the camera inside the edit page? 
+              Or just put the camera button here as the floating action since changing photo is common.
+              Let's follow the requirement: "Edit Button (icono de lápiz)... flotando". 
+              I will assume this button goes to 'editProfile()'. 
+          -->
       </div>
-      <h2 class="user-fullname">{{ user.name }}</h2>
-      <p class="user-email-text">{{ user.email }}</p>
+
+      <div class="user-info-text">
+        <h2 class="username">{{ user.name }}</h2>
+        <p class="email">{{ user.email }}</p>
+      </div>
+
+      <!-- 4. Stats Rápidas -->
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-icon-box">
+            <ion-icon name="wallet-outline"></ion-icon>
+          </div>
+          <div class="stat-data">
+            <span class="stat-value">{{ userStats.vlcoins }}</span>
+            <span class="stat-label">Puntos VLCoin</span>
+          </div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-icon-box">
+            <ion-icon name="cart-outline"></ion-icon>
+          </div>
+          <div class="stat-data">
+            <span class="stat-value">{{ userStats.orders }}</span>
+            <span class="stat-label">Pedidos Totales</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <ion-list lines="full" class="user-info-list hardware-accelerated">
-      <ion-item>
-        <ion-icon name="call-outline" slot="start"></ion-icon>
-        <ion-label position="stacked">Teléfono</ion-label>
-        <ion-input [(ngModel)]="user.phone" name="phone" type="tel" placeholder="Teléfono"></ion-input>
-        <ion-button size="small" fill="solid" color="success" slot="end" (click)="saveProfileField('phone')" style="--padding-start: 8px; --padding-end: 8px; height: 28px; --border-radius: 4px; min-width: 32px;">
-          <ion-icon name="save-outline" style="margin: 0;"></ion-icon>
+    <!-- 2. Sección de Datos (Información) -->
+    <div class="content-wrapper">
+      <div class="info-card">
+        <div class="info-row">
+          <ion-icon name="call-outline" class="info-icon"></ion-icon>
+          <div class="info-text">
+            <span class="label">Teléfono</span>
+            <span class="value">{{ user.phone || 'No especificado' }}</span>
+          </div>
+        </div>
+        <div class="separator"></div>
+        <div class="info-row">
+          <ion-icon name="location-outline" class="info-icon"></ion-icon>
+          <div class="info-text">
+            <span class="label">Dirección</span>
+            <span class="value">{{ user.address || 'Sin dirección' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Menú de Acciones (Navegación) -->
+      <h3 class="section-title">Mi Cuenta</h3>
+      <ion-list [inset]="true" class="menu-list">
+        <ion-item *ngFor="let item of menuItems; trackBy: trackById" (click)="navigate(item.route)" button
+          detail="false" lines="full">
+          <ion-icon [name]="item.icon" slot="start" class="menu-icon"></ion-icon>
+          <ion-label>{{ item.label }}</ion-label>
+          <ion-icon name="chevron-forward-outline" slot="end" color="medium" class="arrow-icon"></ion-icon>
+        </ion-item>
+      </ion-list>
+
+      <div class="logout-container">
+        <ion-button expand="block" fill="outline" color="danger" class="logout-btn" (click)="logout()">
+          <ion-icon name="log-out-outline" slot="start"></ion-icon>
+          Cerrar Sesión
         </ion-button>
-      </ion-item>
-
-      <ion-item>
-        <ion-icon name="location-outline" slot="start"></ion-icon>
-        <ion-label position="stacked">Dirección</ion-label>
-        <ion-input [(ngModel)]="user.address" name="address" type="text" placeholder="Dirección"></ion-input>
-        <ion-button size="small" fill="solid" color="success" slot="end" (click)="saveProfileField('address')" style="--padding-start: 8px; --padding-end: 8px; height: 28px; --border-radius: 4px; min-width: 32px;">
-          <ion-icon name="save-outline" style="margin: 0;"></ion-icon>
-        </ion-button>
-      </ion-item>
-    </ion-list>
-
-    <ion-list lines="full" class="user-menu-list hardware-accelerated">
-      <ion-item *ngFor="let item of menuItems; trackBy: trackById" (click)="navigate(item.route)" detail>
-        <ion-icon [name]="item.icon" slot="start"></ion-icon>
-        <ion-label>{{ item.label }}</ion-label>
-      </ion-item>
-    </ion-list>
-
-    <div class="user-actions-container">
-      <ion-button expand="block" color="danger" class="logout-button hardware-accelerated" (click)="logout()">
-        CERRAR SESIÓN
-      </ion-button>
+      </div>
     </div>
+
   </div>
 
-  <!-- Contenido cuando el usuario NO está autenticado -->
-  <div *ngIf="!isAuthenticated" class="not-authenticated-container hardware-accelerated">
+  <!-- Contenido cuando el usuario NO está autenticado (Manteniendo estilo previo o simplificando) -->
+  <div *ngIf="!isAuthenticated" class="not-authenticated-container">
     <div class="app-logo">
       <div class="logo-container">
-        <img [src]="logoUrl" alt="MercAU" class="transparent-logo" (error)="onImageError($event)" loading="eager">
+        <img [src]="logoUrl" alt="MercAU" class="transparent-logo" (error)="onImageError($event)">
       </div>
       <h1>MercAU</h1>
     </div>
-    
-    <div class="login-prompt-card hardware-accelerated">
-      <ion-icon name="personCircle" class="large-profile-icon"></ion-icon>
+
+    <div class="login-prompt-card">
+      <ion-icon name="person-circle-outline" class="large-profile-icon"></ion-icon>
       <h2>¡Bienvenido!</h2>
       <p>Inicia sesión para acceder a tu perfil, pedidos y más</p>
-      <ion-button expand="block" color="primary" (click)="goToLogin()" class="hardware-accelerated">
+      <ion-button expand="block" shape="round" color="primary" (click)="goToLogin()">
         <ion-icon name="log-in-outline" slot="start"></ion-icon>
         Iniciar Sesión
       </ion-button>
       <p class="register-prompt">¿No tienes cuenta? <a (click)="goToRegister()">Regístrate</a></p>
     </div>
   </div>
-</ion-content> 
+</ion-content>
