@@ -15,26 +15,27 @@
     <ion-spinner></ion-spinner>
     <p>Cargando información del pedido...</p>
   </div>
-  
+
   <!-- Mensaje de error -->
   <ion-card *ngIf="error && !loading">
     <ion-card-content>
       <ion-text color="danger">{{ error }}</ion-text>
     </ion-card-content>
   </ion-card>
-  
+
   <!-- Información del pedido -->
   <div *ngIf="order && !loading" class="order-container">
     <ion-card class="order-summary">
       <ion-card-header>
-        <ion-card-subtitle>Pedido #{{ order?.id?.substring(0, 8) }}</ion-card-subtitle>
+        <ion-card-subtitle>Pedido #{{ order.id.substring(0, 8) }}</ion-card-subtitle>
         <ion-card-title class="order-status">
-          <ion-badge [color]="orderStatus === 'delivered' ? 'success' : orderStatus === 'shipping' ? 'warning' : orderStatus === 'processing' ? 'primary' : 'medium'">
+          <ion-badge
+            [color]="orderStatus === 'delivered' ? 'success' : orderStatus === 'shipping' ? 'warning' : orderStatus === 'processing' ? 'primary' : 'medium'">
             {{ orderStatus | titlecase }}
           </ion-badge>
         </ion-card-title>
       </ion-card-header>
-      
+
       <ion-card-content>
         <div class="delivery-info">
           <div class="info-item">
@@ -50,12 +51,12 @@
             <p><strong>Ubicación actual:</strong> {{ currentDeliveryLocation }}</p>
           </div>
         </div>
-        
+
         <!-- Barra de progreso -->
         <div class="progress-container">
           <ion-progress-bar [value]="deliveryProgress / 100"></ion-progress-bar>
         </div>
-        
+
         <!-- Pasos de la entrega -->
         <div class="delivery-steps">
           <div *ngFor="let step of deliverySteps; let i = index" class="step">
@@ -67,7 +68,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Conectores entre los pasos -->
         <div class="step-connectors">
           <div class="connector" *ngFor="let step of deliverySteps; let i = index">
@@ -76,22 +77,23 @@
         </div>
       </ion-card-content>
     </ion-card>
-    
+
     <!-- Mapa con la ruta -->
     <ion-card class="map-card">
       <ion-card-header>
         <ion-card-title>Ruta de Entrega</ion-card-title>
       </ion-card-header>
-      
+
       <ion-card-content>
         <div #mapElement class="map-container"></div>
-        
+
         <!-- Contenido de respaldo si el mapa no se muestra -->
         <div class="map-fallback" *ngIf="!mapInitialized">
           <ion-text color="medium">
             <ion-icon name="map-outline" style="font-size: 2.5rem;"></ion-icon>
             <h4>Cargando mapa...</h4>
-            <p>Si el mapa no aparece, puedes continuar con el seguimiento del pedido mediante la información proporcionada arriba.</p>
+            <p>Si el mapa no aparece, puedes continuar con el seguimiento del pedido mediante la información
+              proporcionada arriba.</p>
           </ion-text>
           <ion-button (click)="initMap()" expand="block" size="small">
             <ion-icon slot="start" name="refresh"></ion-icon>
@@ -100,14 +102,14 @@
         </div>
       </ion-card-content>
     </ion-card>
-    
+
     <!-- Botón para simular cambio de estado (solo en desarrollo) -->
     <div class="test-controls" *ngIf="location.hostname === 'localhost' || location.hostname === '127.0.0.1'">
       <ion-card>
         <ion-card-header>
           <ion-card-title>Controles de Prueba</ion-card-title>
         </ion-card-header>
-        
+
         <ion-card-content>
           <p>Actualiza el estado del pedido para ver cómo cambia el seguimiento</p>
           <ion-button expand="block" (click)="simulateNextStep()" [disabled]="deliveryProgress >= 100">

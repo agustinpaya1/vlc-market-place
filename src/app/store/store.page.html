@@ -7,8 +7,9 @@
   <div *ngIf="store" class="store-container">
     <!-- Image with overlaid buttons -->
     <div class="store-header-image-container">
-      <img [src]="store.imageUrl" (error)="handleImageError($event)" alt="Imagen de la tienda" loading="lazy" class="store-header-image">
-      
+      <img [src]="store.imageUrl" (error)="handleImageError($event)" alt="Imagen de la tienda" loading="lazy"
+        class="store-header-image">
+
       <!-- Navigation elements overlaid on image -->
       <div class="header-buttons">
         <ion-button (click)="goBack()" class="nav-button back-button">
@@ -16,8 +17,8 @@
         </ion-button>
         <div class="right-buttons">
           <ion-button (click)="toggleFavoriteStore()" class="nav-button favorite-button">
-            <ion-icon [name]="isStoreFavorite(store?.id) ? 'heart' : 'heart-outline'" 
-                      [color]="isStoreFavorite(store?.id) ? 'danger' : 'light'"></ion-icon>
+            <ion-icon [name]="isStoreFavorite(store.id) ? 'heart' : 'heart-outline'"
+              [color]="isStoreFavorite(store.id) ? 'danger' : 'light'"></ion-icon>
           </ion-button>
           <ion-button (click)="shareStore()" class="nav-button share-button">
             <ion-icon name="share"></ion-icon>
@@ -53,7 +54,7 @@
           <ion-icon name="location" color="tertiary"></ion-icon>
           <span>{{ store.location }}</span>
         </div>
-        
+
         <div class="time-info">
           <ion-icon name="time" color="tertiary"></ion-icon>
           <span>{{ store.openTime }}</span>
@@ -63,10 +64,8 @@
 
     <div class="products-section">
       <h3>Productos</h3>
-      <ion-searchbar [(ngModel)]="searchTerm" 
-                    (ionInput)="filterProducts()" 
-                    placeholder="Buscar productos"
-                    class="products-searchbar">
+      <ion-searchbar [(ngModel)]="searchTerm" (ionInput)="filterProducts()" placeholder="Buscar productos"
+        class="products-searchbar">
       </ion-searchbar>
 
       <ion-grid>
@@ -77,12 +76,8 @@
                 <ion-icon [name]="isProductFavorite(product.id) ? 'heart' : 'heart-outline'" color="danger"></ion-icon>
               </button>
               <ion-card-header>
-                <img [src]="product.imageUrl" 
-                     (error)="handleImageError($event)" 
-                     [alt]="product.name" 
-                     loading="lazy" 
-                     width="100%" 
-                     height="140">
+                <img [src]="product.imageUrl" (error)="handleImageError($event)" [alt]="product.name" loading="lazy"
+                  width="100%" height="140">
                 <div *ngIf="product.offerPrice && product.price" class="discount-badge">
                   -{{ ((100 - (product.offerPrice / product.price) * 100) | number:'1.0-0') }}%
                 </div>
@@ -115,4 +110,4 @@
       </div>
     </div>
   </div>
-</ion-content> 
+</ion-content>

@@ -1,21 +1,21 @@
 import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AlertController, LoadingController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import {
-    IonContent,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButton,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonBackButton,
-    IonButtons,
-    IonSpinner,
-    IonIcon
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButton,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonBackButton,
+  IonButtons,
+  IonSpinner,
+  IonIcon
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { warningOutline, arrowBackOutline, lockClosedOutline, checkmarkCircleOutline, informationCircleOutline } from 'ionicons/icons';
@@ -31,7 +31,6 @@ import { Subscription } from 'rxjs';
   imports: [
     FormsModule,
     CommonModule,
-    RouterLink,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -70,8 +69,8 @@ export class ResetPasswordPage implements OnInit, OnDestroy {
     private changeDetector: ChangeDetectorRef
   ) {
     addIcons({
-      warningOutline, 
-      arrowBackOutline, 
+      warningOutline,
+      arrowBackOutline,
       lockClosedOutline,
       checkmarkCircleOutline,
       informationCircleOutline
@@ -83,16 +82,16 @@ export class ResetPasswordPage implements OnInit, OnDestroy {
     // Mostrar el estado de carga
     this.pageState = 'loading';
     this.isValidating = true;
-    
+
     try {
       // Extraer el token de la URL si existe
       await this.extractTokenFromUrl();
-      
+
       // Verificar si tenemos un token o una sesión activa
       const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
-      
+
       console.log('ResetPasswordPage - Estado de sesión:', session ? 'Activa' : 'Inactiva');
-      
+
       if (session || this.accessToken) {
         console.log('ResetPasswordPage - Sesión activa o token encontrado');
         this.pageState = 'form';
@@ -115,7 +114,7 @@ export class ResetPasswordPage implements OnInit, OnDestroy {
         isValidResetLink: this.isValidResetLink
       });
     }
-    
+
     // Suscribirse a cambios en la configuración de tema
     this.themeSubscription = this.settingsService.getSettings().subscribe(settings => {
       // Forzar detección de cambios cuando cambia el tema
@@ -125,7 +124,7 @@ export class ResetPasswordPage implements OnInit, OnDestroy {
       });
     });
   }
-  
+
   ngOnDestroy() {
     if (this.themeSubscription) {
       this.themeSubscription.unsubscribe();
@@ -134,7 +133,7 @@ export class ResetPasswordPage implements OnInit, OnDestroy {
 
   private async extractTokenFromUrl() {
     console.log('ResetPasswordPage - extractTokenFromUrl - Analizando URL:', window.location.href);
-    
+
     // Extraer token del hash si existe
     if (window.location.hash) {
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -146,7 +145,7 @@ export class ResetPasswordPage implements OnInit, OnDestroy {
     if (!this.accessToken && window.location.search) {
       const queryParams = new URLSearchParams(window.location.search);
       const possibleTokens = ['token', 'access_token', 't'];
-      
+
       for (const param of possibleTokens) {
         const token = queryParams.get(param);
         if (token) {
@@ -166,17 +165,17 @@ export class ResetPasswordPage implements OnInit, OnDestroy {
     // Si encontramos un token, intentar establecer la sesión
     try {
       console.log('Intentando establecer sesión con token:', this.accessToken.substring(0, 10) + '...');
-      
+
       const { data, error } = await this.supabaseService.getClient().auth.setSession({
         access_token: this.accessToken,
         refresh_token: ''
       });
-      
+
       if (error) {
         console.error('Error al establecer sesión con token:', error);
         throw error;
       }
-      
+
       console.log('Sesión establecida correctamente con el token');
     } catch (error) {
       console.error('Error completo al establecer sesión con token:', error);
@@ -203,7 +202,7 @@ export class ResetPasswordPage implements OnInit, OnDestroy {
 
     // Mostrar estado de carga
     this.isLoading = true;
-    
+
     // Mostrar un loadingController
     const loading = await this.loadingController.create({
       message: 'Actualizando contraseña...',
@@ -214,20 +213,20 @@ export class ResetPasswordPage implements OnInit, OnDestroy {
     try {
       // Verificar si tenemos una sesión activa
       const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
-      
+
       if (!session) {
         console.error('No hay una sesión activa para actualizar la contraseña');
         throw new Error('No se encontró una sesión activa. Por favor, utiliza el enlace de restablecimiento de contraseña desde tu correo electrónico.');
       }
-      
+
       console.log('Sesión activa detectada, procediendo a actualizar la contraseña');
-      
+
       // Llamar al servicio de Auth para actualizar la contraseña
       const success = await this.authService.resetPassword(this.newPassword);
-      
+
       // Cerrar el loading controller
       await loading.dismiss();
-      
+
       if (!success) {
         // Si hay error, mostrar mensaje y cambiar estado
         console.error('Error al actualizar contraseña');
@@ -238,12 +237,12 @@ export class ResetPasswordPage implements OnInit, OnDestroy {
         // Éxito, mostrar estado de éxito
         console.log('Contraseña actualizada correctamente');
         this.pageState = 'success';
-        
+
         // Redireccionar al login después de un tiempo
         setTimeout(() => {
           // Cerrar sesión
           this.supabaseService.getClient().auth.signOut();
-          
+
           // Redireccionar
           this.router.navigate(['/login'], { replaceUrl: true });
         }, 2000);
@@ -251,7 +250,7 @@ export class ResetPasswordPage implements OnInit, OnDestroy {
     } catch (error: any) {
       // En caso de excepción, también cerrar el loading controller
       await loading.dismiss();
-      
+
       console.error('Error detallado en la actualización de contraseña:', error);
       this.pageState = 'error';
       this.errorMessage = error.message || 'Ocurrió un error inesperado. Por favor, solicita un nuevo enlace de restablecimiento.';
@@ -273,7 +272,7 @@ export class ResetPasswordPage implements OnInit, OnDestroy {
       message,
       buttons: ['OK']
     });
-    
+
     await alert.present();
     return alert.onDidDismiss();
   }

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, NavigationExtras } from '@angular/router';
 import { navigateToOrderTracking } from '../navigate-helper';
-import { 
+import {
   IonContent,
   IonHeader,
   IonTitle,
@@ -17,12 +17,8 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonCardContent,
-  IonGrid,
-  IonRow,
-  IonCol,
   IonImg,
   IonButtons,
-  IonCardSubtitle,
   IonSpinner,
   ModalController,
   IonThumbnail,
@@ -77,12 +73,8 @@ interface Store {
     IonCardHeader,
     IonCardTitle,
     IonCardContent,
-    IonGrid,
-    IonRow,
-    IonCol,
     IonImg,
     IonButtons,
-    IonCardSubtitle,
     IonSpinner,
     IonThumbnail,
     IonBadge
@@ -94,11 +86,11 @@ export class CarritoComponent implements OnInit, OnDestroy {
   totalPrice = 0;
   paymentSuccess = false;
   paymentId = '';
-  
+
   // Variables para la lista de tiendas
   stores: Store[] = [];
   isLoading = true;
-  
+
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -112,14 +104,14 @@ export class CarritoComponent implements OnInit, OnDestroy {
     private changeDetector: ChangeDetectorRef
   ) {
     addIcons({
-      arrowBack, 
-      checkmarkCircle, 
-      storefront, 
-      remove, 
-      add, 
-      trash, 
-      home, 
-      cartOutline, 
+      arrowBack,
+      checkmarkCircle,
+      storefront,
+      remove,
+      add,
+      trash,
+      home,
+      cartOutline,
       locationOutline,
       locationSharp,
       time,
@@ -137,14 +129,14 @@ export class CarritoComponent implements OnInit, OnDestroy {
     const cartSubscription = this.cartService.getCartItems().subscribe((items: CartItem[]) => {
       this.cartItems = items;
       this.calculateTotal();
-      
+
       // Cargar tiendas si el carrito está vacío
       if (this.cartItems.length === 0 && !this.paymentSuccess) {
         console.log('Carrito vacío, cargando tiendas disponibles...');
         this.loadStores();
       }
     });
-    
+
     // Guardar la suscripción para limpiarla después
     this.subscriptions.push(cartSubscription);
 
@@ -156,11 +148,11 @@ export class CarritoComponent implements OnInit, OnDestroy {
         this.changeDetector.detectChanges();
       });
     });
-    
+
     // Añadir esta suscripción a la lista
     this.subscriptions.push(themeSubscription);
   }
-  
+
   ngOnDestroy() {
     // Limpiar suscripciones
     this.subscriptions.forEach(sub => sub.unsubscribe());
@@ -170,7 +162,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
     try {
       this.isLoading = true;
       console.log('Cargando tiendas desde Supabase...');
-      
+
       // Obtener tiendas y categorías en paralelo, igual que en la pantalla de inicio
       const [storesData, categoriesByStore] = await Promise.all([
         this.supabaseService.getStores(),
@@ -200,7 +192,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
         console.log('No se encontraron tiendas en Supabase, usando datos de ejemplo');
         this.useExampleStores();
       }
-      
+
     } catch (error) {
       console.error('Error al cargar tiendas:', error);
       // Usar datos de ejemplo si hay error
@@ -209,7 +201,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
       this.isLoading = false;
     }
   }
-  
+
   // Método para usar tiendas de ejemplo cuando no hay datos de Supabase
   private useExampleStores() {
     const tiendas = [
@@ -279,7 +271,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
         contact_phone: '333222111'
       }
     ];
-    
+
     // Procesar los datos de ejemplo
     this.stores = tiendas.map(store => {
       const isOpenNow = this.checkIfStoreIsOpen(store.open_time);
@@ -292,30 +284,30 @@ export class CarritoComponent implements OnInit, OnDestroy {
       };
     });
   }
-  
+
   private calculateRandomDistance(): number {
     return parseFloat((Math.random() * 4.9 + 0.1).toFixed(1));
   }
-  
+
   private checkIfStoreIsOpen(openTime?: string): boolean {
     if (!openTime) return false;
     const now = new Date();
     const hour = now.getHours();
     const times = openTime.split(' - ');
     if (times.length !== 2) return false;
-    
+
     const openHour = parseInt(times[0].split(':')[0], 10);
     const closeHour = parseInt(times[1].split(':')[0], 10);
-    
+
     return hour >= openHour && hour < closeHour;
   }
-  
+
   navigateToStore(store: Store) {
     // Establecer la sesión activa para evitar que se muestre la intro
     sessionStorage.setItem('activeSession', 'true');
-    
+
     console.log(`Navegando a la tienda: ${store.name} (ID: ${store.id})`);
-    
+
     // Navegar a la página de tienda específica
     this.router.navigate(['/tabs/store', store.id]);
   }
@@ -332,10 +324,10 @@ export class CarritoComponent implements OnInit, OnDestroy {
   removeItem(productId: string) {
     // Comprobar si es el último elemento
     const isLastItem = this.cartItems.length === 1;
-    
+
     // Eliminar el elemento del carrito
     this.cartService.removeFromCart(productId);
-    
+
     // Si era el último elemento, asegurarse de que se cargan las tiendas
     if (isLastItem) {
       console.log('Se eliminó el último elemento del carrito');
@@ -367,34 +359,34 @@ export class CarritoComponent implements OnInit, OnDestroy {
     await modal.present();
 
     const { data, role } = await modal.onWillDismiss();
-    
+
     if (role === 'success' && data?.success) {
       this.paymentSuccess = true;
       this.paymentId = data.paymentId;
-      
+
       // Clear the cart after successful payment
       this.cartService.clearCart();
-      
+
       try {
         // Comprobar si tenemos un orderId para redirigir al seguimiento
         if (data.redirectToTracking && data.orderId) {
           console.log('Redirigiendo al seguimiento del pedido:', data.orderId);
-          
+
           // Guardar el ID del pedido en sessionStorage para uso potencial de recuperación
           sessionStorage.setItem('lastOrderId', data.orderId);
           sessionStorage.setItem('forceOrderTracking', 'true');
-          
+
           // Navegación de emergencia - forzar apertura en una nueva pestaña
           const orderId = data.orderId;
-          
+
           // Primero intentamos con Angular Router con queryParams para forzar navegación
           const navigationExtras: NavigationExtras = {
-            queryParams: { 
+            queryParams: {
               timestamp: new Date().getTime(), // Forzar nueva navegación
               forceLoad: true
             }
           };
-          
+
           // Intentar con múltiples métodos de navegación
           setTimeout(() => {
             // 1. Intento: navegación Angular con navigationExtras
@@ -415,7 +407,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
         } else {
           // Si no hay orderId, redirigir a la página de tiendas como antes
           console.log('Payment successful, will redirect to stores');
-          
+
           setTimeout(() => {
             window.location.href = '/tabs/stores';
           }, 2000);
@@ -435,7 +427,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
     this.totalItems = this.cartService.getTotalItems();
     this.totalPrice = this.cartService.getTotalPrice();
   }
-  
+
   handleImageError(event: Event) {
     const target = event.target as HTMLImageElement;
     if (target) {

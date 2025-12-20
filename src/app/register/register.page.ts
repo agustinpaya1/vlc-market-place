@@ -3,26 +3,24 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import {
-    IonButton,
-    IonContent,
-    IonInput,
-    IonItem,
-    IonLabel,
-    IonSelect,
-    IonSelectOption,
-    IonIcon,
-    IonSegment,
-    IonSegmentButton
+  IonButton,
+  IonContent,
+  IonInput,
+  IonItem,
+  IonLabel,
+  IonIcon,
+  IonSegment,
+  IonSegmentButton
 } from '@ionic/angular/standalone';
 import { AuthService, BusinessProfile } from '../services/auth.service';
 import { SettingsService } from '../services/settings.service';
 import { CommonModule } from '@angular/common';
 import { addIcons } from 'ionicons';
-import { 
-  eyeOutline, 
-  eyeOffOutline, 
-  arrowBackOutline, 
-  informationCircleOutline, 
+import {
+  eyeOutline,
+  eyeOffOutline,
+  arrowBackOutline,
+  informationCircleOutline,
   warningOutline,
   personOutline,
   briefcaseOutline
@@ -41,8 +39,6 @@ import { Subscription } from 'rxjs';
     IonItem,
     IonInput,
     IonLabel,
-    IonSelect,
-    IonSelectOption,
     IonIcon,
     IonSegment,
     IonSegmentButton
@@ -65,15 +61,15 @@ export class RegisterPage implements OnInit, OnDestroy {
     private changeDetector: ChangeDetectorRef
   ) {
     addIcons({
-      eyeOutline, 
-      eyeOffOutline, 
-      arrowBackOutline, 
-      informationCircleOutline, 
+      eyeOutline,
+      eyeOffOutline,
+      arrowBackOutline,
+      informationCircleOutline,
       warningOutline,
       personOutline,
       briefcaseOutline
     });
-    
+
     this.registerForm = this.formBuilder.group({
       type: ['user', Validators.required],
       fullName: ['', [Validators.required, Validators.minLength(3)]],
@@ -111,7 +107,7 @@ export class RegisterPage implements OnInit, OnDestroy {
 
   private updateValidators() {
     const businessFields = ['businessName', 'taxId', 'address', 'phone'];
-    
+
     if (this.showBusinessFields) {
       businessFields.forEach(field => {
         this.registerForm.get(field)?.setValidators([Validators.required]);
@@ -121,7 +117,7 @@ export class RegisterPage implements OnInit, OnDestroy {
         this.registerForm.get(field)?.clearValidators();
       });
     }
-    
+
     businessFields.forEach(field => {
       this.registerForm.get(field)?.updateValueAndValidity();
     });
@@ -167,11 +163,11 @@ export class RegisterPage implements OnInit, OnDestroy {
       } catch (error: any) {
         console.error('Error detallado en el registro:', error);
         let errorMessage = 'Ha ocurrido un error durante el registro.';
-        
+
         if (error?.message) {
           errorMessage += ' ' + error.message;
         }
-        
+
         await this.showErrorAlert(errorMessage);
       }
     } else {

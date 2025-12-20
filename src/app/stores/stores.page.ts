@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, NgZone, ChangeDetectorRef, OnDestroy } from '@angular/core';
-import { 
+import {
   IonButton,
   IonCard,
   IonCardContent,
@@ -8,8 +8,7 @@ import {
   IonCardTitle,
   IonChip,
   IonCol,
-  IonContent, 
-  IonFabButton,
+  IonContent,
   IonGrid,
   IonHeader,
   IonIcon,
@@ -27,25 +26,25 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { 
-  storefront, 
-  location, 
-  time, 
-  arrowForward, 
-  star, 
-  trendingUp, 
-  map, 
+import {
+  storefront,
+  location,
+  time,
+  arrowForward,
+  star,
+  trendingUp,
+  map,
   starHalf,
   sunny,
-  moon, 
+  moon,
   searchOutline,
   search,
-  notifications, 
-  locationOutline, 
-  chevronDownOutline, 
-  notificationsOutline, 
-  optionsOutline, 
-  timeOutline, 
+  notifications,
+  locationOutline,
+  chevronDownOutline,
+  notificationsOutline,
+  optionsOutline,
+  timeOutline,
   arrowForwardOutline,
   camera,
   chatbubbleEllipses,
@@ -138,7 +137,6 @@ interface Store {
     IonCol,
     IonChip,
     IonSpinner,
-    IonFabButton,
     IonPopover,
     IonSegment,
     IonSegmentButton
@@ -162,15 +160,15 @@ interface Store {
 export class StoresPage implements OnInit, OnDestroy {
   @ViewChild('filterPopover') filterPopover!: IonPopover;
   @ViewChild('notificationPopover') notificationPopover!: IonPopover;
-  
+
   // Add property for controlling the popover visibility
   isFilterPopoverOpen = false;
   notificationPopoverOpen = false;
   notificationPopoverEvent: any = null;
-  
+
   // Usuario ubicación
   userLocation: string = 'Valencia, España';
-  
+
   selectedCategory: string = 'Todos';
   selectedSort: string = 'default';
   isLoading = false;
@@ -273,22 +271,22 @@ export class StoresPage implements OnInit, OnDestroy {
 
   async ngOnInit() {
     this.isLoading = true;
-    
+
     // Cargar notificaciones de prueba
     this.simulateNotifications();
-    
+
     // Get VLCoin balance from VLCoin service
     this.vlcoinService.vlcoinBalance$.subscribe(balance => {
       this.vlcoinBalance = balance;
     });
-    
+
     // Initialize VLCoin data for the current user
     this.authService.user$.subscribe(async user => {
       if (user && user.id) {
         await this.vlcoinService.getVlcoinBalance(user.id);
       }
     });
-    
+
     // Cargar favoritos del usuario si está autenticado
     this.authService.user$.subscribe(async user => {
       if (user && user.id) {
@@ -302,7 +300,7 @@ export class StoresPage implements OnInit, OnDestroy {
         this.userFavorites = [];
       }
     });
-    
+
     try {
       // Aplicar filtros inmediatamente para evitar recálculos innecesarios
       this.applyFilters();
@@ -416,7 +414,7 @@ export class StoresPage implements OnInit, OnDestroy {
 
     // Aplicar filtro por categoría
     if (this.selectedCategory !== 'Todos') {
-      result = result.filter(store => 
+      result = result.filter(store =>
         store.categories && store.categories.includes(this.selectedCategory)
       );
     }
@@ -440,7 +438,7 @@ export class StoresPage implements OnInit, OnDestroy {
 
     console.log('Tiendas filtradas que se mostrarán:', result);
     console.log('Número de tiendas a mostrar:', result.length);
-    
+
     // Update the filteredStores property with the result
     this.filteredStores = result;
   }
@@ -453,23 +451,23 @@ export class StoresPage implements OnInit, OnDestroy {
     if (this.selectedCategory === category) {
       return;
     }
-    
+
     // Debug actual state before change
     this.debugFilterState('Before category change');
-    
+
     // Cambiamos la categoría seleccionada
     this.selectedCategory = category;
-    
+
     // Apply filters with the new category
     this.applyFilters();
-    
+
     // Mostramos feedback para el usuario
     if (category !== 'Todos') {
       console.log(`Filtrando tiendas por categoría: ${category}`);
     } else {
       console.log('Mostrando todas las tiendas');
     }
-    
+
     // Añadimos una pequeña animación al elemento seleccionado
     setTimeout(() => {
       const selectedElement = document.querySelector('.category-item.active .category-icon');
@@ -480,10 +478,10 @@ export class StoresPage implements OnInit, OnDestroy {
         }, 300);
       }
     }, 50);
-    
+
     // Debug new state after change
     this.debugFilterState('After category change');
-    
+
     // Force change detection and UI update
     this.forceUpdate();
   }
@@ -510,13 +508,13 @@ export class StoresPage implements OnInit, OnDestroy {
     if (img && img.parentElement) {
       // Ocultar la imagen
       img.style.display = 'none';
-      
+
       // Crear y mostrar un icono de respaldo
       const fallbackIcon = document.createElement('div');
       fallbackIcon.className = `notification-fallback-icon notification-fallback-${notificationType}`;
-      
+
       const icon = document.createElement('ion-icon');
-      
+
       // Asignar icono según el tipo de notificación
       switch (notificationType) {
         case 'reto':
@@ -539,7 +537,7 @@ export class StoresPage implements OnInit, OnDestroy {
           icon.setAttribute('name', 'notifications');
           icon.setAttribute('color', 'medium');
       }
-      
+
       fallbackIcon.appendChild(icon);
       img.parentElement.appendChild(fallbackIcon);
     }
@@ -563,13 +561,13 @@ export class StoresPage implements OnInit, OnDestroy {
 
   onSearchInput(event: any) {
     const term = event.detail.value.trim();
-    
+
     // Si está vacío, restaurar todas las tiendas inmediatamente
     if (!term) {
       this.stores = [...this.allStores];
       return;
     }
-    
+
     // Ejecutar búsqueda después de escribir al menos 2 caracteres
     if (term.length >= 2) {
       this.searchTerms.next(term);
@@ -578,15 +576,15 @@ export class StoresPage implements OnInit, OnDestroy {
 
   searchStores() {
     console.log('Ejecutando búsqueda con término:', this.searchTerm);
-    
+
     if (!this.searchTerm || !this.searchTerm.trim()) {
       // Reset search term and reapply filters
       this.searchTerm = '';
     }
-    
+
     // Apply filters with current search term
     this.applyFilters();
-    
+
     console.log(`Buscando tiendas con término: "${this.searchTerm}"`);
   }
 
@@ -596,13 +594,13 @@ export class StoresPage implements OnInit, OnDestroy {
     if (!this.isAuthenticated) {
       return;
     }
-    
+
     // Helper para buscar id de tienda por nombre
     const getStoreIdByName = (name: string) => {
       const store = this.allStores.find(s => s.name.toLowerCase().includes(name.toLowerCase()));
       return store ? store.id : undefined;
     };
-    
+
     // Limpiar notificaciones previas
     this.notifications = [];
 
@@ -702,7 +700,7 @@ export class StoresPage implements OnInit, OnDestroy {
         category: 'Tiendas Chinas'
       }
     ];
-    
+
     // Añadir retos activos a las notificaciones
     for (const challenge of challenges) {
       this.notifications.push({
@@ -733,11 +731,11 @@ export class StoresPage implements OnInit, OnDestroy {
   // Mostrar y manejar notificaciones
   async showNotifications() {
     console.log('Mostrando notificaciones');
-    
+
     if (this.notificationCount > 0) {
       // Create a temporary variable to store the count before resetting
       const count = this.notificationCount;
-      
+
       // Create a more descriptive message based on the number of notifications
       let message = '';
       if (count === 1) {
@@ -745,7 +743,7 @@ export class StoresPage implements OnInit, OnDestroy {
       } else {
         message = `Tienes ${count} notificaciones nuevas`;
       }
-      
+
       const toast = await this.toastController.create({
         message: message,
         duration: 2500,
@@ -764,9 +762,9 @@ export class StoresPage implements OnInit, OnDestroy {
           }
         ]
       });
-      
+
       await toast.present();
-      
+
       // Add visual feedback with a small animation
       const notificationIcon = document.querySelector('ion-button ion-icon[name="notifications-outline"]');
       if (notificationIcon) {
@@ -775,7 +773,7 @@ export class StoresPage implements OnInit, OnDestroy {
           notificationIcon.classList.remove('notification-pulse');
         }, 1000);
       }
-      
+
       // Reseteamos el contador de notificaciones
       this.notificationCount = 0;
     } else {
@@ -785,26 +783,26 @@ export class StoresPage implements OnInit, OnDestroy {
         position: 'top',
         color: 'medium'
       });
-      
+
       await toast.present();
     }
   }
-  
+
   // Mostrar lista de notificaciones (ejemplo)
   private showNotificationsList() {
     // Esta es una función de ejemplo que podría mostrar un modal
     // o navegar a una página de notificaciones
     this.showToast('Abriendo lista de notificaciones...');
-    
+
     // Simulación de notificaciones
     const mockNotifications = [
       { title: 'Oferta especial', message: '20% de descuento en tu tienda favorita' },
       { title: 'Nuevo producto', message: 'Productos frescos recién llegados' },
       { title: 'Recordatorio', message: 'No olvides visitar el mercado hoy' }
     ];
-    
+
     console.log('Notificaciones:', mockNotifications);
-    
+
     // Aquí podría implementarse la navegación a una página de notificaciones
     // o mostrar un modal con la lista de notificaciones
   }
@@ -820,13 +818,13 @@ export class StoresPage implements OnInit, OnDestroy {
     }
 
     console.log('Mostrando información de VLCoins');
-    
+
     try {
       const modal = await this.modalController.create({
         component: VlcoinModalComponent,
         cssClass: 'vlcoin-modal'
       });
-      
+
       await modal.present();
 
       // Añadir efecto visual al icono
@@ -837,7 +835,7 @@ export class StoresPage implements OnInit, OnDestroy {
           vlCoinIcon.classList.remove('wallet-pulse');
         }, 800);
       }
-      
+
       // Get result from modal to check if balance was updated
       const { data } = await modal.onWillDismiss();
       if (data && data.balanceUpdated) {
@@ -849,14 +847,14 @@ export class StoresPage implements OnInit, OnDestroy {
             take(1)
           ).subscribe(user => resolve(user));
         });
-        
+
         if (user && user.id) {
           await this.vlcoinService.getVlcoinBalance(user.id);
         }
       }
     } catch (error) {
       console.error('Error al abrir el modal de VLCoins:', error);
-      
+
       // Mostrar fallback toast si hay error
       const toast = await this.toastController.create({
         message: `Tienes ${this.vlcoinBalance} VLCoins disponibles`,
@@ -864,7 +862,7 @@ export class StoresPage implements OnInit, OnDestroy {
         position: 'top',
         color: 'warning'
       });
-      
+
       await toast.present();
     }
   }
@@ -887,7 +885,7 @@ export class StoresPage implements OnInit, OnDestroy {
       color: 'primary',
       cssClass: 'notification-toast'
     });
-    
+
     await toast.present();
   }
 
@@ -895,7 +893,7 @@ export class StoresPage implements OnInit, OnDestroy {
    * Maps category names to their corresponding icons
    */
   getCategoryIcon(category: string): string {
-    const iconMap: {[key: string]: string} = {
+    const iconMap: { [key: string]: string } = {
       'Todos': 'storefront',
       'Fruterías': 'basketOutline',
       'Carnicerías': 'restaurantOutline',
@@ -908,7 +906,7 @@ export class StoresPage implements OnInit, OnDestroy {
       'Herramientas': 'constructOutline',
       'Especialidad': 'pizzaOutline'
     };
-    
+
     return iconMap[category] || 'storefront';
   }
 
@@ -943,25 +941,25 @@ export class StoresPage implements OnInit, OnDestroy {
       this.isFilterPopoverOpen = false;
       return;
     }
-    
+
     // Debug actual state before change
     this.debugFilterState('Before filter change');
-    
+
     // Update the selected sort option
     this.selectedSort = sortOption;
-    
+
     // Apply filters with the new sort option
     this.applyFilters();
-    
+
     // Close the popover
     this.isFilterPopoverOpen = false;
-    
+
     // Provide feedback
     console.log(`Aplicando filtro: ${sortOption}`);
-    
+
     // Debug new state after change
     this.debugFilterState('After filter change');
-    
+
     // Add visual feedback (optional)
     let message = '';
     switch (sortOption) {
@@ -978,7 +976,7 @@ export class StoresPage implements OnInit, OnDestroy {
         message = 'Mostrando tiendas destacadas';
     }
     this.showToast(message);
-    
+
     // Force change detection and UI update
     this.forceUpdate();
   }
@@ -989,11 +987,11 @@ export class StoresPage implements OnInit, OnDestroy {
   updateSearchTerm(event: Event) {
     const inputElement = event.target as HTMLInputElement;
     const term = inputElement.value.trim();
-    
+
     // Ejecutar búsqueda después de escribir al menos 2 caracteres
     // o resetear si está vacío
     this.searchTerms.next(term);
-    
+
     console.log('Término de búsqueda actualizado:', term);
   }
 
@@ -1002,7 +1000,7 @@ export class StoresPage implements OnInit, OnDestroy {
    */
   getCategoryImage(category: string): string {
     const mainColor = '02A396';
-    const svgMap: {[key: string]: string} = {
+    const svgMap: { [key: string]: string } = {
       'Todos': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M32 38c0-1.1.9-2 2-2h32c1.1 0 2 .9 2 2v28c0 1.1-.9 2-2 2H34c-1.1 0-2-.9-2-2V38zm8-6c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2v6H40v-6z' fill='white'/%3E%3C/svg%3E`,
       'Fruterías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M50 68c9.4 0 17-7.6 17-17s-7.6-17-17-17-17 7.6-17 17 7.6 17 17 17zm0-6c-6.1 0-11-4.9-11-11s4.9-11 11-11 11 4.9 11 11-4.9 11-11 11z' fill='white'/%3E%3Cpath d='M55 27c0 5.5 10 8 10 2s-2-10-10-2zM45 27c0 5.5-10 8-10 2s2-10 10 2z' fill='white'/%3E%3C/svg%3E`,
       'Carnicerías': `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23${mainColor}'/%3E%3Cstop offset='100%25' stop-color='%2301877c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23a)'/%3E%3Cpath d='M32 35c0-2.2 1.8-4 4-4h28c2.2 0 4 1.8 4 4v30c0 2.2-1.8 4-4 4H36c-2.2 0-4-1.8-4-4V35zm5 0c0-.6.4-1 1-1h24c.6 0 1 .4 1 1v5H37v-5zm0 10h26v15c0 .6-.4 1-1 1H38c-.6 0-1-.4-1-1V45z' fill='white'/%3E%3C/svg%3E`,
@@ -1023,7 +1021,7 @@ export class StoresPage implements OnInit, OnDestroy {
    */
   private loadMockStores() {
     console.log('Loading mock stores for testing');
-    
+
     // Create mock stores with different categories to test filtering
     this.stores = [
       {
@@ -1135,7 +1133,7 @@ export class StoresPage implements OnInit, OnDestroy {
         distance: 1.3
       }
     ];
-    
+
     console.log('Loaded', this.stores.length, 'mock stores');
   }
 
@@ -1151,7 +1149,7 @@ export class StoresPage implements OnInit, OnDestroy {
       filteredStoresCount: this.filteredStores.length
     });
   }
-  
+
   /**
    * Forces the Angular change detection to update the UI
    */
@@ -1160,7 +1158,7 @@ export class StoresPage implements OnInit, OnDestroy {
       console.log('Forzando actualización de la UI');
       // Esto desencadenará la detección de cambios
       this.changeDetector.detectChanges();
-      
+
       // Aplicar una pequeña animación a los botones de favoritos
       setTimeout(() => {
         const favoriteButtons = document.querySelectorAll('.favorite-button');
@@ -1184,9 +1182,9 @@ export class StoresPage implements OnInit, OnDestroy {
         componentProps: {},
         cssClass: 'ai-chat-modal'
       });
-      
+
       await modal.present();
-      
+
     } catch (error) {
       console.error('Error al abrir el chat de IA:', error);
       this.showToast('Error al abrir el asistente de IA');
@@ -1224,7 +1222,7 @@ export class StoresPage implements OnInit, OnDestroy {
         }
 
         loading.message = 'Analizando texto...';
-        
+
         try {
           // Inicializar worker con idioma español
           const worker = await createWorker('spa');
@@ -1232,14 +1230,14 @@ export class StoresPage implements OnInit, OnDestroy {
           // Procesar la imagen
           const result = await worker.recognize(image.dataUrl);
           console.log('Resultado OCR:', result);
-          
+
           // Extraer y limpiar el texto
           const scannedText = this.cleanScannedText(result.data.text);
-          
+
           // Liberar recursos
           await worker.terminate();
           await loading.dismiss();
-          
+
           if (scannedText) {
             // Usar el texto para buscar
             this.searchTerm = scannedText;
@@ -1247,24 +1245,24 @@ export class StoresPage implements OnInit, OnDestroy {
             this.showToast(`Texto detectado: "${scannedText}"`);
           } else {
             this.showAlert(
-              'No se pudo detectar texto en la imagen', 
+              'No se pudo detectar texto en la imagen',
               'Intenta nuevamente con mejor iluminación o una imagen más clara.'
             );
           }
         } catch (ocrError) {
           console.error('Error al procesar OCR:', ocrError);
           await loading.dismiss();
-          
+
           // Si falla Tesseract, mostrar mensaje específico
           this.showAlert(
-            'Error al procesar el texto', 
+            'Error al procesar el texto',
             'No se pudo analizar la imagen correctamente. Intenta de nuevo con una imagen de mejor calidad.'
           );
         }
       } catch (cameraError: any) {
         console.error('Error con la cámara:', cameraError);
         await loading.dismiss();
-        
+
         if (cameraError.message !== 'User cancelled photos app') {
           this.showToast('No se pudo acceder a la cámara');
         }
@@ -1281,18 +1279,18 @@ export class StoresPage implements OnInit, OnDestroy {
    */
   private cleanScannedText(text: string): string {
     if (!text) return '';
-    
+
     // Eliminar saltos de línea y caracteres especiales
     let cleaned = text.replace(/[\r\n\t]/g, ' ');
-    
+
     // Eliminar múltiples espacios
     cleaned = cleaned.replace(/\s+/g, ' ');
-    
+
     // Truncar si es muy largo (para búsqueda)
     if (cleaned.length > 50) {
       cleaned = cleaned.substring(0, 50);
     }
-    
+
     return cleaned.trim();
   }
 
@@ -1305,7 +1303,7 @@ export class StoresPage implements OnInit, OnDestroy {
       message,
       buttons: ['OK']
     });
-    
+
     await alert.present();
   }
 
@@ -1326,7 +1324,7 @@ export class StoresPage implements OnInit, OnDestroy {
     if (!this.isAuthenticated) {
       return;
     }
-    
+
     this.notifications = this.notifications.filter(n => n.id !== id);
     this.notificationCount = this.notifications.length;
   }
@@ -1336,13 +1334,13 @@ export class StoresPage implements OnInit, OnDestroy {
       this.showLoginRequiredToast('iniciar sesión para ver notificaciones');
       return;
     }
-    
+
     // Aplicar efecto de feedback visual
     this.applyFeedbackAnimation(n.type);
-    
+
     // Cerrar el popover inmediatamente para evitar que permanezca abierto
     this.notificationPopoverOpen = false;
-    
+
     if (n.type === 'oferta' && n.storeId) {
       // Utilizar setTimeout para asegurar que el popover se cierra antes de navegar
       setTimeout(() => {
@@ -1358,12 +1356,12 @@ export class StoresPage implements OnInit, OnDestroy {
       }, 100);
     }
   }
-  
+
   // Método para aplicar animación de feedback visual según el tipo de notificación
   private applyFeedbackAnimation(type: string) {
     let iconName: string;
     let color: string;
-    
+
     switch (type) {
       case 'reto':
         iconName = 'trophy';
@@ -1381,15 +1379,15 @@ export class StoresPage implements OnInit, OnDestroy {
         iconName = 'notifications';
         color = 'primary';
     }
-    
+
     // Mostrar un toast con un icono que indique el tipo de notificación
     this.showToastWithIcon(
-      `Abriendo detalles...`, 
+      `Abriendo detalles...`,
       iconName,
       color
     );
   }
-  
+
   // Método para mostrar un toast con icono
   private async showToastWithIcon(message: string, iconName: string, color: string) {
     const toast = await this.toastController.create({
@@ -1405,7 +1403,7 @@ export class StoresPage implements OnInit, OnDestroy {
         }
       ]
     });
-    
+
     await toast.present();
   }
 
@@ -1419,9 +1417,9 @@ export class StoresPage implements OnInit, OnDestroy {
           selectedSegment: tab
         }
       });
-      
+
       await modal.present();
-      
+
       // Añadir efecto visual al icono
       const vlCoinIcon = document.querySelector('.wallet-button .vl-coin-icon');
       if (vlCoinIcon) {
@@ -1430,7 +1428,7 @@ export class StoresPage implements OnInit, OnDestroy {
           vlCoinIcon.classList.remove('wallet-pulse');
         }, 800);
       }
-      
+
       // Get result from modal to check if balance was updated
       const { data } = await modal.onWillDismiss();
       if (data && data.balanceUpdated) {

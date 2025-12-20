@@ -813,7 +813,7 @@ import { StoreService } from '../services/store.service';
     }
   `],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule, RouterModule, OrderSummaryComponent],
+  imports: [IonicModule, CommonModule, FormsModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OrdersPage implements OnInit {
@@ -838,7 +838,7 @@ export class OrdersPage implements OnInit {
     private cdr: ChangeDetectorRef,
     private storeService: StoreService,
     private toastCtrl: ToastController
-  ) {}
+  ) { }
 
   async ngOnInit() {
     await this.loadOrders();
@@ -908,14 +908,14 @@ export class OrdersPage implements OnInit {
     try {
       this.orders = await this.orderService.getUserOrders();
       this.filterOrders();
-      
+
       // Log para ayudar a diagnosticar problemas
       console.log('Pedidos actualizados:', this.orders.map(order => ({
         id: order.id,
         store_info: order.store_info,
         storeNames: this.getStoreNames(order)
       })));
-      
+
       // Diagnóstico específico para problema de tiendas
       this.debugStoreNames();
     } catch (error) {
@@ -936,40 +936,40 @@ export class OrdersPage implements OnInit {
       message: 'Recargando datos...',
       spinner: 'crescent'
     });
-    
+
     await loading.present();
-    
+
     try {
       console.log('Limpiando caché de tiendas...');
       this.storeService.clearCache();
-      
+
       console.log('Recargando todas las tiendas...');
       await this.storeService.preloadStores();
-      
+
       console.log('Recargando órdenes...');
       this.orders = await this.orderService.getUserOrders();
       this.filterOrders();
-      
+
       this.debugStoreNames();
-      
+
       const toast = await this.toastCtrl.create({
         message: 'Recarga completa exitosa',
         duration: 2000,
         position: 'bottom',
         color: 'success'
       });
-      
+
       await toast.present();
     } catch (error) {
       console.error('Error en recarga completa:', error);
-      
+
       const toast = await this.toastCtrl.create({
         message: 'Error al recargar. Intenta de nuevo.',
         duration: 3000,
         position: 'bottom',
         color: 'danger'
       });
-      
+
       await toast.present();
     } finally {
       await loading.dismiss();
@@ -982,26 +982,26 @@ export class OrdersPage implements OnInit {
    */
   private debugStoreNames() {
     if (!this.orders || this.orders.length === 0) return;
-    
+
     console.group('Diagnóstico de nombres de tiendas');
-    
+
     this.orders.forEach(order => {
       const storeInfo = order.store_info;
       const storeList = this.orderService.getStoreList(order);
       const displayName = this.getStoreNames(order);
-      
+
       console.log(`Pedido ${order.id.substring(0, 8)}:`, {
         storeId: order.store_id,
         storeInfo,
-        storeList: storeList.map(store => ({ 
-          id: store.id, 
+        storeList: storeList.map(store => ({
+          id: store.id,
           name: store.name,
           isGeneric: store.name === 'Tienda'
         })),
         displayName
       });
     });
-    
+
     console.groupEnd();
   }
 
@@ -1020,7 +1020,7 @@ export class OrdersPage implements OnInit {
       'completed': 'success',
       'paid': 'secondary'
     };
-    
+
     return statusColorMap[status] || 'medium';
   }
 
@@ -1034,52 +1034,52 @@ export class OrdersPage implements OnInit {
       'completed': 'Completado',
       'paid': 'Pagado'
     };
-    
+
     return statusMap[status] || status;
   }
 
   getStoreNames(order: Order): string {
     // Si no hay store_info, mostrar valor genérico
     if (!order.store_info) return 'Tienda local';
-    
+
     // Si hay un ID directo en store_info
     if (order.store_info.id) {
       // 'Frutas Manolo' siempre debe aparecer para el ID correcto
       if (order.store_info.id === 'cb4e8dd3-3605-4649-ab10-10f980c88f74') {
         return 'Frutas Manolo';
       }
-      
+
       // Para otros IDs, mostrar nombres amigables según el ID
       const storeId = order.store_info.id;
-      
+
       // Si comienza con a6b7, es una tienda de frutas
       if (storeId.startsWith('a6b7d3')) {
         return 'Frutas Manolo';
       }
-      
+
       // Para otros casos específicos
       if (storeId.startsWith('bb7fa6')) {
         return 'Tienda Central';
       }
-      
+
       if (storeId.startsWith('6604b1')) {
         return 'Mercado Fresco';
       }
-      
+
       if (storeId.startsWith('070215')) {
         return 'Supermercado VLC';
       }
-      
+
       // Para cualquier otro ID, un nombre genérico de tienda
       return 'Tienda local';
     }
-    
+
     // Si hay datos de multiStore, mostrar nombres amigables
     if (order.store_info.multiStore && order.store_info.stores && order.store_info.stores.length > 0) {
       // Obtener nombres para las primeras tiendas
       const storeNames = order.store_info.stores.map((store: any) => {
         const storeId = store.id;
-        
+
         if (storeId === 'cb4e8dd3-3605-4649-ab10-10f980c88f74' || storeId.startsWith('a6b7d3')) {
           return 'Frutas Manolo';
         }
@@ -1092,19 +1092,19 @@ export class OrdersPage implements OnInit {
         if (storeId.startsWith('070215')) {
           return 'Supermercado VLC';
         }
-        
+
         return 'Tienda local';
       });
-      
+
       // Si hay más de una tienda
       if (storeNames.length > 1) {
         return `${storeNames[0]} y ${storeNames.length - 1} más`;
       }
-      
+
       // Solo una tienda
       return storeNames[0];
     }
-    
+
     // Valor predeterminado más amigable
     return 'Tienda local';
   }
@@ -1125,7 +1125,7 @@ export class OrdersPage implements OnInit {
 
   async confirmOrderDelivery(orderId: string, event: Event) {
     event.stopPropagation(); // Evitar que se abra el modal al mismo tiempo
-    
+
     const alert = await this.alertCtrl.create({
       header: 'Confirmar recepción',
       message: '¿Confirmas que has recibido este pedido correctamente?',
@@ -1138,7 +1138,7 @@ export class OrdersPage implements OnInit {
           text: 'Confirmar',
           handler: async () => {
             const success = await this.orderService.markOrderAsDelivered(orderId);
-            
+
             if (success) {
               // Actualizar el estado del pedido en la lista local
               this.orders = this.orders.map(order => {
@@ -1147,7 +1147,7 @@ export class OrdersPage implements OnInit {
                 }
                 return order;
               });
-              
+
               // Actualizar filtros
               this.filterOrders();
             }
@@ -1244,30 +1244,30 @@ export class OrdersPage implements OnInit {
       // Crear contenedor principal
       const messageContent = document.createElement('div');
       messageContent.className = 'incidents-help';
-      
+
       // Añadir elementos de incidencia
-      this.addIncidentItem(messageContent, 'time-outline', 'Mi pedido está retrasado', 
+      this.addIncidentItem(messageContent, 'time-outline', 'Mi pedido está retrasado',
         'Si tu pedido lleva más de 60 minutos en preparación, puedes contactar directamente con la tienda o con nuestro servicio de atención al cliente.');
-      
-      this.addIncidentItem(messageContent, 'alert-circle-outline', 'Producto en mal estado o incorrecto', 
+
+      this.addIncidentItem(messageContent, 'alert-circle-outline', 'Producto en mal estado o incorrecto',
         'Si has recibido un producto en mal estado o diferente al solicitado, contacta con nuestro servicio al cliente en las próximas 24 horas.');
-      
-      this.addIncidentItem(messageContent, 'bag-remove-outline', 'Falta un producto en mi pedido', 
+
+      this.addIncidentItem(messageContent, 'bag-remove-outline', 'Falta un producto en mi pedido',
         'Si falta algún producto en tu pedido, ponte en contacto con la tienda o servicio al cliente lo antes posible.');
-      
-      this.addIncidentItem(messageContent, 'cash-outline', 'Problema con el cobro', 
+
+      this.addIncidentItem(messageContent, 'cash-outline', 'Problema con el cobro',
         'Si has detectado un error en el cobro de tu pedido, contacta con nuestro servicio de atención al cliente adjuntando el comprobante.');
-      
-      this.addIncidentItem(messageContent, 'close-circle-outline', 'Quiero cancelar mi pedido', 
+
+      this.addIncidentItem(messageContent, 'close-circle-outline', 'Quiero cancelar mi pedido',
         'Solo puedes cancelar pedidos que aún estén en estado "Pendiente". Contacta con nuestro servicio de atención al cliente para solicitar la cancelación.');
-      
+
       // Agregar el contenido al mensaje del alerta
       const alertMessage = alertElement.querySelector('.alert-message');
       if (alertMessage) {
         alertMessage.innerHTML = '';
         alertMessage.appendChild(messageContent);
       }
-      
+
       // Añadir estilos
       const style = document.createElement('style');
       style.textContent = `
@@ -1362,25 +1362,25 @@ export class OrdersPage implements OnInit {
   addIncidentItem(parent: HTMLElement, icon: string, title: string, description: string) {
     const item = document.createElement('div');
     item.className = 'incident-item';
-    
+
     const titleDiv = document.createElement('div');
     titleDiv.className = 'incident-title';
-    
+
     const iconElement = document.createElement('ion-icon');
     iconElement.setAttribute('name', icon);
-    
+
     const strongTitle = document.createElement('strong');
     strongTitle.textContent = title;
-    
+
     const paragraph = document.createElement('p');
     paragraph.textContent = description;
-    
+
     titleDiv.appendChild(iconElement);
     titleDiv.appendChild(strongTitle);
-    
+
     item.appendChild(titleDiv);
     item.appendChild(paragraph);
-    
+
     parent.appendChild(item);
   }
 
@@ -1399,24 +1399,24 @@ export class OrdersPage implements OnInit {
       message: 'Ejecutando diagnóstico...',
       spinner: 'crescent'
     });
-    
+
     await loading.present();
-    
+
     try {
       // Ejecutar diagnóstico completo
       const results = await this.storeService.diagnosticAllStores();
-      
+
       console.log('RESULTADO DE DIAGNÓSTICO DE TIENDAS:', results);
-      
+
       const toast = await this.toastCtrl.create({
         message: 'Diagnóstico completado. Ver consola para detalles.',
         duration: 3000,
         position: 'bottom',
         color: 'success'
       });
-      
+
       await toast.present();
-      
+
       // Mostrar alerta con resumen
       const alert = await this.alertCtrl.create({
         header: 'Diagnóstico de Tiendas',
@@ -1427,9 +1427,9 @@ export class OrdersPage implements OnInit {
         `,
         buttons: ['OK']
       });
-      
+
       await alert.present();
-      
+
     } catch (error) {
       console.error('Error en diagnóstico:', error);
       const toast = await this.toastCtrl.create({
@@ -1438,7 +1438,7 @@ export class OrdersPage implements OnInit {
         position: 'bottom',
         color: 'danger'
       });
-      
+
       await toast.present();
     } finally {
       await loading.dismiss();
@@ -1448,18 +1448,18 @@ export class OrdersPage implements OnInit {
   handleTitleClick(event: MouseEvent) {
     // Detectar triple click para activar el diagnóstico (herramienta oculta)
     this.clickCount++;
-    
+
     // Limpiar temporizador existente si hay uno
     if (this.clickTimer) {
       clearTimeout(this.clickTimer);
     }
-    
+
     // Configurar nuevo temporizador para resetear contador después de 500ms
     this.clickTimer = setTimeout(async () => {
       // Si hubo 3 clicks, mostrar menú de opciones
       if (this.clickCount >= 3) {
         console.log('Activando menú de herramientas de diagnóstico...');
-        
+
         const actionSheet = await this.alertCtrl.create({
           header: 'Herramientas de diagnóstico',
           subHeader: 'Selecciona una opción',
@@ -1482,10 +1482,10 @@ export class OrdersPage implements OnInit {
             }
           ]
         });
-        
+
         await actionSheet.present();
       }
-      
+
       // Resetear contador
       this.clickCount = 0;
     }, 500);
