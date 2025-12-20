@@ -1,5 +1,5 @@
 {
-  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "$schema": "https://raw.githubusercontent.com/angular/angular-cli/main/packages/angular/cli/lib/config/workspace-schema.json",
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
@@ -52,6 +52,7 @@
           },
           "configurations": {
             "production": {
+              "tsConfig": "tsconfig.app.json",
               "budgets": [
                 {
                   "type": "initial",
@@ -73,12 +74,14 @@
               "outputHashing": "all"
             },
             "development": {
+              "tsConfig": "tsconfig.app.json",
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true
             },
             "ci": {
+              "tsConfig": "tsconfig.app.json"
             }
           },
           "defaultConfiguration": "production"
@@ -93,6 +96,7 @@
               "buildTarget": "app:build:development"
             },
             "ci": {
+              "buildTarget": "app:build:ci"
             }
           },
           "defaultConfiguration": "development"
@@ -118,11 +122,15 @@
                 "output": "assets"
               }
             ],
-            "styles": ["src/global.scss", "src/theme/variables.scss"],
+            "styles": [
+              "src/global.scss",
+              "src/theme/variables.scss"
+            ],
             "scripts": []
           },
           "configurations": {
             "ci": {
+              "tsConfig": "tsconfig.spec.json",
               "watch": false
             }
           }
@@ -130,7 +138,10 @@
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
-            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
           }
         }
       }
